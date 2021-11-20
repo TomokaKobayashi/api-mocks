@@ -1,7 +1,6 @@
 import express from 'express';
 import { Config, loadConfig } from './configurations';
 import cmd from 'commander';
-import defConfig from './config/default.json';
 
 cmd
   .version('0.0.1', '-v --version')
@@ -13,21 +12,20 @@ cmd
   .option('-a --apiBaseUri [uri]', 'control api base uri')
   .parse(process.argv);
 
-const config = cmd.config ? loadConfig(cmd.config) : {};
+const config = loadConfig(cmd.config);
 const finalConfig: Config = {
-  port: cmd.port || config.port || defConfig.port,
-  dataDirectory: cmd.data || config.dataDirectory || defConfig.dataDirectory,
-  staticContents: cmd.static || config.staticContents || defConfig.staticContents,
-  apiRoot: cmd.apiBaseUri || config.apiRoot || defConfig.apiRoot,
+  port: cmd.port || config.port,
+  dataDirectory: cmd.data || config.dataDirectory,
+  staticContents: cmd.static || config.staticContents,
+  apiRoot: cmd.apiBaseUri || config.apiRoot,
 };
-
 
 const app = express();
 
-app.get('/', (req, res) => {
-  res.send('hello!!!');
-});
+// serve static contents
+app.use(express.static(finalConfig.staticContents))
 
+// starting to serve
 app.listen(finalConfig.port, ()=>{
-  console.log(`start on port ${finalConfig.port}`);
+  console.log(`started on port ${finalConfig.port}`);
 });
