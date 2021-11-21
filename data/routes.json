@@ -1,0 +1,18 @@
+{
+  "baseUrl": [
+    "/custom-web00/([a-z]{4}/)?",
+    "/bank-web00/([a-z]{4}/)?",
+    "/corp-web00/"
+  ],
+  "endpoints": [
+    {
+      "path": "aaa/bbb",
+      "method": "GET",
+      "patterns": [
+        {
+          "response": "responses/response_a/define.json"
+        }
+      ]
+    }
+  ]
+}

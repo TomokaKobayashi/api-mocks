@@ -1,5 +1,5 @@
 {
-  "port": 3000,
+  "port": 4010,
   "dataDirectory": "./data",
   "staticContents": "./public",
   "apiRoot": "/control"

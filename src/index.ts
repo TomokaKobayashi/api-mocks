@@ -1,6 +1,7 @@
 import express from 'express';
 import { Config, loadConfig } from './configurations';
 import cmd from 'commander';
+import { createRouter, loadRoutes } from './main-router';
 
 cmd
   .version('0.0.1', '-v --version')
@@ -20,8 +21,13 @@ const finalConfig: Config = {
   apiRoot: cmd.apiBaseUri || config.apiRoot,
 };
 
-const app = express();
+const routes = loadRoutes(finalConfig);
+const baseUrls = Array.isArray(routes.baseUrl) ? routes.baseUrl : [routes.baseUrl];
+const router = createRouter(routes);
 
+const app = express();
+// serve mocks
+app.use(new RegExp(`(${baseUrls.join('|')})`), router);
 // serve static contents
 app.use(express.static(finalConfig.staticContents))
 
