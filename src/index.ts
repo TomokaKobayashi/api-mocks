@@ -1,9 +1,9 @@
 import express from 'express';
-import { Config, loadConfig } from './configurations';
-import cmd from 'commander';
-import { createRouter, loadRoutes } from './main-router';
+import { AppConfig, loadConfig } from './app-config';
+import {program} from 'commander';
+import { mockRouter } from './mock-router';
 
-cmd
+program
   .version('0.0.1', '-v --version')
   .usage('[options]')
   .option('-c --config [fileName]', 'configuration file name')
@@ -13,24 +13,23 @@ cmd
   .option('-a --apiBaseUri [uri]', 'control api base uri')
   .parse(process.argv);
 
-const config = loadConfig(cmd.config);
-const finalConfig: Config = {
-  port: cmd.port || config.port,
-  dataDirectory: cmd.data || config.dataDirectory,
-  staticContents: cmd.static || config.staticContents,
-  apiRoot: cmd.apiBaseUri || config.apiRoot,
+const config = loadConfig(program.getOptionValue('config'));
+const finalConfig: AppConfig = {
+  port: program.getOptionValue('port') || config.port,
+  dataDirectory: program.getOptionValue('data') || config.dataDirectory,
+  staticContents: program.getOptionValue('static') || config.staticContents,
+  apiRoot: program.getOptionValue('apiBaseUri') || config.apiRoot,
 };
 
-const routes = loadRoutes(finalConfig);
-const baseUrls = Array.isArray(routes.baseUrl) ? routes.baseUrl : [routes.baseUrl];
-const router = createRouter(routes);
+// create mock-router
+const router = mockRouter(finalConfig);
 
+// create app
 const app = express();
-// serve mocks
-app.use(new RegExp(`(${baseUrls.join('|')})`), router);
-// serve static contents
-app.use(express.static(finalConfig.staticContents))
-
+// apply mock-router
+app.use(router);
+// apply static
+app.use(express.static(finalConfig.staticContents));
 // starting to serve
 app.listen(finalConfig.port, ()=>{
   console.log(`started on port ${finalConfig.port}`);

@@ -1,16 +1,25 @@
 {
-  "baseUrl": [
-    "/custom-web00/([a-z]{4}/)?",
-    "/bank-web00/([a-z]{4}/)?",
-    "/corp-web00/"
+  "prefixes": [
+    "/custom-web00(/[a-z]{4})?",
+    "/bank-web00(/[a-z]{4}/)?",
+    "/corp-web00"
   ],
   "endpoints": [
     {
-      "path": "aaa/bbb",
+      "pattern": "/aaa/bbb",
       "method": "GET",
-      "patterns": [
+      "matches": [
         {
-          "response": "responses/response_a/define.json"
+          "metadata": "responses/response_a/define.json"
+        }
+      ]
+    },
+    {
+      "pattern": "/ccc/ddd",
+      "method": "GET",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json"
         }
       ]
     }

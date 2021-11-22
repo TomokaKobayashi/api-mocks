@@ -1,5 +1,8 @@
 {
-  "headers":[],
-  "contentType": "application/json",
-  "responseFile": "response_a.json"
+  "headers":[{
+    "name": "Content-Type",
+    "value": "application/json"
+  }],
+  "status": 200,
+  "file": "response_a.json"
 }
