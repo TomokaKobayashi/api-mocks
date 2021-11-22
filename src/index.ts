@@ -26,6 +26,7 @@ const router = mockRouter(finalConfig);
 
 // create app
 const app = express();
+
 // apply mock-router
 app.use(router);
 // apply static

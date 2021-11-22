@@ -1,4 +1,71 @@
 <html>
-  <head><title>test page</title></head>
-  <body><h1>Hello!!!</h1></body>
+  <head>
+    <title>test page for mock server</title>
+    <script src="./jquery.js"></script>
+    <script src="./scripts.js"></script>
+  </head>
+  <body>
+    <h1>A test page for mock server</h1>
+    <form id="form">
+      <div>
+        <h2>ENDPOINT</h2>
+        <input id="endpoint" name="endpoint" value="http://localhost:4010/custom-web00/aaa/bbb"/>
+      </div>
+      <div>
+        <h2>METHOD</h2>
+        <label for="method_get">GET</label>
+        <input type="radio" name="method" id="method_get" value="GET" checked></span>
+        <label for="method_post">POST</label>
+        <input type="radio" name="method" id="method_post" value="POST"></span>
+        <label for="method_put">PUT</label>
+        <input type="radio" name="method" id="method_put" value="PUT"></span>
+        <label for="method_patch">PATCH</label>
+        <input type="radio" name="method" id="method_patch" value="PATCH"></span>
+        <label for="method_delete">DELETE</label>
+        <input type="radio" name="method" id="method_delete" value="DELETE"></span>
+      </div>
+      <div>
+        <h2>PAYLOAD</h2>
+        <div>
+          <label for="content_type">Content-Type</label>
+          <select id="content_type">
+            <option value="NONE" selected>NONE</option>
+            <option value="JSON">JSON</option>
+            <option value="FORM">FORM</option>
+            <option value="MULTI-PART">MULTI-PART</option>
+          </select>
+        </div>
+        <div>
+          <div id="body_JSON">
+            <label for="content_json">JSON</label>
+            <textarea id="content_json">{}</textarea>
+          </div>
+          <div id="body_file">
+            <label for="content_file">UPLOAD FILE</label>
+            <input type="file" id="content_file"/>
+          </div>
+          <div id="body_form">
+            <label for="content_form">FORM DATA</label>
+            <table id="content_form">
+              <tr><th>NAME</th><th>VALUE</th></tr>
+              <tr><td><input id="name1"/></td><td><input id="value1"/></td></tr>
+              <tr><td><input id="name2"/></td><td><input id="value2"/></td></tr>
+              <tr><td><input id="name3"/></td><td><input id="value3"/></td></tr>
+              <tr><td><input id="name4"/></td><td><input id="value4"/></td></tr>
+              <tr><td><input id="name5"/></td><td><input id="value5"/></td></tr>
+              <tr><td><input id="name6"/></td><td><input id="value6"/></td></tr>
+              <tr><td><input id="name7"/></td><td><input id="value7"/></td></tr>
+              <tr><td><input id="name8"/></td><td><input id="value8"/></td></tr>
+              <tr><td><input id="name9"/></td><td><input id="value9"/></td></tr>
+            </table>
+          </div>
+        </div>
+        <input id="emit" type="submit" value="EMIT"/>
+      </div>
+      <div>
+        <h2>RESULT</h2>
+        <div id="result"></div>
+      </div>
+    </form>
+  </body>
 </html>

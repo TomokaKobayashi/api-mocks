@@ -73,13 +73,27 @@ const processDefiniton = (basePath: string, fileName: string, req: express.Reque
   }
 }
 
+function evaluateConditions(req: express.Request, conditions?: Condition[][]): boolean {
+  if(!conditions) return true;
+  for(const andConditions of conditions){
+    for(const condition of andConditions){
+
+    }
+  }
+  return false;
+}
+
 const createProcessor = (baseDir: string, patterns: Pattern[]) => {
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     console.log(`requested url = ${req.url}`);
+    console.log(`requested method = ${req.method}`);
+    console.log(`requested query params = ${JSON.stringify(req.query, null, '  ')}`);
     console.log(`requested params = ${JSON.stringify(req.params, null, '  ')}`);
+    console.log(`requested headers = ${JSON.stringify(req.headers, null, '  ')}`);
+    console.log(`requested body = ${JSON.stringify(req.body, null, '  ')}`);
     let proceed = false;
     for(const pat of patterns){
-      if(!pat.conditions){
+      if(evaluateConditions(req, pat.conditions)){
         proceed = true;
         processDefiniton(baseDir, pat.metadata, req, res);
         break;
@@ -98,6 +112,8 @@ export const mockRouter = (config: RouterConfig): express.Router => {
   const prefixes = Array.isArray(routes.prefixes) ? routes.prefixes : [routes.prefixes];
   const prefixPattern = new RegExp(`(${prefixes.join('|')})`);
   const rootRouter = express.Router();
+  rootRouter.use(express.urlencoded({extended: true}));
+  rootRouter.use(express.json());
   const router = express.Router();
   rootRouter.use(prefixPattern, router);
   for(const endpoint of routes.endpoints){
@@ -122,5 +138,6 @@ export const mockRouter = (config: RouterConfig): express.Router => {
         throw `'${endpoint.method}' is not supported.`
       }
   }
-  return router;
+  return rootRouter;
 };
+
