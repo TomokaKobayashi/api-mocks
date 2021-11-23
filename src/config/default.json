@@ -2,5 +2,6 @@
   "port": 4010,
   "dataDirectory": "./data",
   "staticContents": "./public",
-  "apiRoot": "/control"
+  "apiRoot": "/control",
+  "uploadPath": "./upload"
 }

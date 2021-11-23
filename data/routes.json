@@ -31,6 +31,15 @@
           "metadata": "responses/response_a/define.json"
         }
       ]
+    },
+    {
+      "pattern": "/fff/ggg/:name/:type",
+      "method": "POST",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json"
+        }
+      ]
     }
   ]
 }

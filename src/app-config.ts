@@ -6,6 +6,7 @@ export type AppConfig = {
   dataDirectory: string
   staticContents: string
   apiRoot: string
+  uploadPath: string
 };
 
 export const loadConfig = (path?: string): AppConfig => {

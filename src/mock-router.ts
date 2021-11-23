@@ -1,6 +1,11 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
+import form from 'express-form-data';
+
+type Request = express.Request & {
+  files?: Object
+};
 
 type Headers = {
   name: string
@@ -43,6 +48,7 @@ type Routes = {
 type RouterConfig = {
   dataDirectory: string
   apiRoot: string
+  uploadPath: string
 }
 
 const processDefiniton = (basePath: string, fileName: string, req: express.Request, res: express.Response) => {
@@ -73,7 +79,7 @@ const processDefiniton = (basePath: string, fileName: string, req: express.Reque
   }
 }
 
-function evaluateConditions(req: express.Request, conditions?: Condition[][]): boolean {
+const evaluateConditions = (req: express.Request, conditions?: Condition[][]): boolean => {
   if(!conditions) return true;
   for(const andConditions of conditions){
     for(const condition of andConditions){
@@ -84,13 +90,14 @@ function evaluateConditions(req: express.Request, conditions?: Condition[][]): b
 }
 
 const createProcessor = (baseDir: string, patterns: Pattern[]) => {
-  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  return (req: Request, res: express.Response, next: express.NextFunction) => {
     console.log(`requested url = ${req.url}`);
     console.log(`requested method = ${req.method}`);
     console.log(`requested query params = ${JSON.stringify(req.query, null, '  ')}`);
     console.log(`requested params = ${JSON.stringify(req.params, null, '  ')}`);
     console.log(`requested headers = ${JSON.stringify(req.headers, null, '  ')}`);
     console.log(`requested body = ${JSON.stringify(req.body, null, '  ')}`);
+    console.log(`requested files = ${JSON.stringify(req.files, null, '  ')}`);
     let proceed = false;
     for(const pat of patterns){
       if(evaluateConditions(req, pat.conditions)){
@@ -114,24 +121,26 @@ export const mockRouter = (config: RouterConfig): express.Router => {
   const rootRouter = express.Router();
   rootRouter.use(express.urlencoded({extended: true}));
   rootRouter.use(express.json());
+  rootRouter.use(form.parse({uploadDir: config.uploadPath, autoClean: true}));
   const router = express.Router();
   rootRouter.use(prefixPattern, router);
+
   for(const endpoint of routes.endpoints){
     switch(endpoint.method){
       case 'GET':
-        router.get(new RegExp(endpoint.pattern), createProcessor(config.dataDirectory, endpoint.matches));
+        router.get(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       case 'POST':
-        router.post(new RegExp(endpoint.pattern), createProcessor(config.dataDirectory, endpoint.matches));
+        router.post(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       case 'PUT':
-        router.put(new RegExp(endpoint.pattern), createProcessor(config.dataDirectory, endpoint.matches));
+        router.put(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       case 'PATCH':
-        router.patch(new RegExp(endpoint.pattern), createProcessor(config.dataDirectory, endpoint.matches));
+        router.patch(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       case 'DELETE':
-        router.delete(new RegExp(endpoint.pattern), createProcessor(config.dataDirectory, endpoint.matches));
+        router.delete(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       default:
         console.error(`error: '${endpoint.method}' is not supported.`);

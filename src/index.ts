@@ -11,6 +11,7 @@ program
   .option('-d --data [directory]', 'data directory')
   .option('-s --static [directory]', 'static contents directory')
   .option('-a --apiBaseUri [uri]', 'control api base uri')
+  .option('-u --upload [directory]', 'directory for upload')
   .parse(process.argv);
 
 const config = loadConfig(program.getOptionValue('config'));
@@ -19,6 +20,7 @@ const finalConfig: AppConfig = {
   dataDirectory: program.getOptionValue('data') || config.dataDirectory,
   staticContents: program.getOptionValue('static') || config.staticContents,
   apiRoot: program.getOptionValue('apiBaseUri') || config.apiRoot,
+  uploadPath: program.getOptionValue('upload') || config.uploadPath,
 };
 
 // create mock-router

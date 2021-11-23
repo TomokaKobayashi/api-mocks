@@ -1,7 +1,7 @@
 GET http://localhost:4010/custom-web00/aaa/bbb?aaaa=bbbb
 Content-Type: application/x-www-form-urlencoded
 
-AAA=BBB&CCC=DDD
+AAA=BBB&CCC=DDD&CCC=EEE
 
 ###
 GET http://localhost:4010/custom-web00/ccc/ddd
@@ -28,6 +28,12 @@ Content-Type: image/png
 
 ###
 POST http://localhost:4010/custom-web00/ddd/eee
+Content-Type: application/x-www-form-urlencoded
+
+AAA=BBB&CCC=DDD
+
+###
+POST http://localhost:4010/custom-web00/fff/ggg/xxx/yyy
 Content-Type: application/x-www-form-urlencoded
 
 AAA=BBB&CCC=DDD
