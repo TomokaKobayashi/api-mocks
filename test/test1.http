@@ -1,10 +1,10 @@
-GET http://localhost:4010/custom-web00/aaa/bbb?aaaa=bbbb
+GET http://localhost:4010/prefix00/aaa/bbb?aaaa=bbbb
 Content-Type: application/x-www-form-urlencoded
 
 AAA=BBB&CCC=DDD&CCC=EEE
 
 ###
-GET http://localhost:4010/custom-web00/ccc/ddd
+GET http://localhost:4010/prefix00/ccc/ddd
 Content-Type: application/json
 
 {
@@ -16,8 +16,30 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:4010/custom-web00/ddd/eee
+POST http://localhost:4010/prefix00/ddd/eee
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="text"
+
+title
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="params"
+Content-Type: application/x-www-form-urlencoded
+
+AAA=BBB&CCC=DDD&CCC=EEE
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="json"
+Content-Type: application/json
+
+{
+    "aaaa": "bbbb",
+    "cccc":[
+        "dddd",
+        "eeee"
+    ]
+}
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="image"; filename="sample1.png"
@@ -27,13 +49,13 @@ Content-Type: image/png
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###
-POST http://localhost:4010/custom-web00/ddd/eee
+POST http://localhost:4010/prefix0/ddd/eee
 Content-Type: application/x-www-form-urlencoded
 
 AAA=BBB&CCC=DDD
 
 ###
-POST http://localhost:4010/custom-web00/fff/ggg/xxx/yyy
+POST http://localhost:4010/prefix01/fff/ggg/xxx/yyy
 Content-Type: application/x-www-form-urlencoded
 
 AAA=BBB&CCC=DDD

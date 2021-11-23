@@ -2,6 +2,17 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import form from 'express-form-data';
+import { IncomingHttpHeaders } from 'http';
+
+// JSON -> body
+// FORM -> body
+// QUERY PARMAS -> query
+// PATH PARAMS -> params
+// MULTI-PART -> files, body(raw string and content-type is missed)
+
+interface Record<T> {
+  [key: string]: T
+};
 
 type Request = express.Request & {
   files?: Object
@@ -51,6 +62,11 @@ type RouterConfig = {
   uploadPath: string
 }
 
+type RequestSummary = {
+  data: Record<any>
+  headers: IncomingHttpHeaders
+};
+
 const processDefiniton = (basePath: string, fileName: string, req: express.Request, res: express.Response) => {
   try{
     const definitionPath = path.isAbsolute(fileName) ? fileName : basePath + '/' + fileName
@@ -79,7 +95,7 @@ const processDefiniton = (basePath: string, fileName: string, req: express.Reque
   }
 }
 
-const evaluateConditions = (req: express.Request, conditions?: Condition[][]): boolean => {
+const evaluateConditions = (req: RequestSummary, conditions?: Condition[][]): boolean => {
   if(!conditions) return true;
   for(const andConditions of conditions){
     for(const condition of andConditions){
@@ -89,18 +105,25 @@ const evaluateConditions = (req: express.Request, conditions?: Condition[][]): b
   return false;
 }
 
+/// making a endpoint processor
 const createProcessor = (baseDir: string, patterns: Pattern[]) => {
   return (req: Request, res: express.Response, next: express.NextFunction) => {
     console.log(`requested url = ${req.url}`);
     console.log(`requested method = ${req.method}`);
-    console.log(`requested query params = ${JSON.stringify(req.query, null, '  ')}`);
-    console.log(`requested params = ${JSON.stringify(req.params, null, '  ')}`);
-    console.log(`requested headers = ${JSON.stringify(req.headers, null, '  ')}`);
-    console.log(`requested body = ${JSON.stringify(req.body, null, '  ')}`);
-    console.log(`requested files = ${JSON.stringify(req.files, null, '  ')}`);
+
+    const requestSummary: RequestSummary = {
+      data:{
+        ...req.query,
+        ...req.params,
+        ...req.body,
+      },
+      headers: req.headers,
+    };
+    console.log(`requested summary = ${JSON.stringify(requestSummary, null, '  ')}`);
+
     let proceed = false;
     for(const pat of patterns){
-      if(evaluateConditions(req, pat.conditions)){
+      if(evaluateConditions(requestSummary, pat.conditions)){
         proceed = true;
         processDefiniton(baseDir, pat.metadata, req, res);
         break;
@@ -112,7 +135,7 @@ const createProcessor = (baseDir: string, patterns: Pattern[]) => {
   }
 }
 
-/// 定義情報からrouterを作成する関数です。
+/// making a router from difinition file.
 export const mockRouter = (config: RouterConfig): express.Router => {
   const rawRoute = fs.readFileSync(config.dataDirectory + '/routes.json');
   const routes = JSON.parse(rawRoute.toString()) as Routes;
@@ -122,6 +145,7 @@ export const mockRouter = (config: RouterConfig): express.Router => {
   rootRouter.use(express.urlencoded({extended: true}));
   rootRouter.use(express.json());
   rootRouter.use(form.parse({uploadDir: config.uploadPath, autoClean: true}));
+  rootRouter.use(form.union());
   const router = express.Router();
   rootRouter.use(prefixPattern, router);
 

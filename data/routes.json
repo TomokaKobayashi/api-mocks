@@ -1,8 +1,8 @@
 {
   "prefixes": [
-    "/custom-web00(/[a-z]{4})?",
-    "/bank-web00(/[a-z]{4}/)?",
-    "/corp-web00"
+    "/prefix00(/[a-z]{4})?",
+    "/prefix01(/[a-z]{4}/)?",
+    "/prefix02"
   ],
   "endpoints": [
     {
