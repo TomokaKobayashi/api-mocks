@@ -11,6 +11,9 @@ Content-Type: application/x-www-form-urlencoded
 CCC=DDD&CCC=EEE
 
 ###
+GET http://localhost:4010/prefix02/image/test
+
+###
 GET http://localhost:4010/prefix00/ccc/ddd
 Content-Type: application/json
 

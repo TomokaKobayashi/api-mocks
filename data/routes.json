@@ -45,6 +45,15 @@
           "metadata": "responses/response_a/define.json"
         }
       ]
+    },
+    {
+      "pattern": "/image/:name",
+      "method": "GET",
+      "matches": [
+        {
+          "metadata": "responses/response_c/define.json"
+        }
+      ]
     }
   ]
 }
