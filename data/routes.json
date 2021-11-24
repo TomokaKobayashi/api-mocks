@@ -1,5 +1,5 @@
 {
-  "prefixes": [
+  "prefix": [
     "/prefix00(/[a-z]{4})?",
     "/prefix01(/[a-z]{4}/)?",
     "/prefix02"
@@ -10,7 +10,12 @@
       "method": "GET",
       "matches": [
         {
-          "metadata": "responses/response_a/define.json"
+          "metadata": "responses/response_a/define.json",
+          "conditions": "data.AAA===\"BBB\""
+        },
+        {
+          "metadata": "responses/response_b/define.json",
+          "conditions": "data.CCC[0]===\"DDD\""
         }
       ]
     },

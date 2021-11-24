@@ -1,69 +1,101 @@
+// COPYRIGHT Kobayashi, Tomoka 2021
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import form from 'express-form-data';
 import { IncomingHttpHeaders } from 'http';
 
-// JSON -> body
-// FORM -> body
-// QUERY PARMAS -> query
-// PATH PARAMS -> params
-// MULTI-PART -> files, body(raw string and content-type is missed)
+// memo:
+// JSON -> body -> data
+// FORM -> body -> data
+// QUERY PARMAS -> query -> data
+// PATH PARAMS -> params -> data
+// MULTI-PART -> body(raw string and content-type is missed) -> data
+// HEADERS -> headers -> headers
 
+// general map string to T.
 interface Record<T> {
   [key: string]: T
 };
 
+// type definition to use 'express-form-data'.
+// 'express-form-data' make 'files' parameter.
 type Request = express.Request & {
   files?: Object
 };
 
 type Headers = {
+  // header name
   name: string
+  // header value
   value: string
 };
 
 type Definitions = {
+  // response status
   status: number
+  // response headers
   headers: Headers[]
+  // response data file
   file?: string
+  // javascript string to edit response data(only JSON data or headers)
   edit?: string
 };
 
-type Condition = {
-  field: string
-  operator: string
-  value: string
+type Pattern = {
+  // condition to use following 'metadata'
+  // javascript condition expression.
+  // be evaluated by Function object.
+  // like this, 'data.param1===\"AAAA\" || data.param2===\"BBBB\"
+  conditions?: string
+  // response metadata file path.
+  metadata: string
 };
 
-type Pattern = {
-  conditions?: Condition[][]
-  metadata: string
-}
-
 type Endpoint = {
+  // endpoint path pattern string (not RegExp)
+  // basic: /foo/bar
+  // with path parameters: /foo/bar/:para1/:para2
   pattern: string
+  // http method
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+  // response definition with conditions
   matches: Pattern[]
-  pathParams?: string[]
+  // API name(optional)
   name?: string 
 };
 
 type Routes = {
-  prefixes: string[] | string
+  // endpoint prefix pattern RegExp.
+  // `/prefix` of '/prefix/foo/var'.
+  // if prefix is Array, matches all of Array.
+  // '["/prefix1", "/prefix2"]' is to be '(/prefix1|/prefix2)' .
+  prefix: string[] | string
+  // response headers to apply all responses(exclude error).
+  // ** not yet implemented **
   defaultHeaders?: Headers[]
+  // javascript string to edit all responses(exclude error).
+  // it can edit response body when 'Content-Type' is 'application/json'.
+  // ** not yet implemented **
   defaultScript?: string
+  // endpoints 
   endpoints: Endpoint[]
 }
 
 type RouterConfig = {
+  // a directory that 'routes.json' exists.
   dataDirectory: string
+  // controlling api's root path of this mock server
   apiRoot: string
+  // a temporary directory is used when file upload.
   uploadPath: string
 }
 
+// request data is use to evaluate condiitons of matching.
 type RequestSummary = {
+  // data from body, params and query of req.
   data: Record<any>
+  // headers form headers of req.
   headers: IncomingHttpHeaders
 };
 
@@ -95,12 +127,19 @@ const processDefiniton = (basePath: string, fileName: string, req: express.Reque
   }
 }
 
-const evaluateConditions = (req: RequestSummary, conditions?: Condition[][]): boolean => {
+const evaluateConditions = (req: RequestSummary, conditions?: string): boolean => {
   if(!conditions) return true;
-  for(const andConditions of conditions){
-    for(const condition of andConditions){
-
-    }
+  try{
+    const result = new Function('req', `
+      const {data, headers} = req;
+      if(${conditions}) return true;
+      return false;
+    `)(req);
+    return result;
+  }catch(error){
+    console.log('*** condition parse error ***');
+    console.log(conditions);
+    console.log(error);
   }
   return false;
 }
@@ -110,7 +149,6 @@ const createProcessor = (baseDir: string, patterns: Pattern[]) => {
   return (req: Request, res: express.Response, next: express.NextFunction) => {
     console.log(`requested url = ${req.url}`);
     console.log(`requested method = ${req.method}`);
-
     const requestSummary: RequestSummary = {
       data:{
         ...req.query,
@@ -135,11 +173,23 @@ const createProcessor = (baseDir: string, patterns: Pattern[]) => {
   }
 }
 
+const makePrefix = (prefix: string | string[]): string[] => {
+  if(!prefix) return ['[^/]*'];
+  if(Array.isArray(prefix)){
+    if(prefix.length===0){
+      return ['[^/]*'];
+    }
+    return prefix;
+  }else{
+    return [prefix];
+  }
+};
+
 /// making a router from difinition file.
 export const mockRouter = (config: RouterConfig): express.Router => {
   const rawRoute = fs.readFileSync(config.dataDirectory + '/routes.json');
   const routes = JSON.parse(rawRoute.toString()) as Routes;
-  const prefixes = Array.isArray(routes.prefixes) ? routes.prefixes : [routes.prefixes];
+  const prefixes = makePrefix(routes.prefix);
   const prefixPattern = new RegExp(`(${prefixes.join('|')})`);
   const rootRouter = express.Router();
   rootRouter.use(express.urlencoded({extended: true}));
@@ -152,18 +202,23 @@ export const mockRouter = (config: RouterConfig): express.Router => {
   for(const endpoint of routes.endpoints){
     switch(endpoint.method){
       case 'GET':
+        console.log(`GET : ${endpoint.pattern}`);
         router.get(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       case 'POST':
+        console.log(`POST : ${endpoint.pattern}`);
         router.post(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       case 'PUT':
+        console.log(`PUT : ${endpoint.pattern}`);
         router.put(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       case 'PATCH':
+        console.log(`PATCH : ${endpoint.pattern}`);
         router.patch(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       case 'DELETE':
+        console.log(`DELETE : ${endpoint.pattern}`);
         router.delete(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
         break;
       default:

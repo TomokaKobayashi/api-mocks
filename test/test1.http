@@ -4,6 +4,12 @@ Content-Type: application/x-www-form-urlencoded
 AAA=BBB&CCC=DDD&CCC=EEE
 
 ###
+GET http://localhost:4010/prefix00/aaa/bbb?aaaa=bbbb
+Content-Type: application/x-www-form-urlencoded
+
+CCC=DDD&CCC=EEE
+
+###
 GET http://localhost:4010/prefix00/ccc/ddd
 Content-Type: application/json
 
@@ -49,7 +55,7 @@ Content-Type: image/png
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###
-POST http://localhost:4010/prefix0/ddd/eee
+POST http://localhost:4010/prefix00/ddd/eee
 Content-Type: application/x-www-form-urlencoded
 
 AAA=BBB&CCC=DDD

@@ -1,3 +1,4 @@
+// COPYRIGHT Kobayashi, Tomoka 2021
 import express from 'express';
 import { AppConfig, loadConfig } from './app-config';
 import {program} from 'commander';

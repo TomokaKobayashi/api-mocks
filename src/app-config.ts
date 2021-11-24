@@ -1,3 +1,4 @@
+// COPYRIGHT Kobayashi, Tomoka 2021
 import fs from 'fs';
 import defConfig from './config/default.json';
 
