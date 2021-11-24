@@ -1,8 +1,8 @@
 // COPYRIGHT Kobayashi, Tomoka 2021
-import express from 'express';
+import express, { Router } from 'express';
 import { AppConfig, loadConfig } from './app-config';
-import {program} from 'commander';
-import { mockRouter } from './mock-router';
+import { program } from 'commander';
+import { mockRouter, RouterConfig } from './mock-router';
 
 program
   .version('0.0.1', '-v --version')
@@ -24,8 +24,43 @@ const finalConfig: AppConfig = {
   uploadPath: program.getOptionValue('upload') || config.uploadPath,
 };
 
+// a sample middleware to parse JSON in request headers
+const sampleMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.log(`requested url = ${req.url}`);
+  console.log(`requested method = ${req.method}`);
+
+  for(const key in req.headers){
+    const val = req.headers[key];
+    if(val){
+      try{
+        if(Array.isArray(val)){
+          const repVal = [];
+          for(const v of val){
+            repVal.push(JSON.parse(v));
+          }
+          req.headers[key] = repVal;
+        }else{
+          const json = JSON.parse(val);
+          req.headers[key] = json;
+        }
+      }catch(err){
+        // no effects
+      }
+    }
+  }
+
+  next();
+};
+
+const routerConfig: RouterConfig = {
+  dataDirectory: finalConfig.dataDirectory,
+  apiRoot: finalConfig.apiRoot,
+  uploadPath: finalConfig.uploadPath,
+  preprocessMiddle: sampleMiddleware,
+};
+
 // create mock-router
-const router = mockRouter(finalConfig);
+const router = mockRouter(routerConfig);
 
 // create app
 const app = express();

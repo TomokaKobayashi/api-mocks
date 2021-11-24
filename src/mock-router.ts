@@ -82,13 +82,15 @@ type Routes = {
   endpoints: Endpoint[]
 }
 
-type RouterConfig = {
+export type RouterConfig = {
   // a directory that 'routes.json' exists.
   dataDirectory: string
   // controlling api's root path of this mock server
   apiRoot: string
   // a temporary directory is used when file upload.
   uploadPath: string
+  // preprocess middles run before handler
+  preprocessMiddle?: express.Handler[] | express.Handler
 }
 
 // request data is use to evaluate condiitons of matching.
@@ -147,8 +149,6 @@ const evaluateConditions = (req: RequestSummary, conditions?: string): boolean =
 /// making a endpoint processor
 const createProcessor = (baseDir: string, patterns: Pattern[]) => {
   return (req: Request, res: express.Response, next: express.NextFunction) => {
-    console.log(`requested url = ${req.url}`);
-    console.log(`requested method = ${req.method}`);
     const requestSummary: RequestSummary = {
       data:{
         ...req.query,
@@ -196,6 +196,23 @@ export const mockRouter = (config: RouterConfig): express.Router => {
   rootRouter.use(express.json());
   rootRouter.use(form.parse({uploadDir: config.uploadPath, autoClean: true}));
   rootRouter.use(form.union());
+ 
+  // preprocessing middlewares
+  if(config.preprocessMiddle){
+    if(Array.isArray(config.preprocessMiddle)){
+      if(config.preprocessMiddle.length>0){
+        for(const middle of config.preprocessMiddle){
+          if(typeof middle == 'function'){
+            rootRouter.use(middle);
+          }
+        }
+      }
+    }else{
+      rootRouter.use(config.preprocessMiddle);
+    }   
+  }
+
+  // make handlers from definition
   const router = express.Router();
   rootRouter.use(prefixPattern, router);
 
