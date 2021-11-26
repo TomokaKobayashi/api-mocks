@@ -1,7 +1,7 @@
 // COPYRIGHT Kobayashi, Tomoka 2021
-import express, { Router } from 'express';
-import { AppConfig, loadConfig } from './app-config';
+import express from 'express';
 import { program } from 'commander';
+import { AppConfig, loadConfig } from './app-config';
 import { mockRouter, RouterConfig } from './mock-router';
 
 program

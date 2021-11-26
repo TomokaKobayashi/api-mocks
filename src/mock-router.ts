@@ -146,6 +146,30 @@ const evaluateConditions = (req: RequestSummary, conditions?: string): boolean =
   return false;
 }
 
+class RouterManager {
+  // 作成オプションの記録
+  config?: RouterConfig;
+  // ルートルータのインスタンス
+  rootRouter: express.Router = express.Router();
+  // 定義情報の更新日時
+  definitionTime?: Date;
+  // 定義情報を展開したもの
+  definition?: Routes;
+
+  init(config: RouterConfig) {
+    // 定義の読込
+    const rawRoute = fs.readFileSync(config.dataDirectory + '/routes.json');
+    const routes = JSON.parse(rawRoute.toString()) as Routes;
+    const prefixes = makePrefix(routes.prefix);
+    const prefixPattern = new RegExp(`(${prefixes.join('|')})`);
+  }
+
+};
+const theInstance: RouterManager = new RouterManager();
+export const getInstance = () => {
+  return theInstance;
+}
+
 /// making a endpoint processor
 const createProcessor = (baseDir: string, patterns: Pattern[]) => {
   return (req: Request, res: express.Response, next: express.NextFunction) => {
