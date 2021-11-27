@@ -4,5 +4,5 @@
     "value": "application/json"
   }],
   "status": 200,
-  "file": "response_b.json"
+  "data": "response_a.json"
 }

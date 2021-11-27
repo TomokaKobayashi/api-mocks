@@ -1,8 +1,8 @@
 {
   "headers":[{
     "name": "Content-Type",
-    "value": "application/json"
+    "value": "image/png"
   }],
   "status": 200,
-  "file": "response_a.json"
+  "data": "image.png"
 }

@@ -1,4 +1,5 @@
-// COPYRIGHT Kobayashi, Tomoka 2021
+// COPYRIGHT 2021 Kobayashi, Tomoka
+
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
@@ -18,12 +19,7 @@ interface Record<T> {
   [key: string]: T
 };
 
-// type definition to use 'express-form-data'.
-// 'express-form-data' make 'files' parameter.
-type Request = express.Request & {
-  files?: Object
-};
-
+// headers definition in Metadata.
 type Headers = {
   // header name
   name: string
@@ -31,31 +27,38 @@ type Headers = {
   value: string
 };
 
-type Definitions = {
+// response metadata with status, headers and response data.
+type Metadata = {
   // response status
-  status: number
+  status?: number
   // response headers
   headers: Headers[]
-  // response data file
-  file?: string
+  // body data type(default: file)
+  datatype?: 'file' | 'value' | 'object'
+  // response body data file or immediate value or object
+  data?: string | Record<any>
   // javascript string to edit response data(only JSON data or headers)
   edit?: string
 };
 
+// response pattern definition.
 type Pattern = {
   // condition to use following 'metadata'
-  // javascript condition expression.
-  // be evaluated by Function object.
+  // conditions is written in javascript condition expression.
+  // it is evaluated by Function object.
   // like this, 'data.param1===\"AAAA\" || data.param2===\"BBBB\"
   conditions?: string
-  // response metadata file path.
-  metadata: string
+  // type of metadata(default: file)
+  metadataType?: 'file' | 'immidiate'
+  // response metadata file path or Metadata by JSON
+  metadata: string | Metadata
 };
 
+// endpoint definition
 type Endpoint = {
   // endpoint path pattern string (not RegExp)
-  // basic: /foo/bar
-  // with path parameters: /foo/bar/:para1/:para2
+  //  basic: /foo/bar
+  //  with path parameters: /foo/bar/:para1/:para2
   pattern: string
   // http method
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
@@ -65,26 +68,33 @@ type Endpoint = {
   name?: string 
 };
 
+// structure definition of 'routers.json'
 type Routes = {
   // endpoint prefix pattern RegExp.
   // `/prefix` of '/prefix/foo/var'.
   // if prefix is Array, matches all of Array.
   // '["/prefix1", "/prefix2"]' is to be '(/prefix1|/prefix2)' .
   prefix: string[] | string
+
   // response headers to apply all responses(exclude error).
   // ** not yet implemented **
   defaultHeaders?: Headers[]
+
   // javascript string to edit all responses(exclude error).
   // it can edit response body when 'Content-Type' is 'application/json'.
   // ** not yet implemented **
   defaultScript?: string
+
   // endpoints 
   endpoints: Endpoint[]
 }
 
+// default routes file name.
+const DEFAULT_ROUTES_FILE = 'routes.json';
+
 export type RouterConfig = {
-  // a directory that 'routes.json' exists.
-  dataDirectory: string
+  // a path to 'routes.json'.
+  routesPath: string
   // controlling api's root path of this mock server
   apiRoot: string
   // a temporary directory is used when file upload.
@@ -101,33 +111,38 @@ type RequestSummary = {
   headers: IncomingHttpHeaders
 };
 
-const processDefiniton = (basePath: string, fileName: string, req: express.Request, res: express.Response) => {
+const processMetadata = (basePath: string, metadata: Metadata, req: express.Request, res: express.Response) => {
   try{
-    const definitionPath = path.isAbsolute(fileName) ? fileName : basePath + '/' + fileName
-    console.log('definitionPath=' + definitionPath);
-    const rawDef = fs.readFileSync(definitionPath);
-    const definition = JSON.parse(rawDef.toString()) as Definitions;
-    if(definition.file){
-      const dataDir = path.dirname(definitionPath);
-      const dataPath = path.isAbsolute(definition.file) ? definition.file : dataDir + '/' + definition.file;
-      console.log('dataPath=' + dataPath);
-      const data = fs.readFileSync(dataPath);
-      for(const header of definition.headers){
-        res.set(header.name, header.value);
+    for(const header of metadata.headers){
+      res.set(header.name, header.value);
+    }
+    const respStatus = metadata.status || metadata.data ? 200 : 204;
+    if(metadata.data){
+      if(!metadata.datatype || metadata.datatype==='file'){
+        const dataFileName = metadata.data as string;
+        const dataPath = path.isAbsolute(dataFileName) ? dataFileName : basePath + '/' + dataFileName;
+        console.log('dataPath=' + dataPath);
+        const data = fs.readFileSync(dataPath);
+        res.status(respStatus).send(data);
+      }else if(metadata.datatype==='object'){
+        const data = JSON.stringify(metadata.data);
+        res.status(respStatus).send(data);
+      }else if(metadata.datatype==='value'){
+        const data = metadata.data;
+        res.status(respStatus).send(data);
       }
-      res.status(definition.status).send(data);
     }else{
       console.log('no data');
-      for(const header of definition.headers){
+      for(const header of metadata.headers){
         res.set(header.name, header.value);
       }
-      res.status(definition.status).send();
+      res.status(respStatus).send();
     }
   }catch(error){
     console.log(error);
     res.status(500).send(error);
   }
-}
+};
 
 const evaluateConditions = (req: RequestSummary, conditions?: string): boolean => {
   if(!conditions) return true;
@@ -144,35 +159,19 @@ const evaluateConditions = (req: RequestSummary, conditions?: string): boolean =
     console.log(error);
   }
   return false;
-}
-
-class RouterManager {
-  // 作成オプションの記録
-  config?: RouterConfig;
-  // ルートルータのインスタンス
-  rootRouter: express.Router = express.Router();
-  // 定義情報の更新日時
-  definitionTime?: Date;
-  // 定義情報を展開したもの
-  definition?: Routes;
-
-  init(config: RouterConfig) {
-    // 定義の読込
-    const rawRoute = fs.readFileSync(config.dataDirectory + '/routes.json');
-    const routes = JSON.parse(rawRoute.toString()) as Routes;
-    const prefixes = makePrefix(routes.prefix);
-    const prefixPattern = new RegExp(`(${prefixes.join('|')})`);
-  }
-
 };
-const theInstance: RouterManager = new RouterManager();
-export const getInstance = () => {
-  return theInstance;
-}
 
-/// making a endpoint processor
-const createProcessor = (baseDir: string, patterns: Pattern[]) => {
-  return (req: Request, res: express.Response, next: express.NextFunction) => {
+const loadMetadata = (baseDir: string, filePath: string) => {
+  const metadataPath = path.isAbsolute(filePath) ? filePath : baseDir + '/' + filePath;
+  console.log('definitionPath=' + metadataPath);
+  const rawDef = fs.readFileSync(metadataPath);
+  const metadata = JSON.parse(rawDef.toString()) as Metadata;
+  return {metadata, baseDir: path.dirname(metadataPath)};
+};
+
+/// making a endpoint handler
+const createHnadler = (baseDir: string, patterns: Pattern[]) => {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const requestSummary: RequestSummary = {
       data:{
         ...req.query,
@@ -187,7 +186,12 @@ const createProcessor = (baseDir: string, patterns: Pattern[]) => {
     for(const pat of patterns){
       if(evaluateConditions(requestSummary, pat.conditions)){
         proceed = true;
-        processDefiniton(baseDir, pat.metadata, req, res);
+        if(!pat.metadataType || pat.metadataType==='file'){
+          const metadata = loadMetadata(baseDir, pat.metadata as string);
+          processMetadata(metadata.baseDir, metadata.metadata, req, res);
+        }else if(pat.metadataType==='immidiate'){
+          processMetadata(baseDir, pat.metadata as Metadata, req, res);
+        }
         break;
       }
     }
@@ -195,34 +199,125 @@ const createProcessor = (baseDir: string, patterns: Pattern[]) => {
       next();
     }
   }
-}
+};
 
-const makePrefix = (prefix: string | string[]): string[] => {
-  if(!prefix) return ['[^/]*'];
+const makePrefixPattern = (prefix: string | string[] | undefined): RegExp => {
+  if(!prefix) return new RegExp('[^/]*');
   if(Array.isArray(prefix)){
     if(prefix.length===0){
-      return ['[^/]*'];
+      return new RegExp('[^/]*');
     }
-    return prefix;
+    return new RegExp(`(${prefix.join('|')})`);
   }else{
-    return [prefix];
+    return new RegExp(`(${prefix})`);
   }
 };
 
+const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
+  const prefix = routes && routes.prefix ? routes.prefix : undefined;
+  const prefixPattern = makePrefixPattern(prefix);
+  const prefixRouter = express.Router();
+  const mockRouter = express.Router();
+  prefixRouter.use(prefixPattern, mockRouter);
+
+  // apply mock endpoint handlers.
+  if(routes && routes.endpoints){
+    for(const endpoint of routes.endpoints){
+      switch(endpoint.method){
+        case 'GET':
+          console.log(`GET    : ${endpoint.pattern}`);
+          mockRouter.get(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          break;
+        case 'POST':
+          console.log(`POST   : ${endpoint.pattern}`);
+          mockRouter.post(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          break;
+        case 'PUT':
+          console.log(`PUT    : ${endpoint.pattern}`);
+          mockRouter.put(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          break;
+        case 'PATCH':
+          console.log(`PATCH  : ${endpoint.pattern}`);
+          mockRouter.patch(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          break;
+        case 'DELETE':
+          console.log(`DELETE : ${endpoint.pattern}`);
+          mockRouter.delete(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          break;
+        default:
+          console.error(`error: '${endpoint.method}' is not supported.`);
+          throw `'${endpoint.method}' is not supported.`;
+      }
+    }
+  }
+  return prefixRouter;
+};
+
+const makeRoutesDir = (config: RouterConfig | undefined) => {
+  if(config && config.routesPath){
+    if(fs.existsSync(config.routesPath)){
+      const stat = fs.statSync(config.routesPath);
+      if(stat.isDirectory()){
+        return config.routesPath;
+      }else{
+        return path.dirname(config.routesPath);
+      }
+    }
+  }
+  // default is current directory.
+  return '.'
+};
+
+// load routes file
+const loadRoutes = (config: RouterConfig | undefined) => {
+  if(config && config.routesPath){
+    if(fs.existsSync(config.routesPath)){
+      const stat = fs.statSync(config.routesPath);
+      const routesFileName = stat.isDirectory() 
+                           ? `${config.routesPath}/${DEFAULT_ROUTES_FILE}`
+                           : config.routesPath;
+      const rawRoutes = fs.readFileSync(routesFileName);
+      const routes = JSON.parse(rawRoutes.toString()) as Routes;
+      return routes;
+    }
+  }
+  return undefined;
+};
+
+// change deector
+// detects routes settings (on memory or file).
+// change the targetRouter's routes new setting.
+const makeChangeDetector = (config: RouterConfig | undefined, routes: Routes | undefined, targetRouter: express.Router) => {
+  const changeDetector = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+
+
+
+    next();
+  };
+  // custom function properties
+  changeDetector.targetRouter = targetRouter;
+  changeDetector.isChanged = false;
+  changeDetector.autoApply = false;
+  return changeDetector;
+};
+
 /// making a router from difinition file.
-export const mockRouter = (config: RouterConfig): express.Router => {
-  const rawRoute = fs.readFileSync(config.dataDirectory + '/routes.json');
-  const routes = JSON.parse(rawRoute.toString()) as Routes;
-  const prefixes = makePrefix(routes.prefix);
-  const prefixPattern = new RegExp(`(${prefixes.join('|')})`);
+export const mockRouter = (config?: RouterConfig): express.Router => {
+  const routes = loadRoutes(config);
+
+  // root router is the entry point.
   const rootRouter = express.Router();
   rootRouter.use(express.urlencoded({extended: true}));
   rootRouter.use(express.json());
-  rootRouter.use(form.parse({uploadDir: config.uploadPath, autoClean: true}));
-  rootRouter.use(form.union());
+
+  // express-form-data needs temporary directory to upload.
+  if(config && config.uploadPath){
+    rootRouter.use(form.parse({uploadDir: config.uploadPath, autoClean: true}));
+    rootRouter.use(form.union());
+  }
  
-  // preprocessing middlewares
-  if(config.preprocessMiddle){
+  // apply middlewares.
+  if(config && config.preprocessMiddle){
     if(Array.isArray(config.preprocessMiddle)){
       if(config.preprocessMiddle.length>0){
         for(const middle of config.preprocessMiddle){
@@ -236,37 +331,21 @@ export const mockRouter = (config: RouterConfig): express.Router => {
     }   
   }
 
-  // make handlers from definition
-  const router = express.Router();
-  rootRouter.use(prefixPattern, router);
+  // prefix router is mocking root.
+  const routesDir = makeRoutesDir(config);
+  const prefixRouter = makePrefixRouter(routesDir, routes);
 
-  for(const endpoint of routes.endpoints){
-    switch(endpoint.method){
-      case 'GET':
-        console.log(`GET : ${endpoint.pattern}`);
-        router.get(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
-        break;
-      case 'POST':
-        console.log(`POST : ${endpoint.pattern}`);
-        router.post(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
-        break;
-      case 'PUT':
-        console.log(`PUT : ${endpoint.pattern}`);
-        router.put(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
-        break;
-      case 'PATCH':
-        console.log(`PATCH : ${endpoint.pattern}`);
-        router.patch(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
-        break;
-      case 'DELETE':
-        console.log(`DELETE : ${endpoint.pattern}`);
-        router.delete(endpoint.pattern, createProcessor(config.dataDirectory, endpoint.matches));
-        break;
-      default:
-        console.error(`error: '${endpoint.method}' is not supported.`);
-        throw `'${endpoint.method}' is not supported.`
-      }
-  }
+  // thunk router is the target of change detector.
+  const thunkRouter = express.Router();
+  thunkRouter.use(prefixRouter);
+
+  // apply change detector.
+  const changeDetector = makeChangeDetector(config, routes, thunkRouter);
+  rootRouter.use(changeDetector);
+
+  // apply thunk router.
+  rootRouter.use(thunkRouter);
+
   return rootRouter;
 };
 

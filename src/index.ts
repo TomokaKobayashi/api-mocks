@@ -1,4 +1,5 @@
-// COPYRIGHT Kobayashi, Tomoka 2021
+// COPYRIGHT 2021 Kobayashi, Tomoka
+
 import express from 'express';
 import { program } from 'commander';
 import { AppConfig, loadConfig } from './app-config';
@@ -18,7 +19,7 @@ program
 const config = loadConfig(program.getOptionValue('config'));
 const finalConfig: AppConfig = {
   port: program.getOptionValue('port') || config.port,
-  dataDirectory: program.getOptionValue('data') || config.dataDirectory,
+  routesPath: program.getOptionValue('data') || config.routesPath,
   staticContents: program.getOptionValue('static') || config.staticContents,
   apiRoot: program.getOptionValue('apiBaseUri') || config.apiRoot,
   uploadPath: program.getOptionValue('upload') || config.uploadPath,
@@ -53,7 +54,7 @@ const sampleMiddleware = (req: express.Request, res: express.Response, next: exp
 };
 
 const routerConfig: RouterConfig = {
-  dataDirectory: finalConfig.dataDirectory,
+  routesPath: finalConfig.routesPath,
   apiRoot: finalConfig.apiRoot,
   uploadPath: finalConfig.uploadPath,
   preprocessMiddle: sampleMiddleware,

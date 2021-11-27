@@ -1,6 +1,6 @@
 {
   "port": 4010,
-  "dataDirectory": "./data",
+  "routesPath": "./routes/routes.json",
   "staticContents": "./public",
   "apiRoot": "/control",
   "uploadPath": "./upload"

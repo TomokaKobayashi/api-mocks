@@ -1,4 +1,5 @@
-// COPYRIGHT Kobayashi, Tomoka 2021
+// COPYRIGHT 2021 Kobayashi, Tomoka
+
 import express from 'express';
 
 const addYaml = (req: express.Request, res: express.Response, next: express.NextFunction) => {

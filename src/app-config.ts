@@ -1,10 +1,11 @@
-// COPYRIGHT Kobayashi, Tomoka 2021
+// COPYRIGHT 2021 Kobayashi, Tomoka
+
 import fs from 'fs';
 import defConfig from './config/default.json';
 
 export type AppConfig = {
   port: number
-  dataDirectory: string
+  routesPath: string
   staticContents: string
   apiRoot: string
   uploadPath: string
