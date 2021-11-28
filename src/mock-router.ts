@@ -268,14 +268,22 @@ const makeRoutesDir = (config: RouterConfig | undefined) => {
   return '.'
 };
 
+const makeRoutesPath = (config: RouterConfig | undefined) => {
+  if(config && config.routesPath && fs.existsSync(config.routesPath)){
+    const stat = fs.statSync(config.routesPath);
+    const routesFileName = stat.isDirectory() 
+                         ? `${config.routesPath}/${DEFAULT_ROUTES_FILE}`
+                         : config.routesPath;
+    return routesFileName;
+  }
+  return undefined;
+}
+
 // load routes file
 const loadRoutes = (config: RouterConfig | undefined) => {
   if(config && config.routesPath){
-    if(fs.existsSync(config.routesPath)){
-      const stat = fs.statSync(config.routesPath);
-      const routesFileName = stat.isDirectory() 
-                           ? `${config.routesPath}/${DEFAULT_ROUTES_FILE}`
-                           : config.routesPath;
+    const routesFileName = makeRoutesPath(config);
+    if(routesFileName){
       const rawRoutes = fs.readFileSync(routesFileName);
       const routes = JSON.parse(rawRoutes.toString()) as Routes;
       return routes;
@@ -289,15 +297,34 @@ const loadRoutes = (config: RouterConfig | undefined) => {
 // change the targetRouter's routes new setting.
 const makeChangeDetector = (config: RouterConfig | undefined, routes: Routes | undefined, targetRouter: express.Router) => {
   const changeDetector = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-
-
-
+    if(changeDetector.routesFileName){
+      const stat = fs.statSync(changeDetector.routesFileName);
+      if(changeDetector.routesTimestamp!=stat.mtime.getTime()){
+        console.log('*** ROUTES FILE CHANGE DETECTED ***');
+        changeDetector.routesTimestamp = stat.mtime.getTime();
+        const rawRoutes = fs.readFileSync(changeDetector.routesFileName);
+        const newRoutes = JSON.parse(rawRoutes.toString()) as Routes;
+        const prefixRouter = makePrefixRouter(routesDir, newRoutes);
+        changeDetector.targetRouter.stack = [];
+        changeDetector.targetRouter.use(prefixRouter);
+        changeDetector.routes = newRoutes;
+        console.log('*** ROUTES IS RECONSTRUCTED ***');
+      }
+    }    
     next();
   };
   // custom function properties
+  const routesDir = makeRoutesDir(config);
+  const routesFileName = makeRoutesPath(config);
+  if(routesFileName){
+    const stat = fs.statSync(routesFileName);
+    changeDetector.routesFileName = routesFileName;
+    changeDetector.routesTimestamp = stat.mtime.getTime();
+    changeDetector.routesDir = routesDir;
+  }
   changeDetector.targetRouter = targetRouter;
+  changeDetector.routes = routes;
   changeDetector.isChanged = false;
-  changeDetector.autoApply = false;
   return changeDetector;
 };
 

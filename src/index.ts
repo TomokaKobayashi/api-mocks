@@ -10,7 +10,7 @@ program
   .usage('[options]')
   .option('-c --config [fileName]', 'configuration file name')
   .option('-p --port [portNo]', 'listen port number', parseInt)
-  .option('-d --data [directory]', 'data directory')
+  .option('-r --routes [directory]', 'routes directory')
   .option('-s --static [directory]', 'static contents directory')
   .option('-a --apiBaseUri [uri]', 'control api base uri')
   .option('-u --upload [directory]', 'directory for upload')
@@ -19,7 +19,7 @@ program
 const config = loadConfig(program.getOptionValue('config'));
 const finalConfig: AppConfig = {
   port: program.getOptionValue('port') || config.port,
-  routesPath: program.getOptionValue('data') || config.routesPath,
+  routesPath: program.getOptionValue('routes') || config.routesPath,
   staticContents: program.getOptionValue('static') || config.staticContents,
   apiRoot: program.getOptionValue('apiBaseUri') || config.apiRoot,
   uploadPath: program.getOptionValue('upload') || config.uploadPath,
