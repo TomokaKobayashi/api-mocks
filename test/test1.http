@@ -55,7 +55,7 @@ Content-Type: application/json
 Content-Disposition: form-data; name="image"; filename="sample1.png"
 Content-Type: image/png
 
-< .test/sample1.png
+< ./test/sample1.png
 ------WebKitFormBoundary7MA4YWxkTrZu0gW--
 
 ###
@@ -75,3 +75,17 @@ POST http://localhost:4010/prefix01/hhh/iii/aaa/bbb
 Content-Type: application/x-www-form-urlencoded
 
 AAA=BBB&CCC=DDD
+
+###
+POST http://localhost:4010/control/yamls
+Content-Type: application/yaml
+
+< ./test/samplev2.yaml
+
+
+###
+POST http://localhost:4010/control/yamls
+Content-Type: application/yaml
+
+< ./test/samplev3.yaml
+

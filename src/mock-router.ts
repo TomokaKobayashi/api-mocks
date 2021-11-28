@@ -4,7 +4,8 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import form from 'express-form-data';
-import { IncomingHttpHeaders } from 'http';
+import { Metadata, RequestSummary, Pattern, Routes, RouterConfig, DEFAULT_ROUTES_FILE, ChangeDetector } from './types';
+import { controlRouter } from './control-router';
 
 // memo:
 // JSON -> body -> data
@@ -14,102 +15,6 @@ import { IncomingHttpHeaders } from 'http';
 // MULTI-PART -> body(raw string and content-type is missed) -> data
 // HEADERS -> headers -> headers
 
-// general map string to T.
-interface Record<T> {
-  [key: string]: T
-};
-
-// headers definition in Metadata.
-type Headers = {
-  // header name
-  name: string
-  // header value
-  value: string
-};
-
-// response metadata with status, headers and response data.
-type Metadata = {
-  // response status
-  status?: number
-  // response headers
-  headers: Headers[]
-  // body data type(default: file)
-  datatype?: 'file' | 'value' | 'object'
-  // response body data file or immediate value or object
-  data?: string | Record<any>
-  // javascript string to edit response data(only JSON data or headers)
-  edit?: string
-};
-
-// response pattern definition.
-type Pattern = {
-  // condition to use following 'metadata'
-  // conditions is written in javascript condition expression.
-  // it is evaluated by Function object.
-  // like this, 'data.param1===\"AAAA\" || data.param2===\"BBBB\"
-  conditions?: string
-  // type of metadata(default: file)
-  metadataType?: 'file' | 'immidiate'
-  // response metadata file path or Metadata by JSON
-  metadata: string | Metadata
-};
-
-// endpoint definition
-type Endpoint = {
-  // endpoint path pattern string (not RegExp)
-  //  basic: /foo/bar
-  //  with path parameters: /foo/bar/:para1/:para2
-  pattern: string
-  // http method
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
-  // response definition with conditions
-  matches: Pattern[]
-  // API name(optional)
-  name?: string 
-};
-
-// structure definition of 'routers.json'
-type Routes = {
-  // endpoint prefix pattern RegExp.
-  // `/prefix` of '/prefix/foo/var'.
-  // if prefix is Array, matches all of Array.
-  // '["/prefix1", "/prefix2"]' is to be '(/prefix1|/prefix2)' .
-  prefix: string[] | string
-
-  // response headers to apply all responses(exclude error).
-  // ** not yet implemented **
-  defaultHeaders?: Headers[]
-
-  // javascript string to edit all responses(exclude error).
-  // it can edit response body when 'Content-Type' is 'application/json'.
-  // ** not yet implemented **
-  defaultScript?: string
-
-  // endpoints 
-  endpoints: Endpoint[]
-}
-
-// default routes file name.
-const DEFAULT_ROUTES_FILE = 'routes.json';
-
-export type RouterConfig = {
-  // a path to 'routes.json'.
-  routesPath: string
-  // controlling api's root path of this mock server
-  apiRoot: string
-  // a temporary directory is used when file upload.
-  uploadPath: string
-  // preprocess middles run before handler
-  preprocessMiddle?: express.Handler[] | express.Handler
-}
-
-// request data is use to evaluate condiitons of matching.
-type RequestSummary = {
-  // data from body, params and query of req.
-  data: Record<any>
-  // headers form headers of req.
-  headers: IncomingHttpHeaders
-};
 
 const processMetadata = (basePath: string, metadata: Metadata, req: express.Request, res: express.Response) => {
   try{
@@ -245,7 +150,7 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           mockRouter.delete(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
           break;
         default:
-          console.error(`error: '${endpoint.method}' is not supported.`);
+          console.error(`error: method '${endpoint.method}' is not supported.`);
           throw `'${endpoint.method}' is not supported.`;
       }
     }
@@ -296,31 +201,37 @@ const loadRoutes = (config: RouterConfig | undefined) => {
 // detects routes settings (on memory or file).
 // change the targetRouter's routes new setting.
 const makeChangeDetector = (config: RouterConfig | undefined, routes: Routes | undefined, targetRouter: express.Router) => {
-  const changeDetector = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if(changeDetector.routesFileName){
+  function changeDetector(req: express.Request, res: express.Response, next: express.NextFunction) {
+    if (changeDetector.routesFileName) {
       const stat = fs.statSync(changeDetector.routesFileName);
-      if(changeDetector.routesTimestamp!=stat.mtime.getTime()){
+      if (changeDetector.routesTimestamp != stat.mtime.getTime()) {
         console.log('*** ROUTES FILE CHANGE DETECTED ***');
         changeDetector.routesTimestamp = stat.mtime.getTime();
         const rawRoutes = fs.readFileSync(changeDetector.routesFileName);
         const newRoutes = JSON.parse(rawRoutes.toString()) as Routes;
-        const prefixRouter = makePrefixRouter(routesDir, newRoutes);
+        const prefixRouter = makePrefixRouter(changeDetector.routesDir, newRoutes);
         changeDetector.targetRouter.stack = [];
         changeDetector.targetRouter.use(prefixRouter);
         changeDetector.routes = newRoutes;
         console.log('*** ROUTES IS RECONSTRUCTED ***');
       }
-    }    
+    } else if (changeDetector.isChanged) {
+      console.log('*** ROUTES ON MEMORY CHANGE DETECTED ***');
+      const prefixRouter = makePrefixRouter(changeDetector.routesDir, changeDetector.routes);
+      changeDetector.targetRouter.stack = [];
+      changeDetector.targetRouter.use(prefixRouter);
+      changeDetector.isChanged = false;
+      console.log('*** ROUTES IS RECONSTRUCTED ***');
+    }
     next();
-  };
+  }
   // custom function properties
-  const routesDir = makeRoutesDir(config);
   const routesFileName = makeRoutesPath(config);
   if(routesFileName){
     const stat = fs.statSync(routesFileName);
     changeDetector.routesFileName = routesFileName;
     changeDetector.routesTimestamp = stat.mtime.getTime();
-    changeDetector.routesDir = routesDir;
+    changeDetector.routesDir = makeRoutesDir(config);;
   }
   changeDetector.targetRouter = targetRouter;
   changeDetector.routes = routes;
@@ -372,6 +283,12 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
 
   // apply thunk router.
   rootRouter.use(thunkRouter);
+
+  // create control router.
+  if(config?.apiRoot){
+    const ctrlRouter = controlRouter(config.apiRoot, changeDetector);
+    rootRouter.use(ctrlRouter);
+  }
 
   return rootRouter;
 };

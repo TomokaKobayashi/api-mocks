@@ -2,8 +2,29 @@
 
 import express from 'express';
 import { program } from 'commander';
-import { AppConfig, loadConfig } from './app-config';
-import { mockRouter, RouterConfig } from './mock-router';
+import { mockRouter } from './mock-router';
+import fs from 'fs';
+import defConfig from './config/default.json';
+
+export type AppConfig = {
+  port: number
+  routesPath?: string
+  staticContents?: string
+  apiRoot?: string
+  uploadPath?: string
+};
+
+export const loadConfig = (path?: string): AppConfig => {
+  if(!path) return defConfig;
+  try{
+    const rawFile = fs.readFileSync(path);
+    const config = JSON.parse(rawFile.toString()) as AppConfig;
+    return config
+  }catch(error){
+    console.log('warning: can not read config file : ' + path);
+  }
+  return defConfig;
+};
 
 program
   .version('0.0.1', '-v --version')
@@ -53,23 +74,25 @@ const sampleMiddleware = (req: express.Request, res: express.Response, next: exp
   next();
 };
 
-const routerConfig: RouterConfig = {
+// create app
+const app = express();
+
+// create mock-router
+const router = mockRouter({
   routesPath: finalConfig.routesPath,
   apiRoot: finalConfig.apiRoot,
   uploadPath: finalConfig.uploadPath,
   preprocessMiddle: sampleMiddleware,
-};
-
-// create mock-router
-const router = mockRouter(routerConfig);
-
-// create app
-const app = express();
+});
 
 // apply mock-router
 app.use(router);
-// apply static
-app.use(express.static(finalConfig.staticContents));
+
+// apply static handler
+if(finalConfig.staticContents){
+  app.use(express.static(finalConfig.staticContents));
+}
+
 // starting to serve
 app.listen(finalConfig.port, ()=>{
   console.log(`started on port ${finalConfig.port}`);
