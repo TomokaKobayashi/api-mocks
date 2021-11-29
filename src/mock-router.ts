@@ -202,7 +202,7 @@ const loadRoutes = (config: RouterConfig | undefined) => {
 // change the targetRouter's routes new setting.
 const makeChangeDetector = (config: RouterConfig | undefined, routes: Routes | undefined, targetRouter: express.Router) => {
   function changeDetector(req: express.Request, res: express.Response, next: express.NextFunction) {
-    if (changeDetector.routesFileName) {
+    if (changeDetector.needsUpdateFile && changeDetector.routesFileName) {
       const stat = fs.statSync(changeDetector.routesFileName);
       if (changeDetector.routesTimestamp != stat.mtime.getTime()) {
         console.log('*** ROUTES FILE CHANGE DETECTED ***');
@@ -236,6 +236,7 @@ const makeChangeDetector = (config: RouterConfig | undefined, routes: Routes | u
   changeDetector.targetRouter = targetRouter;
   changeDetector.routes = routes;
   changeDetector.isChanged = false;
+  changeDetector.needsUpdateFile = config && config.needRoutesUpdate;
   return changeDetector;
 };
 

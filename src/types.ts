@@ -88,6 +88,8 @@ export type RouterConfig = {
   uploadPath?: string
   // preprocess middles run before handler
   preprocessMiddle?: express.Handler[] | express.Handler
+  // needs to update 'routes.json' when the file is modified by control-router.
+  needRoutesUpdate?: boolean
 }
 
 // request data is use to evaluate condiitons of matching.
@@ -105,4 +107,5 @@ export type ChangeDetector = {
   routesDir: string
   routes?: Routes
   isChanged?: boolean
+  needsUpdateFile?: boolean
 } & express.RequestHandler;

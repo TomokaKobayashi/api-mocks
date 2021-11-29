@@ -1,17 +1,22 @@
 // COPYRIGHT 2021 Kobayashi, Tomoka
 
 import express from 'express';
+import SwaggerParser from "@apidevtools/swagger-parser";
+import yaml from 'js-yaml';
 import { ChangeDetector } from './types';
+import { makeRoute } from './route-creator';
 
 const addYamlHandler = (changeDetector: ChangeDetector) => {
     const addYaml =  (req: express.Request, res: express.Response, next: express.NextFunction) => {
         if(req.headers['content-type']==='application/yaml'){
             const rawApi = req.body.toString();
-            console.log(rawApi);
+            const routes = makeRoute(rawApi);
+            console.log(routes);
             res.status(200).send();
+        }else{
+            // other content-type can't be accepted.
+            res.status(400).send();
         }        
-        // other content-type can't be accepted.
-        res.status(400).send();
     };
     addYaml.target = changeDetector;
     return addYaml;
