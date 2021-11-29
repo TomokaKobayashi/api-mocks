@@ -12,6 +12,7 @@ export type AppConfig = {
   staticContents?: string
   apiRoot?: string
   uploadPath?: string
+  fileUpdate?: boolean
 };
 
 export const loadConfig = (path?: string): AppConfig => {
@@ -29,12 +30,13 @@ export const loadConfig = (path?: string): AppConfig => {
 program
   .version('0.0.1', '-v --version')
   .usage('[options]')
-  .option('-c --config [fileName]', 'configuration file name')
-  .option('-p --port [portNo]', 'listen port number', parseInt)
-  .option('-r --routes [directory]', 'routes directory')
-  .option('-s --static [directory]', 'static contents directory')
-  .option('-a --apiBaseUri [uri]', 'control api base uri')
-  .option('-u --upload [directory]', 'directory for upload')
+  .option('-c --config <fileName>', 'configuration file name')
+  .option('-p --port <portNo>', 'listen port number', parseInt)
+  .option('-r --routes <directory>', 'routes directory')
+  .option('-s --static <directory>', 'static contents directory')
+  .option('-a --apiBaseUri <uri>', 'control api base uri')
+  .option('-u --upload <directory>', 'directory for upload')
+  .option('-f --fileUpdate <true|false>', 'routes update by control apis', (val)=>{return val==='true'})
   .parse(process.argv);
 
 const config = loadConfig(program.getOptionValue('config'));
@@ -44,6 +46,7 @@ const finalConfig: AppConfig = {
   staticContents: program.getOptionValue('static') || config.staticContents,
   apiRoot: program.getOptionValue('apiBaseUri') || config.apiRoot,
   uploadPath: program.getOptionValue('upload') || config.uploadPath,
+  fileUpdate: program.getOptionValue('fileUpdate') || config.fileUpdate,
 };
 
 // a sample middleware to parse JSON in request headers
@@ -82,7 +85,7 @@ const router = mockRouter({
   routesPath: finalConfig.routesPath,
   apiRoot: finalConfig.apiRoot,
   uploadPath: finalConfig.uploadPath,
-  needRoutesUpdate: true,
+  needRoutesUpdate: finalConfig.fileUpdate,
   preprocessMiddle: sampleMiddleware,
 });
 

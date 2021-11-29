@@ -8,8 +8,7 @@
   "dependencies": {
     "commander": "^8.3.0",
     "express": "^4.17.1",
-    "express-form-data": "^2.0.17",
-    "swagger-parser": "^10.0.3"
+    "express-form-data": "^2.0.17"
   },
   "devDependencies": {
     "@types/commander": "^2.12.2",

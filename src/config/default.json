@@ -3,5 +3,6 @@
   "routesPath": "./routes/routes.json",
   "staticContents": "./public",
   "apiRoot": "/control",
-  "uploadPath": "./upload"
+  "uploadPath": "./upload",
+  "fileUpdate": true
 }

@@ -1,8 +1,6 @@
 // COPYRIGHT 2021 Kobayashi, Tomoka
 
 import express from 'express';
-import SwaggerParser from "@apidevtools/swagger-parser";
-import yaml from 'js-yaml';
 import { ChangeDetector } from './types';
 import { makeRoute } from './route-creator';
 
