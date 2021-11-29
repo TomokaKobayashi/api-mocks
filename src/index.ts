@@ -82,6 +82,7 @@ const router = mockRouter({
   routesPath: finalConfig.routesPath,
   apiRoot: finalConfig.apiRoot,
   uploadPath: finalConfig.uploadPath,
+  needRoutesUpdate: true,
   preprocessMiddle: sampleMiddleware,
 });
 
