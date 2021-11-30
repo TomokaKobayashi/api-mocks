@@ -3,6 +3,10 @@
     "name": "Content-Type",
     "value": "application/json"
   }],
+  "cookies":[{
+    "name": "sample-cookie",
+    "value": "cookie-value"
+  }],
   "status": 200,
   "data": "response_a.json"
 }

@@ -7,7 +7,7 @@ import form from 'express-form-data';
 import { Metadata, RequestSummary, Pattern, Routes, RouterConfig, DEFAULT_ROUTES_FILE, ChangeDetector } from './types';
 import { controlRouter } from './control-router';
 
-// memo:
+// request summary memo:
 // JSON -> body -> data
 // FORM -> body -> data
 // QUERY PARMAS -> query -> data
@@ -15,11 +15,17 @@ import { controlRouter } from './control-router';
 // MULTI-PART -> body(raw string and content-type is missed) -> data
 // HEADERS -> headers -> headers
 
-
 const processMetadata = (basePath: string, metadata: Metadata, req: express.Request, res: express.Response) => {
   try{
-    for(const header of metadata.headers){
-      res.set(header.name, header.value);
+    if(metadata.headers){
+      for(const header of metadata.headers){
+        res.set(header.name, header.value);
+      }
+    }
+    if(metadata.cookies){
+      for(const cookie of metadata.cookies){
+        res.cookie(cookie.name, cookie.value);
+      }
     }
     const respStatus = metadata.status || metadata.data ? 200 : 204;
     if(metadata.data){
@@ -38,9 +44,6 @@ const processMetadata = (basePath: string, metadata: Metadata, req: express.Requ
       }
     }else{
       console.log('no data');
-      for(const header of metadata.headers){
-        res.set(header.name, header.value);
-      }
       res.status(respStatus).send();
     }
   }catch(error){
@@ -84,6 +87,7 @@ const createHnadler = (baseDir: string, patterns: Pattern[]) => {
         ...req.body,
       },
       headers: req.headers,
+      cookies: req.cookies,
     };
     console.log(`requested summary = ${JSON.stringify(requestSummary, null, '  ')}`);
 

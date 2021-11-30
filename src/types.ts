@@ -19,7 +19,9 @@ export type Metadata = {
   // response status
   status?: number
   // response headers
-  headers: Headers[]
+  headers?: Headers[]
+  // set-cookie values
+  cookies?: Headers[]
   // body data type(default: file)
   datatype?: 'file' | 'value' | 'object'
   // response body data file or immediate value or object
@@ -98,6 +100,8 @@ export type RequestSummary = {
   data: Record<any>
   // headers form headers of req.
   headers: IncomingHttpHeaders
+  // cookies
+  cookies: Record<any>
 };
 
 export type ChangeDetector = {
