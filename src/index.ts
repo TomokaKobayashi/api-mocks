@@ -9,13 +9,14 @@ import defConfig from './config/default.json';
 export type AppConfig = {
   port: number
   routesPath?: string
+  disabledSettings?: string[] 
   staticContents?: string
   apiRoot?: string
   uploadPath?: string
   fileUpdate?: boolean
 };
 
-export const loadConfig = (path?: string): AppConfig => {
+const loadConfig = (path?: string): AppConfig => {
   if(!path) return defConfig;
   try{
     const rawFile = fs.readFileSync(path);
@@ -25,6 +26,10 @@ export const loadConfig = (path?: string): AppConfig => {
     console.log('warning: can not read config file : ' + path);
   }
   return defConfig;
+};
+
+const parseDisabledSettings = (headers: string) => {
+  return headers.split(',');
 };
 
 program
@@ -37,6 +42,7 @@ program
   .option('-a --apiBaseUri <uri>', 'control api base uri')
   .option('-u --upload <directory>', 'directory for upload')
   .option('-f --fileUpdate <true|false>', 'routes update by control apis', (val)=>{return val==='true'})
+  .option('-d --disabledSettings <param,...>', 'disable express settings', parseDisabledSettings)
   .parse(process.argv);
 
 const config = loadConfig(program.getOptionValue('config'));
@@ -47,6 +53,7 @@ const finalConfig: AppConfig = {
   apiRoot: program.getOptionValue('apiBaseUri') || config.apiRoot,
   uploadPath: program.getOptionValue('upload') || config.uploadPath,
   fileUpdate: program.getOptionValue('fileUpdate') || config.fileUpdate,
+  disabledSettings: program.getOptionValue('disabledSettings') || config.disabledSettings,
 };
 
 // a sample middleware to parse JSON in request headers
@@ -79,6 +86,14 @@ const sampleMiddleware = (req: express.Request, res: express.Response, next: exp
 
 // create app
 const app = express();
+
+// apply disabled headers
+if(finalConfig.disabledSettings){
+  for(const setting of finalConfig.disabledSettings){
+    console.log('disabled : ' + setting);
+    app.disable(setting);
+  }
+}
 
 // create mock-router
 const router = mockRouter({

@@ -1,5 +1,9 @@
 {
   "port": 4010,
+  "disabledSettings":[
+    "x-powered-by",
+    "etag"
+  ],
   "routesPath": "./routes/routes.json",
   "staticContents": "./public",
   "apiRoot": "/control",
