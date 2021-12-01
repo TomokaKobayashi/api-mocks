@@ -6,8 +6,8 @@ export interface Record<T> {
   [key: string]: T
 };
 
-// headers definition in Metadata.
-export type Headers = {
+// header definition in Metadata.
+export type Header = {
   // header name
   name: string
   // header value
@@ -19,9 +19,9 @@ export type Metadata = {
   // response status
   status?: number
   // response headers
-  headers?: Headers[]
+  headers?: Header[]
   // set-cookie values
-  cookies?: Headers[]
+  cookies?: Header[]
   // body data type(default: file)
   datatype?: 'file' | 'value' | 'object'
   // response body data file or immediate value or object
@@ -66,8 +66,7 @@ export type Routes = {
   prefix: string[] | string
 
   // response headers to apply all responses(exclude error).
-  // ** not yet implemented **
-  defaultHeaders?: Headers[]
+  defaultHeaders?: Header[]
 
   // javascript string to edit all responses(exclude error).
   // it can edit response body when 'Content-Type' is 'application/json'.

@@ -1,7 +1,7 @@
 // this functions make route info from yaml.
 import yaml from 'js-yaml';
 
-export const makeRoute = (apiYaml: string) => {
+export const makeRouteFromYaml = (apiYaml: string) => {
     const api = yaml.load(apiYaml) as any;
     if(api.openapi && api.openapi.startsWith('3.')){
         for(const path in api.paths){

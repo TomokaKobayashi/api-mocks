@@ -4,7 +4,7 @@ import express from 'express';
 import fs from 'fs';
 import path from 'path';
 import form from 'express-form-data';
-import { Metadata, RequestSummary, Pattern, Routes, RouterConfig, DEFAULT_ROUTES_FILE, ChangeDetector } from './types';
+import { Metadata, RequestSummary, Header, Pattern, Routes, RouterConfig, DEFAULT_ROUTES_FILE } from './types';
 import { controlRouter } from './control-router';
 
 // request summary memo:
@@ -15,8 +15,13 @@ import { controlRouter } from './control-router';
 // MULTI-PART -> body(raw string and content-type is missed) -> data
 // HEADERS -> headers -> headers
 
-const processMetadata = (basePath: string, metadata: Metadata, req: express.Request, res: express.Response) => {
+const processMetadata = (basePath: string, defaultHeaders: Header[] | undefined, metadata: Metadata, req: express.Request, res: express.Response) => {
   try{
+    if(defaultHeaders){
+      for(const header of defaultHeaders){
+        res.set(header.name, header.value);
+      }
+    }
     if(metadata.headers){
       for(const header of metadata.headers){
         res.set(header.name, header.value);
@@ -78,8 +83,8 @@ const loadMetadata = (baseDir: string, filePath: string) => {
 };
 
 /// making a endpoint handler
-const createHnadler = (baseDir: string, patterns: Pattern[]) => {
-  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const createHnadler = (baseDir: string, patterns: Pattern[], defaultHeaders: Header[] | undefined) => {
+  function mockHandler(req: express.Request, res: express.Response, next: express.NextFunction) {
     const requestSummary: RequestSummary = {
       data:{
         ...req.query,
@@ -97,9 +102,9 @@ const createHnadler = (baseDir: string, patterns: Pattern[]) => {
         proceed = true;
         if(!pat.metadataType || pat.metadataType==='file'){
           const metadata = loadMetadata(baseDir, pat.metadata as string);
-          processMetadata(metadata.baseDir, metadata.metadata, req, res);
+          processMetadata(metadata.baseDir, mockHandler.defaultHeaders, metadata.metadata, req, res);
         }else if(pat.metadataType==='immidiate'){
-          processMetadata(baseDir, pat.metadata as Metadata, req, res);
+          processMetadata(baseDir, mockHandler.defaultHeaders, pat.metadata as Metadata, req, res);
         }
         break;
       }
@@ -108,6 +113,8 @@ const createHnadler = (baseDir: string, patterns: Pattern[]) => {
       next();
     }
   }
+  mockHandler.defaultHeaders = defaultHeaders;
+  return mockHandler;
 };
 
 const makePrefixPattern = (prefix: string | string[] | undefined): RegExp => {
@@ -135,23 +142,23 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
       switch(endpoint.method){
         case 'GET':
           console.log(`GET    : ${endpoint.pattern}`);
-          mockRouter.get(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          mockRouter.get(endpoint.pattern, createHnadler(baseDir, endpoint.matches, routes.defaultHeaders));
           break;
         case 'POST':
           console.log(`POST   : ${endpoint.pattern}`);
-          mockRouter.post(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          mockRouter.post(endpoint.pattern, createHnadler(baseDir, endpoint.matches, routes.defaultHeaders));
           break;
         case 'PUT':
           console.log(`PUT    : ${endpoint.pattern}`);
-          mockRouter.put(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          mockRouter.put(endpoint.pattern, createHnadler(baseDir, endpoint.matches, routes.defaultHeaders));
           break;
         case 'PATCH':
           console.log(`PATCH  : ${endpoint.pattern}`);
-          mockRouter.patch(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          mockRouter.patch(endpoint.pattern, createHnadler(baseDir, endpoint.matches, routes.defaultHeaders));
           break;
         case 'DELETE':
           console.log(`DELETE : ${endpoint.pattern}`);
-          mockRouter.delete(endpoint.pattern, createHnadler(baseDir, endpoint.matches));
+          mockRouter.delete(endpoint.pattern, createHnadler(baseDir, endpoint.matches, routes.defaultHeaders));
           break;
         default:
           console.error(`error: method '${endpoint.method}' is not supported.`);

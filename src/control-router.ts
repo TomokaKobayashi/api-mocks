@@ -2,13 +2,13 @@
 
 import express from 'express';
 import { ChangeDetector } from './types';
-import { makeRoute } from './route-creator';
+import { makeRouteFromYaml } from './route-creator';
 
 const addYamlHandler = (changeDetector: ChangeDetector) => {
     const addYaml =  (req: express.Request, res: express.Response, next: express.NextFunction) => {
         if(req.headers['content-type']==='application/yaml'){
             const rawApi = req.body.toString();
-            const routes = makeRoute(rawApi);
+            const routes = makeRouteFromYaml(rawApi);
             console.log(routes);
             res.status(200).send();
         }else{
