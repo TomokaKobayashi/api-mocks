@@ -1,6 +1,6 @@
 {
   "name": "@chandla/api-mock-server",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "main": "./lib/mock-server.js",
   "repository": "https://github.com/TomokaKobayashi/api-mocks.git",
   "author": "TomokaKobayashi <chandla@bc.mbn.or.jp>",
@@ -31,6 +31,6 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node ./bin/index.js"
+    "start": "./bin/mockserver"
   }
 }
