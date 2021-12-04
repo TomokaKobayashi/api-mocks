@@ -1,3 +1,4 @@
-dist/lib/
-dist/types/
+lib/
+types/
 node_modules/
+.DS_Store

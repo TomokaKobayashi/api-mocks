@@ -4,7 +4,6 @@ import express from 'express';
 import { program } from 'commander';
 import { mockRouter } from './mock-router';
 import fs from 'fs';
-import defConfig from './config/default.json';
 
 export type AppConfig = {
   port: number
@@ -14,6 +13,19 @@ export type AppConfig = {
   apiRoot?: string
   uploadPath?: string
   fileUpdate?: boolean
+};
+
+const defConfig: AppConfig = {
+  port: 4010,
+  disabledSettings:[
+    "x-powered-by",
+    "etag"
+  ],
+  routesPath: "./routes/routes.json",
+  staticContents: "./public",
+  apiRoot: "/control",
+  uploadPath: "./upload",
+  fileUpdate: true
 };
 
 const loadConfig = (path?: string): AppConfig => {
