@@ -1,5 +1,26 @@
 // COPYRIGHT 2021 Kobayashi, Tomoka
 
+// Control APIs
+// GET /endpoints
+//   returns a list of endpoints as 'endpoints' of Routes structure.
+// GET /ednpoint/:id
+//   returns an information of an endpoint as Endpoint structure.
+// PUT /endpoint/:id
+//   updates an information of an endpoint by Endpoint stucture.
+// POST /endpoint
+//   adds a new information of an endpoint by Endpoint structure.
+// DELETE /endpoint/:id
+//   removes an information if an endpoint by id.
+// GET /response-data/:id/:index
+//   returns a response data by an id and an index of 'patterns' of Endpoint structure.
+// PUT /response-data/:id/:index
+//   updates a response data by an id and an index of 'patterns' of Endpoint structure.
+// POST /route/:name
+//   adds endpoints by Open API specification YAML file.
+//   and groups these endpoints and names.
+// DELETE /route/:name
+//   removes a group of endpoints by name.
+
 import express from 'express';
 import { ChangeDetector } from './types';
 import { makeRouteFromYaml } from './route-creator';
@@ -38,8 +59,8 @@ export const controlRouter = (apiRoot: string, changeDetector: ChangeDetector) =
     const router = express.Router();
     router.use(express.raw({type: 'application/yaml'}));
     router.use(express.json());
-    router.post('/yamls', addYamlHandler(changeDetector));
-    router.delete('/yamls', removeYamlHandler(changeDetector));
+    router.post('/route/:name', addYamlHandler(changeDetector));
+    router.delete('/route/:name', removeYamlHandler(changeDetector));
     rootRouter.use(apiRoot, router);
     return rootRouter;
 };
