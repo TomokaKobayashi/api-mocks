@@ -29,6 +29,6 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "./bin/mockserver"
+    "start": "./bin/mock-server"
   }
 }

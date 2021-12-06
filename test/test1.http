@@ -89,3 +89,6 @@ Content-Type: application/yaml
 
 < ./test/samplev3.yaml
 
+###
+DELETE http://localhost:4010/control/route/testtest
+

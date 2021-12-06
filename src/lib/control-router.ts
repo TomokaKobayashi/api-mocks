@@ -43,12 +43,25 @@ const addYamlHandler = (changeDetector: ChangeDetector) => {
 
 const removeYamlHandler = (changeDetector: ChangeDetector) =>{ 
     const removeYaml = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        if(req.headers['content-type']==='application/json'){
-            
+        if(removeYaml.target.routes){
+            const name = req.params['name'];
+            let flag = false;
+            const newEndpoints = removeYaml.target.routes.endpoints.filter((value)=>{
+                if(value.source && value.source===name){
+                    flag = true;
+                    return false;
+                }
+                return true;
+            });
+            if(flag){
+                console.log(`removed ${name}`);
+                removeYaml.target.routes.endpoints = newEndpoints;
+                removeYaml.target.isChanged = true;
+            }else{
+                console.log(`no removal target of ${name}`);
+            }
             res.status(200).send();
-        }        
-        // other content-type can't be accepted.
-        res.status(400).send();
+        }
     };
     removeYaml.target = changeDetector;
     return removeYaml;

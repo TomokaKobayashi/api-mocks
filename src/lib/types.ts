@@ -54,7 +54,11 @@ export type Endpoint = {
   // response definition with conditions
   matches: Pattern[]
   // API name(optional)
-  name?: string 
+  name?: string
+  // endpoint ID
+  id?: string
+  // source file
+  source?: string
 };
 
 // structure definition of 'routers.json'
