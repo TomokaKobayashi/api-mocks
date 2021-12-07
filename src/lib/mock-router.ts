@@ -226,7 +226,8 @@ const makeChangeDetector = (config: RouterConfig | undefined, routes: Routes | u
         changeDetector.routes = newRoutes;
         console.log('*** ROUTES IS RECONSTRUCTED ***');
       }
-    } else if (changeDetector.isChanged) {
+    }
+    if (changeDetector.isChanged) {
       console.log('*** ROUTES ON MEMORY CHANGE DETECTED ***');
       const prefixRouter = makePrefixRouter(changeDetector.routesDir, changeDetector.routes);
       changeDetector.targetRouter.stack = [];

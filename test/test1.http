@@ -77,18 +77,44 @@ Content-Type: application/x-www-form-urlencoded
 AAA=BBB&CCC=DDD
 
 ###
-POST http://localhost:4010/control/yamls
+POST http://localhost:4010/control/endpoints/testtest
 Content-Type: application/yaml
 
 < ./test/samplev2.yaml
 
 
 ###
-POST http://localhost:4010/control/yamls
+POST http://localhost:4010/control/endpoints/testtest
 Content-Type: application/yaml
 
 < ./test/samplev3.yaml
 
+
 ###
-DELETE http://localhost:4010/control/route/testtest
+POST http://localhost:4010/control/endpoints/testtest
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="text"
+
+title
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="yaml"; filename="samplev3.yaml"
+Content-Type: application/yaml
+
+< ./test/samplev3.yaml
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="yaml"; filename="samplev3-2.yaml"
+Content-Type: application/yaml
+
+< ./test/samplev3.yaml
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
+DELETE http://localhost:4010/control/endpoints/testtest
+
+###
+GET http://localhost:4010/prefix00/user/login
 

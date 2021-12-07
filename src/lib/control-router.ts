@@ -15,33 +15,45 @@
 //   returns a response data by an id and an index of 'patterns' of Endpoint structure.
 // PUT /response-data/:id/:index
 //   updates a response data by an id and an index of 'patterns' of Endpoint structure.
-// POST /route/:name
+// POST /endpoints/:name
 //   adds endpoints by Open API specification YAML file.
 //   and groups these endpoints and names.
-// DELETE /route/:name
+// DELETE /endpoints/:name
 //   removes a group of endpoints by name.
 
 import express from 'express';
 import { ChangeDetector } from './types';
-import { makeRouteFromYaml } from './route-creator';
+import { makeEndpointsFromYaml } from './make-endpoints';
 
-const addYamlHandler = (changeDetector: ChangeDetector) => {
+const addEndpointsHandler = (changeDetector: ChangeDetector) => {
     const addYaml =  (req: express.Request, res: express.Response, next: express.NextFunction) => {
-        if(req.headers['content-type']==='application/yaml'){
-            const rawApi = req.body.toString();
-            const routes = makeRouteFromYaml(rawApi);
-            console.log(routes);
-            res.status(200).send();
+        const contentType = req.headers && req.headers['content-type'] && req.headers['content-type'].split(';');
+        if(contentType){
+            if(contentType[0]==='application/yaml'){
+                const rawApi = req.body.toString();
+                const endpoints = makeEndpointsFromYaml(rawApi, req.params['name']);
+                if(changeDetector.routes){
+                    changeDetector.routes.endpoints.push(...endpoints);
+                    changeDetector.isChanged = true;
+                }
+                res.status(200).send();
+    
+            }else if(contentType[0]==='multipart/form-data'){
+                res.status(200).send();
+            }else{
+                // other content-type can't be accepted.
+                res.status(400).send();
+            }
         }else{
-            // other content-type can't be accepted.
+            // no content-type can't be accepted.
             res.status(400).send();
-        }        
+        }
     };
     addYaml.target = changeDetector;
     return addYaml;
 };
 
-const removeYamlHandler = (changeDetector: ChangeDetector) =>{ 
+const removeEndpointsHandler = (changeDetector: ChangeDetector) =>{ 
     const removeYaml = (req: express.Request, res: express.Response, next: express.NextFunction) => {
         if(removeYaml.target.routes){
             const name = req.params['name'];
@@ -72,8 +84,8 @@ export const controlRouter = (apiRoot: string, changeDetector: ChangeDetector) =
     const router = express.Router();
     router.use(express.raw({type: 'application/yaml'}));
     router.use(express.json());
-    router.post('/route/:name', addYamlHandler(changeDetector));
-    router.delete('/route/:name', removeYamlHandler(changeDetector));
+    router.post('/endpoints/:name', addEndpointsHandler(changeDetector));
+    router.delete('/endpoints/:name', removeEndpointsHandler(changeDetector));
     rootRouter.use(apiRoot, router);
     return rootRouter;
 };
