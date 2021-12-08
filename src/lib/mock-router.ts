@@ -32,7 +32,7 @@ const processMetadata = (basePath: string, defaultHeaders: Header[] | undefined,
         res.cookie(cookie.name, cookie.value);
       }
     }
-    const respStatus = metadata.status || metadata.data ? 200 : 204;
+    const respStatus = metadata.status ? metadata.status : metadata.data ? 200 : 204;
     if(metadata.data){
       if(!metadata.datatype || metadata.datatype==='file'){
         const dataFileName = metadata.data as string;
@@ -221,7 +221,7 @@ const makeChangeDetector = (config: RouterConfig | undefined, routes: Routes | u
         const rawRoutes = fs.readFileSync(changeDetector.routesFileName);
         const newRoutes = JSON.parse(rawRoutes.toString()) as Routes;
         const prefixRouter = makePrefixRouter(changeDetector.routesDir, newRoutes);
-        changeDetector.targetRouter.stack = [];
+        changeDetector.targetRouter.stack.splice(0);
         changeDetector.targetRouter.use(prefixRouter);
         changeDetector.routes = newRoutes;
         console.log('*** ROUTES IS RECONSTRUCTED ***');
@@ -230,7 +230,7 @@ const makeChangeDetector = (config: RouterConfig | undefined, routes: Routes | u
     if (changeDetector.isChanged) {
       console.log('*** ROUTES ON MEMORY CHANGE DETECTED ***');
       const prefixRouter = makePrefixRouter(changeDetector.routesDir, changeDetector.routes);
-      changeDetector.targetRouter.stack = [];
+      changeDetector.targetRouter.stack.splice(0);
       changeDetector.targetRouter.use(prefixRouter);
       changeDetector.isChanged = false;
       console.log('*** ROUTES IS RECONSTRUCTED ***');
