@@ -116,5 +116,10 @@ Content-Type: application/yaml
 DELETE http://localhost:4010/control/endpoints/testtest
 
 ###
-GET http://localhost:4010/prefix00/user/login
+GET http://localhost:4010/prefix01/store/inventory
 
+###
+POST http://localhost:4010/prefix01/user
+Content-Type: application/x-www-form-urlencoded
+
+AAA=BBB&CCC=DDD
