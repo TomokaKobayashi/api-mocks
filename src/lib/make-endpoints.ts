@@ -2,6 +2,23 @@
 import yaml from 'js-yaml';
 import { Endpoint, Metadata, Pattern } from './types';
 
+const buildResponse = (apiYaml: any, current: any) => {
+
+};
+
+const makeResponse = (apiYaml: any, current: any) => {
+    if(current.examples){
+        // if current has examples, return contents of examples
+        return current.examples;
+    }else{
+        
+
+    }
+    if(current.type==='array'){
+    }else{
+    }
+};
+
 export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
     const ret: Endpoint[] = [];
     const api = yaml.load(apiYaml) as any;

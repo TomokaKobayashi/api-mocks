@@ -1,7 +1,7 @@
 {
   "prefix": [
-    "/prefix00(/[a-z]{4})?",
-    "/prefix01(/[a-z]{4}/)?",
+    "/prefix00",
+    "/prefix01",
     "/prefix02"
   ],
   "endpoints": [
