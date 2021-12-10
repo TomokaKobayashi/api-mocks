@@ -12,18 +12,18 @@ export declare type Metadata = {
     status?: number;
     headers?: Header[];
     cookies?: Header[];
-    datatype?: 'file' | 'value' | 'object';
+    datatype?: "file" | "value" | "object";
     data?: string | Record<any>;
     edit?: string;
 };
 export declare type Pattern = {
     conditions?: string;
-    metadataType?: 'file' | 'immidiate';
+    metadataType?: "file" | "immidiate";
     metadata: string | Metadata;
 };
 export declare type Endpoint = {
     pattern: string;
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+    method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
     matches: Pattern[];
     name?: string;
     id?: string;

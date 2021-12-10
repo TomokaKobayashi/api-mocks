@@ -3,31 +3,31 @@ import { IncomingHttpHeaders } from "http";
 
 // general map string to T.
 export interface Record<T> {
-  [key: string]: T
-};
+  [key: string]: T;
+}
 
 // header definition in Metadata.
 export type Header = {
   // header name
-  name: string
+  name: string;
   // header value
-  value: string
+  value: string;
 };
 
 // response metadata with status, headers and response data.
 export type Metadata = {
   // response status
-  status?: number
+  status?: number;
   // response headers
-  headers?: Header[]
+  headers?: Header[];
   // set-cookie values
-  cookies?: Header[]
+  cookies?: Header[];
   // body data type(default: file)
-  datatype?: 'file' | 'value' | 'object'
+  datatype?: "file" | "value" | "object";
   // response body data file or immediate value or object
-  data?: string | Record<any>
+  data?: string | Record<any>;
   // javascript string to edit response data(only JSON data or headers)
-  edit?: string
+  edit?: string;
 };
 
 // response pattern definition.
@@ -36,11 +36,11 @@ export type Pattern = {
   // conditions is written in javascript condition expression.
   // it is evaluated by Function object.
   // like this, 'data.param1===\"AAAA\" || data.param2===\"BBBB\"
-  conditions?: string
+  conditions?: string;
   // type of metadata(default: file)
-  metadataType?: 'file' | 'immidiate'
+  metadataType?: "file" | "immidiate";
   // response metadata file path or Metadata by JSON
-  metadata: string | Metadata
+  metadata: string | Metadata;
 };
 
 // endpoint definition
@@ -48,17 +48,17 @@ export type Endpoint = {
   // endpoint path pattern string (not RegExp)
   //  basic: /foo/bar
   //  with path parameters: /foo/bar/:para1/:para2
-  pattern: string
+  pattern: string;
   // http method
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
   // response definition with conditions
-  matches: Pattern[]
+  matches: Pattern[];
   // API name(optional)
-  name?: string
+  name?: string;
   // endpoint ID
-  id?: string
+  id?: string;
   // source file
-  source?: string
+  source?: string;
 };
 
 // structure definition of 'routers.json'
@@ -67,52 +67,52 @@ export type Routes = {
   // `/prefix` of '/prefix/foo/var'.
   // if prefix is Array, matches all of Array.
   // '["/prefix1", "/prefix2"]' is to be '(/prefix1|/prefix2)' .
-  prefix: string[] | string
+  prefix: string[] | string;
 
   // response headers to apply all responses(exclude error).
-  defaultHeaders?: Header[]
+  defaultHeaders?: Header[];
 
   // javascript string to edit all responses(exclude error).
   // it can edit response body when 'Content-Type' is 'application/json'.
   // ** not yet implemented **
-  defaultScript?: string
+  defaultScript?: string;
 
-  // endpoints 
-  endpoints: Endpoint[]
-}
+  // endpoints
+  endpoints: Endpoint[];
+};
 
 // default routes file name.
-export const DEFAULT_ROUTES_FILE = 'routes.json';
+export const DEFAULT_ROUTES_FILE = "routes.json";
 
 export type RouterConfig = {
   // a path to 'routes.json'.
-  routesPath?: string
+  routesPath?: string;
   // controlling api's root path of this mock server
-  apiRoot?: string
+  apiRoot?: string;
   // a temporary directory is used when file upload.
-  uploadPath?: string
+  uploadPath?: string;
   // preprocess middles run before handler
-  preprocessMiddle?: express.Handler[] | express.Handler
+  preprocessMiddle?: express.Handler[] | express.Handler;
   // needs to update 'routes.json' when the file is modified by control-router.
-  needRoutesUpdate?: boolean
-}
+  needRoutesUpdate?: boolean;
+};
 
 // request data is use to evaluate condiitons of matching.
 export type RequestSummary = {
   // data from body, params and query of req.
-  data: Record<any>
+  data: Record<any>;
   // headers form headers of req.
-  headers: IncomingHttpHeaders
+  headers: IncomingHttpHeaders;
   // cookies
-  cookies: Record<any>
+  cookies: Record<any>;
 };
 
 export type ChangeDetector = {
-  targetRouter: express.Router
-  routesFileName?: string
-  routesTimestamp?: number
-  routesDir: string
-  routes?: Routes
-  isChanged?: boolean
-  needsUpdateFile?: boolean
+  targetRouter: express.Router;
+  routesFileName?: string;
+  routesTimestamp?: number;
+  routesDir: string;
+  routes?: Routes;
+  isChanged?: boolean;
+  needsUpdateFile?: boolean;
 } & express.RequestHandler;
