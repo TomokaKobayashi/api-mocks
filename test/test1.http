@@ -116,7 +116,7 @@ Content-Type: application/yaml
 DELETE http://localhost:4010/control/endpoints/testtest
 
 ###
-GET http://localhost:4010/prefix01/store/inventory
+GET http://localhost:4010/prefix01/user/user%20name
 
 ###
 POST http://localhost:4010/prefix01/user

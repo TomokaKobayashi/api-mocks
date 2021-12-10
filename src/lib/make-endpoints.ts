@@ -1,4 +1,5 @@
 // this functions make route info from yaml.
+import e from "express";
 import yaml from "js-yaml";
 import { Endpoint, Metadata, Pattern, Header, Record } from "./types";
 
@@ -56,7 +57,7 @@ const buildResponse = (apiYaml: any, current: any): any => {
 const makeJSONResponse = (apiYaml: any, current: any) => {
   if (current.example) {
     // if current has example, return contents of example.
-    return JSON.stringify(current.example);
+    return current.example;
   } else if (current.schema.properties) {
     // properties in schema directly.
     const ret: Record<any> = {};
@@ -67,18 +68,25 @@ const makeJSONResponse = (apiYaml: any, current: any) => {
         ret[key] = val;
       }
     }
-    return JSON.stringify(ret);
+    return ret;
   } else {
     const result = buildResponse(apiYaml, current.schema);
     if (result) {
-      return JSON.stringify(result);
+      return result;
     }
   }
   return undefined;
 };
 
 // make XML response from content object.
-const makeXMLResponse = (apiYaml: any, current: any) => {
+const makeXMLResponse = (apiYaml: any, contentBody: any, respObject: any) => {
+  // map respObject to xml
+
+
+
+
+
+
   console.error("Sorry! XML response is not supported.");
   return undefined;
 };
@@ -125,36 +133,45 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
         for (const status in responseInfo.responses) {
           const respStatusInfo = responseInfo.responses[status];
           const headers = makeHeaders(respStatusInfo.headers);
-          if (
-            respStatusInfo.content &&
-            respStatusInfo.content.hasOwnProperty()
-          ) {
+          if (respStatusInfo.content) {
             for (const content in respStatusInfo.content) {
               const contentBody = respStatusInfo.content[content];
-              const respData =
-                respStatusInfo.content === "application/json"
-                  ? makeJSONResponse(api, contentBody)
-                  : respStatusInfo.content === "application/xml"
-                  ? makeXMLResponse(api, contentBody)
-                  : respStatusInfo.content === "text/xml"
-                  ? makeXMLResponse(api, contentBody)
-                  : "Sample value";
-              const pat: Pattern = {
-                metadataType: "immidiate",
-                metadata: {
-                  status: Number(status),
-                  headers: [
-                    ...headers,
-                    {
-                      name: "content-type",
-                      value: content,
-                    },
-                  ],
-                  datatype: "value",
-                  data: respData,
-                } as Metadata,
-              };
-              tmp.matches.push(pat);
+              const respObject = makeJSONResponse(api, contentBody);
+              if(respObject){
+                const respData =
+                  content === "application/json"
+                    ? JSON.stringify(respObject)
+                    : content === "application/xml"
+                    ? makeXMLResponse(api, contentBody, respObject)
+                    : content === "text/xml"
+                    ? makeXMLResponse(api, contentBody, respObject)
+                    : "Sample value";
+                const pat: Pattern = {
+                  metadataType: "immidiate",
+                  metadata: {
+                    status: Number(status),
+                    headers: [
+                      ...headers,
+                      {
+                        name: "content-type",
+                        value: content,
+                      },
+                    ],
+                    datatype: "value",
+                    data: respData,
+                  } as Metadata,
+                };
+                tmp.matches.push(pat);
+              }else{
+                const pat: Pattern = {
+                  metadataType: "immidiate",
+                  metadata: {
+                    status: Number(status),
+                    headers: [...headers],
+                  } as Metadata,
+                };
+                tmp.matches.push(pat);
+              }
             }
           } else {
             const pat: Pattern = {

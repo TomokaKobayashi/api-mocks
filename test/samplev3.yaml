@@ -533,10 +533,10 @@ paths:
         200:
           description: successful operation
           content:
-            application/xml:
+            application/json:
               schema:
                 $ref: '#/components/schemas/User'
-            application/json:
+            application/xml:
               schema:
                 $ref: '#/components/schemas/User'
         400:
@@ -638,22 +638,29 @@ components:
         id:
           type: integer
           format: int64
+          example: 100
         username:
           type: string
+          example: User Name
         firstName:
           type: string
+          example: User
         lastName:
           type: string
+          example: Name
         email:
           type: string
+          example: email@email.com
         password:
           type: string
         phone:
           type: string
+          example: 010-202-3030
         userStatus:
           type: integer
           description: User Status
           format: int32
+          example: 999
       xml:
         name: User
     Tag:
