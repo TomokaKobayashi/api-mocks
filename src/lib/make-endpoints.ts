@@ -1,8 +1,8 @@
 // this functions make route info from yaml.
-import e from "express";
 import yaml from "js-yaml";
 import { Endpoint, Metadata, Pattern, Header, Record } from "./types";
 
+// resolve ref to obujet
 const resolve = (obj: any, refs: string[]): any => {
   const [car, ...cdr] = refs;
   if (obj[car]) {
@@ -26,6 +26,7 @@ const resolveRef = (apiYaml: any, ref: string): any => {
   return resolve(apiYaml, cdr);
 };
 
+// build response from example fields.
 const buildResponse = (apiYaml: any, current: any): any => {
   if (current.example) {
     // if current has example, return contents of example.
@@ -34,43 +35,30 @@ const buildResponse = (apiYaml: any, current: any): any => {
     if (current.$ref) {
       const ref = resolveRef(apiYaml, current.$ref);
       return buildResponse(apiYaml, ref);
-    } else {
-      if (current.type && current.type === "array") {
-        return [buildResponse(apiYaml, current.items)];
-      } else if (current.type && current.type === "object") {
-        const ret: Record<any> = {};
-        for (const key in current.properties) {
-          const prop = current.properties[key];
-          const val = buildResponse(apiYaml, prop);
-          if (val) {
-            ret[key] = val;
-          }
+    } else if (current.properties) {
+      const ret: Record<any> = {};
+      for (const key in current.properties) {
+        const prop = current.properties[key];
+        const val = buildResponse(apiYaml, prop);
+        if (val) {
+          ret[key] = val;
         }
-        return ret;
       }
+      return ret;
+    } else if (current.type && current.type === "array") {
+      return [buildResponse(apiYaml, current.items)];
     }
   }
   return undefined;
 };
 
-// make JSON response from content object.
-const makeJSONResponse = (apiYaml: any, current: any) => {
-  if (current.example) {
-    // if current has example, return contents of example.
-    return current.example;
-  } else if (current.schema.properties) {
-    // properties in schema directly.
-    const ret: Record<any> = {};
-    for (const key in current.schema.properties) {
-      const prop = current.schema.properties[key];
-      const val = buildResponse(apiYaml, prop);
-      if (val) {
-        ret[key] = val;
-      }
-    }
-    return ret;
+// make response object from content object.
+const makeResponseObject = (apiYaml: any, contentBody: any) => {
+  if (contentBody.example) {
+    // if contentBody has example, it returns contents of example.
+    return contentBody.example;
   } else {
-    const result = buildResponse(apiYaml, current.schema);
+    const result = buildResponse(apiYaml, contentBody.schema);
     if (result) {
       return result;
     }
@@ -78,16 +66,120 @@ const makeJSONResponse = (apiYaml: any, current: any) => {
   return undefined;
 };
 
+type XMLStructure = {
+  name?: string
+  attributes: Record<any>
+  children: XMLStructure[]
+  value?: string
+};
+
+// make XML structure from schema and response object
+const buildXMLStructure = (apiYaml: any, current: any, respObject: any, name: string | undefined): XMLStructure | undefined => {
+  if (current.$ref) {
+    const ref = resolveRef(apiYaml, current.$ref);
+    return buildXMLStructure(apiYaml, ref, respObject, name);
+  } else if (current.type && current.type === 'array') {
+    // array type
+    if (Array.isArray(respObject)) {
+      // strange document because of no root name.
+      if (!name) return undefined;
+      const item = current.items;
+      if (current.xml && current.xml.wrapped) {
+        const wrap = current.xml.name;
+        const ret: XMLStructure = {
+          name: wrap,
+          attributes: {},
+          children: []
+        };
+        for (const val of respObject) {
+          const tmp = buildXMLStructure(apiYaml, item, val, wrap);
+          if (tmp) {
+            ret.children.push(tmp);
+          }
+        }
+        return ret;
+      } else {
+        const ret: XMLStructure = {
+          name,
+          attributes: {},
+          children: [],
+        };
+        for (const val of respObject) {
+          const tmp = buildXMLStructure(apiYaml, item, val, undefined);
+          if (tmp) {
+            ret.children.push(tmp);
+          }
+        }
+        return ret;
+      }
+    }
+  } else if (current.properties) {
+    // object type
+    const ret: XMLStructure = {
+      name: current.xml && current.xml.name ? current.xml.name : name,
+      attributes: {},
+      children: [],
+    };
+    for (const key in current.properties) {
+      const val = respObject[key];
+      const item = current.properties[key];
+      if (val) {
+        const tmp = buildXMLStructure(apiYaml, item, val, key);
+        if (tmp) {
+          if (item.xml && item.xml.attribute) {
+            ret.attributes[key] = tmp;
+          } else {
+            ret.children.push(tmp);
+          }
+        }
+      }
+    }
+    return ret;
+  } else if (current.type) {
+    // other types
+    if (name) {
+      return {
+        name,
+        attributes: {},
+        children: [],
+        value: '' + respObject,
+      }
+    }
+  }
+  return undefined;
+};
+
+const convertToXML = (xml: XMLStructure): string => {
+  const attribs = [];
+  for (const key in xml.attributes) {
+    attribs.push(`${key}="${xml.attributes[key].value}"`);
+  }
+  if (xml.children.length > 0) {
+    const childXML = [];
+    for (const child of xml.children) {
+      childXML.push(convertToXML(child));
+    }
+    return `<${xml.name} ${attribs.join(' ')}>${childXML.join('')}</${xml.name}>`
+  } else {
+    if (xml.value) {
+      // terminal node
+      return `<${xml.name} ${attribs.join(' ')}>${xml.value}</${xml.name}>`
+    } else {
+      // no child node
+      return `<${xml.name} ${attribs.join(' ')}/>`
+    }
+  }
+};
+
 // make XML response from content object.
 const makeXMLResponse = (apiYaml: any, contentBody: any, respObject: any) => {
   // map respObject to xml
-
-
-
-
-
-
-  console.error("Sorry! XML response is not supported.");
+  const xmlStructure = buildXMLStructure(apiYaml, contentBody.schema, respObject, undefined);
+  if (xmlStructure) {
+    const retValue = convertToXML(xmlStructure);
+    console.log(retValue);
+    return retValue;
+  }
   return undefined;
 };
 
@@ -136,16 +228,16 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
           if (respStatusInfo.content) {
             for (const content in respStatusInfo.content) {
               const contentBody = respStatusInfo.content[content];
-              const respObject = makeJSONResponse(api, contentBody);
-              if(respObject){
+              const respObject = makeResponseObject(api, contentBody);
+              if (respObject) {
                 const respData =
                   content === "application/json"
                     ? JSON.stringify(respObject)
                     : content === "application/xml"
-                    ? makeXMLResponse(api, contentBody, respObject)
-                    : content === "text/xml"
-                    ? makeXMLResponse(api, contentBody, respObject)
-                    : "Sample value";
+                      ? makeXMLResponse(api, contentBody, respObject)
+                      : content === "text/xml"
+                        ? makeXMLResponse(api, contentBody, respObject)
+                        : "Sample value";
                 const pat: Pattern = {
                   metadataType: "immidiate",
                   metadata: {
@@ -162,7 +254,7 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
                   } as Metadata,
                 };
                 tmp.matches.push(pat);
-              }else{
+              } else {
                 const pat: Pattern = {
                   metadataType: "immidiate",
                   metadata: {

@@ -533,10 +533,10 @@ paths:
         200:
           description: successful operation
           content:
-            application/json:
+            application/xml:
               schema:
                 $ref: '#/components/schemas/User'
-            application/xml:
+            application/json:
               schema:
                 $ref: '#/components/schemas/User'
         400:
@@ -601,15 +601,21 @@ components:
         id:
           type: integer
           format: int64
+          example: 8765
+          xml:
+            attribute: true
         petId:
           type: integer
           format: int64
+          example: 1234
         quantity:
           type: integer
           format: int32
+          example: 8888
         shipDate:
           type: string
           format: date-time
+          example: "2021-12-24T20:21:00+09:00"
         status:
           type: string
           description: Order Status
@@ -617,9 +623,11 @@ components:
           - placed
           - approved
           - delivered
+          example: placed
         complete:
           type: boolean
           default: false
+          example: false
       xml:
         name: Order
     Category:
@@ -628,8 +636,10 @@ components:
         id:
           type: integer
           format: int64
+          example: CATEGORY
         name:
           type: string
+          example: CAT_NAME
       xml:
         name: Category
     User:
@@ -669,8 +679,10 @@ components:
         id:
           type: integer
           format: int64
+          example: 9876
         name:
           type: string
+          example: Spotty
       xml:
         name: Tag
     Pet:
@@ -682,6 +694,7 @@ components:
         id:
           type: integer
           format: int64
+          example: 998
         category:
           $ref: '#/components/schemas/Category'
         name:
@@ -694,6 +707,7 @@ components:
             wrapped: true
           items:
             type: string
+            example: http://test.com/photo/xxxx
         tags:
           type: array
           xml:
@@ -708,6 +722,7 @@ components:
           - available
           - pending
           - sold
+          example: sold
       xml:
         name: Pet
     ApiResponse:
@@ -716,10 +731,13 @@ components:
         code:
           type: integer
           format: int32
+          example: 0
         type:
           type: string
+          example: Type
         message:
           type: string
+          example: Message
   securitySchemes:
     petstore_auth:
       type: oauth2
