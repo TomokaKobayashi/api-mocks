@@ -4,6 +4,8 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import form from "express-form-data";
+import fastXMLparser from "fast-xml-parser";
+
 import {
   Metadata,
   RequestSummary,
@@ -14,6 +16,7 @@ import {
   DEFAULT_ROUTES_FILE,
 } from "./types";
 import { controlRouter } from "./control-router";
+import { IncomingMessage } from "http";
 
 // request summary memo:
 // JSON -> body -> data
@@ -273,6 +276,29 @@ const loadRoutes = (config: RouterConfig | undefined) => {
   return undefined;
 };
 
+// xml body parser middleware by fast-xml-parser
+const CONTENT_TYPE_XML = /.*\/xml/;
+const CHARSET_PATTERN = /charset=([^ ;]+)/
+const xmlBodyParser = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  const contentType = req.headers['content-type'];
+  if(contentType && CONTENT_TYPE_XML.test(contentType)){
+    const mat = contentType.match(CHARSET_PATTERN);
+    const encoding = mat ? mat[1] : 'utf8';
+    const buf = req.read();
+    if (buf && buf.length) {
+      try{
+        const rawBody = buf.toString(encoding as BufferEncoding);
+        const parser = new fastXMLparser.XMLParser();
+        const result = parser.parse(rawBody);
+        req.body.xml = result;
+      }catch(error){
+        console.log('an error occurred in parsing xml');
+      }
+    }
+  }
+  next();
+};
+
 // change deector
 // detects routes settings (on memory or file).
 // change the targetRouter's routes new setting.
@@ -347,6 +373,9 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
     );
     rootRouter.use(form.union());
   }
+
+  // XMLparser bodyParser
+  rootRouter.use(xmlBodyParser);
 
   // apply middlewares.
   if (config && config.preprocessMiddle) {

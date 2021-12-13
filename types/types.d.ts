@@ -15,11 +15,13 @@ export declare type Metadata = {
     datatype?: "file" | "value" | "object";
     data?: string | Record<any>;
     edit?: string;
+    customProps?: Record<any>;
 };
 export declare type Pattern = {
     conditions?: string;
     metadataType?: "file" | "immidiate";
     metadata: string | Metadata;
+    customProps?: Record<any>;
 };
 export declare type Endpoint = {
     pattern: string;
@@ -28,12 +30,14 @@ export declare type Endpoint = {
     name?: string;
     id?: string;
     source?: string;
+    customProps?: Record<any>;
 };
 export declare type Routes = {
     prefix: string[] | string;
     defaultHeaders?: Header[];
     defaultScript?: string;
     endpoints: Endpoint[];
+    customProps?: Record<any>;
 };
 export declare const DEFAULT_ROUTES_FILE = "routes.json";
 export declare type RouterConfig = {

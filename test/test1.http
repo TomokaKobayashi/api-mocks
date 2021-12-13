@@ -123,3 +123,13 @@ POST http://localhost:4010/prefix01/user
 Content-Type: application/x-www-form-urlencoded
 
 AAA=BBB&CCC=DDD
+
+### 
+POST http://localhost:4010/prefix01/fff/ggg/xxx/yyy
+Content-Type: application/xml
+
+<aaa>
+  <bbb>
+   bbb
+  </bbb>
+</aaa>

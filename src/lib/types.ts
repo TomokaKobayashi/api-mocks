@@ -28,6 +28,8 @@ export type Metadata = {
   data?: string | Record<any>;
   // javascript string to edit response data(only JSON data or headers)
   edit?: string;
+  // additional properies
+  customProps?: Record<any>;
 };
 
 // response pattern definition.
@@ -41,6 +43,8 @@ export type Pattern = {
   metadataType?: "file" | "immidiate";
   // response metadata file path or Metadata by JSON
   metadata: string | Metadata;
+  // additional properies
+  customProps?: Record<any>;
 };
 
 // endpoint definition
@@ -59,6 +63,8 @@ export type Endpoint = {
   id?: string;
   // source file
   source?: string;
+  // additional properies
+  customProps?: Record<any>;
 };
 
 // structure definition of 'routers.json'
@@ -79,6 +85,9 @@ export type Routes = {
 
   // endpoints
   endpoints: Endpoint[];
+
+  // additional properies
+  customProps?: Record<any>;
 };
 
 // default routes file name.
