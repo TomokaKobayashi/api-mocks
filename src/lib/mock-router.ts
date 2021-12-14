@@ -284,19 +284,25 @@ const xmlBodyParser = (req: express.Request, res: express.Response, next: expres
   if(contentType && CONTENT_TYPE_XML.test(contentType)){
     const mat = contentType.match(CHARSET_PATTERN);
     const encoding = mat ? mat[1] : 'utf8';
-    const buf = req.read();
-    if (buf && buf.length) {
-      try{
-        const rawBody = buf.toString(encoding as BufferEncoding);
-        const parser = new fastXMLparser.XMLParser();
-        const result = parser.parse(rawBody);
-        req.body.xml = result;
-      }catch(error){
-        console.log('an error occurred in parsing xml');
-      }
+    // object for closure.
+    const dataObj = {
+      data: ''
     }
+    req.setEncoding(encoding as BufferEncoding);
+    req.on('data', (chunk)=>{
+      dataObj.data = dataObj.data + chunk;
+    });
+    req.on('end', ()=>{
+      // parse data
+      const parser = new fastXMLparser.XMLParser();
+      const data = dataObj.data;
+      const result = parser.parse(data);
+      req.body.xml = result;
+      next();
+    });
+  }else{
+    next();
   }
-  next();
 };
 
 // change deector
