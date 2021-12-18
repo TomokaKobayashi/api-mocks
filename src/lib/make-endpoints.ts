@@ -1,6 +1,7 @@
 // this functions make route info from yaml.
 import yaml from "js-yaml";
 import { Endpoint, Metadata, Pattern, Header, Record } from "./types";
+import { OpenAPIRequestValidatorArgs } from 'openapi-request-validator';
 
 // resolve ref to obujet
 const resolve = (obj: any, refs: string[]): any => {
@@ -200,6 +201,45 @@ const makeHeaders = (headers: any): Header[] => {
   return ret;
 };
 
+// rough copy method...
+const easyCopy = (obj: any) => {
+  if(!obj) return undefined;
+  return JSON.parse(JSON.stringify(obj));
+};
+
+const replaceRef = (apiYaml: any, node: any) => {
+  if(!node) return;
+  if(Array.isArray(node)){
+    for(const child of node){
+      replaceRef(apiYaml, child);
+    }
+  }else if(typeof node === 'object'){
+    for(const key in node){
+      let child = node[key];
+      if(child && child.$ref){
+        console.log(child.$ref);
+        child = easyCopy(resolveRef(apiYaml, child.$ref));
+        child.$ref = undefined;
+        node[key] = child;
+      }
+      replaceRef(apiYaml, child);
+    }
+  }
+};
+
+const makeValidatorParams= (apiYaml: any, methodInfo: any): OpenAPIRequestValidatorArgs  => {
+  // rough copy
+  const params = easyCopy(methodInfo.parameters);
+  replaceRef(apiYaml, params);
+  const body = easyCopy(methodInfo.requestBody);
+  replaceRef(apiYaml, body);
+  const ret: OpenAPIRequestValidatorArgs = {
+    parameters: params,
+    requestBody: body,
+  };
+  return ret;
+};
+
 export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
   const ret: Endpoint[] = [];
   const api = yaml.load(apiYaml) as any;
@@ -213,19 +253,22 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
       );
       const pathInfo = api.paths[path];
       for (const method in pathInfo) {
-        const responseInfo = pathInfo[method];
+        const methodInfo = pathInfo[method];
+        const validatorParams = makeValidatorParams(api, methodInfo);
         const tmp: Endpoint = {
           pattern: endpointPattern,
           method: method.toUpperCase() as any,
           matches: [],
-          name: responseInfo.operationId,
+          name: methodInfo.operationId,
           source: sourceName,
+          validatorArgs: validatorParams,
         };
         ret.push(tmp);
-        for (const status in responseInfo.responses) {
-          const respStatusInfo = responseInfo.responses[status];
+        for (const status in methodInfo.responses) {
+          const respStatusInfo = methodInfo.responses[status];
           const headers = makeHeaders(respStatusInfo.headers);
-          if (respStatusInfo.content) {
+          const contentLen = respStatusInfo.content ? Object.keys(respStatusInfo.content).length : 0;
+          if (contentLen>0) {
             for (const content in respStatusInfo.content) {
               const contentBody = respStatusInfo.content[content];
               const respObject = makeResponseObject(api, contentBody);

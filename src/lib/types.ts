@@ -1,5 +1,6 @@
 import express from "express";
 import { IncomingHttpHeaders } from "http";
+import { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 
 // general map string to T.
 export interface Record<T> {
@@ -65,6 +66,8 @@ export type Endpoint = {
   source?: string;
   // additional properies
   customProps?: Record<any>;
+  // validator parameters of openapi-request-validator
+  validatorArgs?: OpenAPIRequestValidatorArgs;
 };
 
 // structure definition of 'routers.json'
@@ -88,6 +91,9 @@ export type Routes = {
 
   // additional properies
   customProps?: Record<any>;
+
+  // file version
+  version?: string;
 };
 
 // default routes file name.

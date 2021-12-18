@@ -5,7 +5,6 @@ import fs from "fs";
 import path from "path";
 import form from "express-form-data";
 import fastXMLparser from "fast-xml-parser";
-
 import {
   Metadata,
   RequestSummary,
@@ -16,7 +15,7 @@ import {
   DEFAULT_ROUTES_FILE,
 } from "./types";
 import { controlRouter } from "./control-router";
-import { IncomingMessage } from "http";
+import OpenAPIRequestValidator, { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 
 // request summary memo:
 // JSON -> body -> data
@@ -182,6 +181,30 @@ const makePrefixPattern = (prefix: string | string[] | undefined): RegExp => {
   }
 };
 
+const createValidator = (validationArgs: OpenAPIRequestValidatorArgs) => {
+  const validator = new OpenAPIRequestValidator(validationArgs);
+  return (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    const result = validator.validateRequest(req);
+    if(result){
+      const data = {
+        errors: result
+      };
+      res.status(422).send(JSON.stringify(data));      
+    }else{
+      next();
+    }
+  }
+};
+
+const debugMiddle = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.log(req.url);
+  next();
+};
+
 const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
   const prefix = routes && routes.prefix ? routes.prefix : undefined;
   const prefixPattern = makePrefixPattern(prefix);
@@ -195,6 +218,12 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
       switch (endpoint.method) {
         case "GET":
           console.log(`GET    : ${endpoint.pattern}`);
+          if(endpoint.validatorArgs){
+            mockRouter.get(
+              endpoint.pattern,
+              createValidator(endpoint.validatorArgs)
+            );
+          }
           mockRouter.get(
             endpoint.pattern,
             createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
@@ -202,6 +231,12 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           break;
         case "POST":
           console.log(`POST   : ${endpoint.pattern}`);
+          if(endpoint.validatorArgs){
+            mockRouter.post(
+              endpoint.pattern,
+              createValidator(endpoint.validatorArgs)
+            );
+          }
           mockRouter.post(
             endpoint.pattern,
             createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
@@ -209,6 +244,12 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           break;
         case "PUT":
           console.log(`PUT    : ${endpoint.pattern}`);
+          if(endpoint.validatorArgs){
+            mockRouter.put(
+              endpoint.pattern,
+              createValidator(endpoint.validatorArgs)
+            );
+          }
           mockRouter.put(
             endpoint.pattern,
             createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
@@ -216,6 +257,12 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           break;
         case "PATCH":
           console.log(`PATCH  : ${endpoint.pattern}`);
+          if(endpoint.validatorArgs){
+            mockRouter.patch(
+              endpoint.pattern,
+              createValidator(endpoint.validatorArgs)
+            );
+          }
           mockRouter.patch(
             endpoint.pattern,
             createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
@@ -223,6 +270,12 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           break;
         case "DELETE":
           console.log(`DELETE : ${endpoint.pattern}`);
+          if(endpoint.validatorArgs){
+            mockRouter.delete(
+              endpoint.pattern,
+              createValidator(endpoint.validatorArgs)
+            );
+          }
           mockRouter.delete(
             endpoint.pattern,
             createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
@@ -294,7 +347,7 @@ const xmlBodyParser = (req: express.Request, res: express.Response, next: expres
     });
     req.on('end', ()=>{
       // parse data
-      const parser = new fastXMLparser.XMLParser();
+      const parser = new fastXMLparser.XMLParser({ignoreAttributes: false, attributeNamePrefix: ''});
       const data = dataObj.data;
       const result = parser.parse(data);
       req.body.xml = result;

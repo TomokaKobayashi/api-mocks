@@ -1,6 +1,7 @@
 /// <reference types="node" />
 import express from "express";
 import { IncomingHttpHeaders } from "http";
+import { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 export interface Record<T> {
     [key: string]: T;
 }
@@ -31,6 +32,7 @@ export declare type Endpoint = {
     id?: string;
     source?: string;
     customProps?: Record<any>;
+    validatorArgs?: OpenAPIRequestValidatorArgs;
 };
 export declare type Routes = {
     prefix: string[] | string;
@@ -38,6 +40,7 @@ export declare type Routes = {
     defaultScript?: string;
     endpoints: Endpoint[];
     customProps?: Record<any>;
+    version?: string;
 };
 export declare const DEFAULT_ROUTES_FILE = "routes.json";
 export declare type RouterConfig = {

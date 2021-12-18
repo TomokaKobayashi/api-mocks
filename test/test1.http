@@ -133,3 +133,15 @@ Content-Type: application/xml
    bbb
   </bbb>
 </aaa>
+
+###
+PUT http://localhost:4010/prefix00/pet
+Content-Type: application/json
+
+{
+    "id": 1245,
+    "name": "NAMAE"
+}
+
+###
+GET http://localhost:4010/prefix00/pet/findByStatus?status=available&status=sold
