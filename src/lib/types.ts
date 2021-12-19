@@ -68,6 +68,8 @@ export type Endpoint = {
   customProps?: Record<any>;
   // validator parameters of openapi-request-validator
   validatorArgs?: OpenAPIRequestValidatorArgs;
+  // reference count
+  count?: number;
 };
 
 // structure definition of 'routers.json'
@@ -76,7 +78,7 @@ export type Routes = {
   // `/prefix` of '/prefix/foo/var'.
   // if prefix is Array, matches all of Array.
   // '["/prefix1", "/prefix2"]' is to be '(/prefix1|/prefix2)' .
-  prefix: string[] | string;
+  prefix?: string[] | string;
 
   // response headers to apply all responses(exclude error).
   defaultHeaders?: Header[];
@@ -127,7 +129,7 @@ export type ChangeDetector = {
   routesFileName?: string;
   routesTimestamp?: number;
   routesDir: string;
-  routes?: Routes;
+  routes: Routes;
   isChanged?: boolean;
   needsUpdateFile?: boolean;
 } & express.RequestHandler;

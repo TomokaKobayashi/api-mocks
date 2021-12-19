@@ -178,7 +178,6 @@ const makeXMLResponse = (apiYaml: any, contentBody: any, respObject: any) => {
   const xmlStructure = buildXMLStructure(apiYaml, contentBody.schema, respObject, undefined);
   if (xmlStructure) {
     const retValue = convertToXML(xmlStructure);
-    console.log(retValue);
     return retValue;
   }
   return undefined;
@@ -217,7 +216,6 @@ const replaceRef = (apiYaml: any, node: any) => {
     for(const key in node){
       let child = node[key];
       if(child && child.$ref){
-        console.log(child.$ref);
         child = easyCopy(resolveRef(apiYaml, child.$ref));
         child.$ref = undefined;
         node[key] = child;
@@ -262,6 +260,7 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
           name: methodInfo.operationId,
           source: sourceName,
           validatorArgs: validatorParams,
+          count: 1,
         };
         ret.push(tmp);
         for (const status in methodInfo.responses) {

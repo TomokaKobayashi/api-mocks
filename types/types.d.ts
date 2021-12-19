@@ -33,9 +33,10 @@ export declare type Endpoint = {
     source?: string;
     customProps?: Record<any>;
     validatorArgs?: OpenAPIRequestValidatorArgs;
+    count?: number;
 };
 export declare type Routes = {
-    prefix: string[] | string;
+    prefix?: string[] | string;
     defaultHeaders?: Header[];
     defaultScript?: string;
     endpoints: Endpoint[];
@@ -60,7 +61,7 @@ export declare type ChangeDetector = {
     routesFileName?: string;
     routesTimestamp?: number;
     routesDir: string;
-    routes?: Routes;
+    routes: Routes;
     isChanged?: boolean;
     needsUpdateFile?: boolean;
 } & express.RequestHandler;

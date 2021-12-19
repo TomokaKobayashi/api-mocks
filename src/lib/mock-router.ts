@@ -9,13 +9,15 @@ import {
   Metadata,
   RequestSummary,
   Header,
-  Pattern,
+  Endpoint,
   Routes,
   RouterConfig,
   DEFAULT_ROUTES_FILE,
+  ChangeDetector,
 } from "./types";
 import { controlRouter } from "./control-router";
 import OpenAPIRequestValidator, { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
+import { OpenAPIV3 } from 'openapi-types';
 
 // request summary memo:
 // JSON -> body -> data
@@ -112,17 +114,55 @@ const loadMetadata = (baseDir: string, filePath: string) => {
   return { metadata, baseDir: path.dirname(metadataPath) };
 };
 
+// making a data modifier
+// if parameter needs array-type, convert a single parameter to an array.
+// if request body is xml, to JSON.
+const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | undefined) => {
+  if(!validatorArgs || !validatorArgs.parameters) return undefined;
+  const modifierList: ((parameters: any) => void)[] = [];
+  for(const param of validatorArgs.parameters){
+    const v3Param = param as OpenAPIV3.ParameterObject;
+    if(v3Param && v3Param.schema){
+      const schema = v3Param.schema as OpenAPIV3.SchemaObject;
+      if(schema.type && schema.type==='array'){
+        modifierList.push((parameters: any)=>{
+          if(parameters && parameters[v3Param.name]){
+            const val = parameters[v3Param.name];
+            if(val && !Array.isArray(val)){
+              parameters[v3Param.name] = [val];
+            }
+          }
+        });
+      }
+    }
+  }
+  return (req: express.Request) => {
+    for(const modify of modifierList){
+      modify(req.params);
+      modify(req.query);
+    }
+  };
+};
+
 /// making a endpoint handler
 const createHnadler = (
   baseDir: string,
-  patterns: Pattern[],
+  endpoint: Endpoint,
   defaultHeaders: Header[] | undefined
 ) => {
+  const modifier = createRequestModifier(endpoint.validatorArgs);
+  const validator = !endpoint.validatorArgs ? undefined : new OpenAPIRequestValidator(endpoint.validatorArgs);
+
   function mockHandler(
     req: express.Request,
     res: express.Response,
     next: express.NextFunction
   ) {
+    // modify request
+    if(modifier){
+      modifier(req);
+    }
+
     const requestSummary: RequestSummary = {
       data: {
         ...req.query,
@@ -136,8 +176,20 @@ const createHnadler = (
       `requested summary = ${JSON.stringify(requestSummary, null, "  ")}`
     );
 
+    // validation
+    if(validator){
+      const validationResult = validator.validateRequest(req);
+      if(validationResult){
+        const data = {
+          errors: validationResult
+        };
+        res.status(422).send(JSON.stringify(data));      
+        return;
+      }
+    }
+
     let proceed = false;
-    for (const pat of patterns) {
+    for (const pat of endpoint.matches) {
       if (evaluateConditions(requestSummary, pat.conditions)) {
         proceed = true;
         if (!pat.metadataType || pat.metadataType === "file") {
@@ -162,7 +214,7 @@ const createHnadler = (
       }
     }
     if (!proceed) {
-      next();
+      res.status(404).send();      
     }
   }
   mockHandler.defaultHeaders = defaultHeaders;
@@ -181,30 +233,6 @@ const makePrefixPattern = (prefix: string | string[] | undefined): RegExp => {
   }
 };
 
-const createValidator = (validationArgs: OpenAPIRequestValidatorArgs) => {
-  const validator = new OpenAPIRequestValidator(validationArgs);
-  return (
-    req: express.Request,
-    res: express.Response,
-    next: express.NextFunction
-  ) => {
-    const result = validator.validateRequest(req);
-    if(result){
-      const data = {
-        errors: result
-      };
-      res.status(422).send(JSON.stringify(data));      
-    }else{
-      next();
-    }
-  }
-};
-
-const debugMiddle = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.log(req.url);
-  next();
-};
-
 const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
   const prefix = routes && routes.prefix ? routes.prefix : undefined;
   const prefixPattern = makePrefixPattern(prefix);
@@ -218,67 +246,37 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
       switch (endpoint.method) {
         case "GET":
           console.log(`GET    : ${endpoint.pattern}`);
-          if(endpoint.validatorArgs){
-            mockRouter.get(
-              endpoint.pattern,
-              createValidator(endpoint.validatorArgs)
-            );
-          }
           mockRouter.get(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint, routes.defaultHeaders)
           );
           break;
         case "POST":
           console.log(`POST   : ${endpoint.pattern}`);
-          if(endpoint.validatorArgs){
-            mockRouter.post(
-              endpoint.pattern,
-              createValidator(endpoint.validatorArgs)
-            );
-          }
           mockRouter.post(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint, routes.defaultHeaders)
           );
           break;
         case "PUT":
           console.log(`PUT    : ${endpoint.pattern}`);
-          if(endpoint.validatorArgs){
-            mockRouter.put(
-              endpoint.pattern,
-              createValidator(endpoint.validatorArgs)
-            );
-          }
           mockRouter.put(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint, routes.defaultHeaders)
           );
           break;
         case "PATCH":
           console.log(`PATCH  : ${endpoint.pattern}`);
-          if(endpoint.validatorArgs){
-            mockRouter.patch(
-              endpoint.pattern,
-              createValidator(endpoint.validatorArgs)
-            );
-          }
           mockRouter.patch(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint, routes.defaultHeaders)
           );
           break;
         case "DELETE":
           console.log(`DELETE : ${endpoint.pattern}`);
-          if(endpoint.validatorArgs){
-            mockRouter.delete(
-              endpoint.pattern,
-              createValidator(endpoint.validatorArgs)
-            );
-          }
           mockRouter.delete(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint.matches, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint, routes.defaultHeaders)
           );
           break;
         default:
@@ -317,7 +315,7 @@ const makeRoutesPath = (config: RouterConfig | undefined) => {
 };
 
 // load routes file
-const loadRoutes = (config: RouterConfig | undefined) => {
+const loadRoutes = (config: RouterConfig | undefined): Routes => {
   if (config && config.routesPath) {
     const routesFileName = makeRoutesPath(config);
     if (routesFileName) {
@@ -326,7 +324,9 @@ const loadRoutes = (config: RouterConfig | undefined) => {
       return routes;
     }
   }
-  return undefined;
+  return {
+    endpoints: [],
+  };
 };
 
 // xml body parser middleware by fast-xml-parser
@@ -363,9 +363,9 @@ const xmlBodyParser = (req: express.Request, res: express.Response, next: expres
 // change the targetRouter's routes new setting.
 const makeChangeDetector = (
   config: RouterConfig | undefined,
-  routes: Routes | undefined,
+  routes: Routes,
   targetRouter: express.Router
-) => {
+): ChangeDetector => {
   function changeDetector(
     req: express.Request,
     res: express.Response,

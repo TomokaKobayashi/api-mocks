@@ -140,8 +140,30 @@ Content-Type: application/json
 
 {
     "id": 1245,
-    "name": "NAMAE"
-}
+    "name": "NAMAE",
+    "photoUrls": [
+        "http://photo.co.jp"
+    ]
+
+}kenta01
+
 
 ###
 GET http://localhost:4010/prefix00/pet/findByStatus?status=available&status=sold
+
+###
+POST http://localhost:4010/control/debug/endpoints
+Content-Type: application/json
+
+{
+    "fileName": "./test/samplev3.yaml"
+}
+
+###
+DELETE http://localhost:4010/control/debug/endpoints
+Content-Type: application/json
+
+{
+    "fileName": "./test/samplev3.yaml"
+}
+
