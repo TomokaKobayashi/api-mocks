@@ -149,7 +149,7 @@ Content-Type: application/json
 
 
 ###
-GET http://localhost:4010/prefix00/pet/findByStatus?status=available&status=sold
+GET http://localhost:4010/prefix00/pet/findByStatus
 
 ###
 POST http://localhost:4010/control/debug/endpoints

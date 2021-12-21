@@ -83,6 +83,9 @@ export type Routes = {
   // response headers to apply all responses(exclude error).
   defaultHeaders?: Header[];
 
+  // remove headers from all response.
+  suppressHeaders?: string[];
+
   // javascript string to edit all responses(exclude error).
   // it can edit response body when 'Content-Type' is 'application/json'.
   // ** not yet implemented **

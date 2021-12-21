@@ -26,6 +26,7 @@ import { OpenAPIV3 } from 'openapi-types';
 // PATH PARAMS -> params -> data
 // MULTI-PART -> body(raw string and content-type is missed) -> data
 // HEADERS -> headers -> headers
+// COOKIES -> cookies -> cookies
 
 const processMetadata = (
   basePath: string,
@@ -93,7 +94,7 @@ const evaluateConditions = (
       const {data, headers} = req;
       if(${conditions}) return true;
       return false;
-    `
+      `
     )(req);
     return result;
   } catch (error) {
@@ -114,18 +115,24 @@ const loadMetadata = (baseDir: string, filePath: string) => {
   return { metadata, baseDir: path.dirname(metadataPath) };
 };
 
+type Modifier = ((parameters: any) => void);
+interface ModifierList {
+  [key: string]: Modifier[]
+};
+
 // making a data modifier
 // if parameter needs array-type, convert a single parameter to an array.
 // if request body is xml, to JSON.
 const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | undefined) => {
   if(!validatorArgs || !validatorArgs.parameters) return undefined;
-  const modifierList: ((parameters: any) => void)[] = [];
+  const modifierList: ModifierList = {header: [], path: [], query: [], cookie: []};
   for(const param of validatorArgs.parameters){
     const v3Param = param as OpenAPIV3.ParameterObject;
-    if(v3Param && v3Param.schema){
+    if(v3Param && v3Param.schema && modifierList[v3Param.in]){
+      const place = modifierList[v3Param.in];
       const schema = v3Param.schema as OpenAPIV3.SchemaObject;
       if(schema.type && schema.type==='array'){
-        modifierList.push((parameters: any)=>{
+        place.push((parameters: any)=>{
           if(parameters && parameters[v3Param.name]){
             const val = parameters[v3Param.name];
             if(val && !Array.isArray(val)){
@@ -133,14 +140,34 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
             }
           }
         });
+        if(schema.items){
+          const items = schema.items as OpenAPIV3.ArraySchemaObject;
+          if(items.default){
+            place.push((parameters: any)=>{
+              console.log(`${v3Param.name} : ${parameters[v3Param.name]}`)
+              if(parameters && !parameters[v3Param.name]){
+                console.log(`set default ${v3Param.name} : ${[items.default]}`)
+                parameters[v3Param.name] = [items.default];
+              }
+            });
+          }
+        }
+      }else{
+        if(schema.default){
+          place.push((parameters: any)=>{
+            if(parameters && !parameters[v3Param.name]){
+              parameters[v3Param.name] = schema.default;
+            }
+          });
+        }
       }
     }
   }
   return (req: express.Request) => {
-    for(const modify of modifierList){
-      modify(req.params);
-      modify(req.query);
-    }
+    if(modifierList.header) modifierList.header.forEach((modify)=>{modify(req.headers)});
+    if(modifierList.path) modifierList.path.forEach((modify)=>{modify(req.params)});
+    if(modifierList.query) modifierList.query.forEach((modify)=>{modify(req.query)});
+    if(modifierList.cookie) modifierList.path.forEach((modify)=>{modify(req.cookies)});
   };
 };
 

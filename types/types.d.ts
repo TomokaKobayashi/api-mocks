@@ -38,6 +38,7 @@ export declare type Endpoint = {
 export declare type Routes = {
     prefix?: string[] | string;
     defaultHeaders?: Header[];
+    suppressHeaders?: string[];
     defaultScript?: string;
     endpoints: Endpoint[];
     customProps?: Record<any>;
