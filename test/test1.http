@@ -152,6 +152,9 @@ Content-Type: application/json
 GET http://localhost:4010/prefix00/pet/findByStatus
 
 ###
+GET http://localhost:4010/prefix00/store/order/5
+
+###
 POST http://localhost:4010/control/debug/endpoints
 Content-Type: application/json
 

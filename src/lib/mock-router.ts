@@ -141,13 +141,22 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
           }
         });
         if(schema.items){
-          const items = schema.items as OpenAPIV3.ArraySchemaObject;
+          const items = schema.items as OpenAPIV3.SchemaObject;
           if(items.default){
             place.push((parameters: any)=>{
               console.log(`${v3Param.name} : ${parameters[v3Param.name]}`)
               if(parameters && !parameters[v3Param.name]){
-                console.log(`set default ${v3Param.name} : ${[items.default]}`)
-                parameters[v3Param.name] = [items.default];
+                if(items.format==='string'){}
+                parameters[v3Param.name] = items.format==='string' ? [''+items.default] : [items.default];
+              }
+            });
+          }
+          if(items.type==='integer' || items.type==='number'){
+            place.push((parameters: any)=>{
+              if(parameters && parameters[v3Param.name]){
+                parameters[v3Param.name] = parameters[v3Param.name].map((element: any) => {
+                  return Number(element);
+                });
               }
             });
           }
@@ -156,7 +165,14 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
         if(schema.default){
           place.push((parameters: any)=>{
             if(parameters && !parameters[v3Param.name]){
-              parameters[v3Param.name] = schema.default;
+              parameters[v3Param.name] = schema.format==='string' ? ''+schema.default : schema.default;
+            }
+          });
+        }
+        if(schema.type==='integer' || schema.type==='number'){
+          place.push((parameters: any)=>{
+            if(parameters && parameters[v3Param.name]){
+              parameters[v3Param.name] = Number(parameters[v3Param.name]);
             }
           });
         }
@@ -167,7 +183,7 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
     if(modifierList.header) modifierList.header.forEach((modify)=>{modify(req.headers)});
     if(modifierList.path) modifierList.path.forEach((modify)=>{modify(req.params)});
     if(modifierList.query) modifierList.query.forEach((modify)=>{modify(req.query)});
-    if(modifierList.cookie) modifierList.path.forEach((modify)=>{modify(req.cookies)});
+    if(modifierList.cookie) modifierList.cookie.forEach((modify)=>{modify(req.cookies)});
   };
 };
 

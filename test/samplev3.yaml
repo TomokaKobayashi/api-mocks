@@ -616,7 +616,7 @@ components:
         shipDate:
           type: string
           format: date-time
-          example: "2021-12-24T20:21:00+09:00"
+          #example: "2021-12-24T20:21:00+09:00"
         status:
           type: string
           description: Order Status

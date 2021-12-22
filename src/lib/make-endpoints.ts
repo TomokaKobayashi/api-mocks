@@ -48,6 +48,26 @@ const buildResponse = (apiYaml: any, current: any): any => {
       return ret;
     } else if (current.type && current.type === "array") {
       return [buildResponse(apiYaml, current.items)];
+    } else if(current.type==='integer'){
+      if(current.format==='int32'){
+        return -1 * 2 ^ 31;
+      }
+      return -1 * Number.MAX_SAFE_INTEGER;
+    }else if(current.type==='number'){
+      return -1 * Number.MAX_VALUE;
+    }else if(current.type==='string'){
+      switch(current.format){
+        case 'date':
+          return '2021-12-31';
+        case 'date-time':
+          return '2021-12-31T23:59:59Z';
+        case 'byte':
+          return 'QUJDREVGRw==';
+        default:
+          return 'string';
+      }
+    }else if(current.type==='boolean'){
+      return false;
     }
   }
   return undefined;
