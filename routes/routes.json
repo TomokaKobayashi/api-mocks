@@ -4,6 +4,15 @@
     "/prefix01",
     "/prefix02"
   ],
+  "defaultHeaders": [
+    {
+      "name": "x-def-header",
+      "value": "def-header-value"
+    }
+  ],
+  "suppressHeaders": [
+    "Date"
+  ],
   "endpoints": [
     {
       "pattern": "/aaa/bbb",

@@ -30,17 +30,11 @@ import { OpenAPIV3 } from 'openapi-types';
 
 const processMetadata = (
   basePath: string,
-  defaultHeaders: Header[] | undefined,
   metadata: Metadata,
   req: express.Request,
   res: express.Response
 ) => {
   try {
-    if (defaultHeaders) {
-      for (const header of defaultHeaders) {
-        res.set(header.name, header.value);
-      }
-    }
     if (metadata.headers) {
       for (const header of metadata.headers) {
         res.set(header.name, header.value);
@@ -190,8 +184,7 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
 /// making a endpoint handler
 const createHnadler = (
   baseDir: string,
-  endpoint: Endpoint,
-  defaultHeaders: Header[] | undefined
+  endpoint: Endpoint
 ) => {
   const modifier = createRequestModifier(endpoint.validatorArgs);
   const validator = !endpoint.validatorArgs ? undefined : new OpenAPIRequestValidator(endpoint.validatorArgs);
@@ -239,7 +232,6 @@ const createHnadler = (
           const metadata = loadMetadata(baseDir, pat.metadata as string);
           processMetadata(
             metadata.baseDir,
-            mockHandler.defaultHeaders,
             metadata.metadata,
             req,
             res
@@ -247,7 +239,6 @@ const createHnadler = (
         } else if (pat.metadataType === "immidiate") {
           processMetadata(
             baseDir,
-            mockHandler.defaultHeaders,
             pat.metadata as Metadata,
             req,
             res
@@ -260,7 +251,6 @@ const createHnadler = (
       res.status(404).send();      
     }
   }
-  mockHandler.defaultHeaders = defaultHeaders;
   return mockHandler;
 };
 
@@ -275,12 +265,47 @@ const makePrefixPattern = (prefix: string | string[] | undefined): RegExp => {
     return new RegExp(`(${prefix})`);
   }
 };
+const makeResponseHeaderModifier = (routes: Routes | undefined) => {
+  if(!routes || (!routes.defaultHeaders && !routes.suppressHeaders)) return undefined;
+  const modifiers:((res: express.Response) => void)[] = [];
+  if(routes.defaultHeaders){
+    const headers = routes.defaultHeaders;
+    modifiers.push(
+      (res: express.Response) => {
+        for(const header of headers){
+          res.setHeader(header.name, header.value);
+        }
+      }
+    );
+  }
+  if(routes.suppressHeaders){
+    const headers = routes.suppressHeaders;
+    modifiers.push(
+      (res: express.Response) => {
+        for(const header of headers){
+          res.removeHeader(header);
+        }
+      }
+    );
+  }
+  if(modifiers.length==0) return undefined;
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    for(const modifier of modifiers){
+      modifier(res);
+    }
+    next();
+  };
+};
 
 const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
   const prefix = routes && routes.prefix ? routes.prefix : undefined;
   const prefixPattern = makePrefixPattern(prefix);
   const prefixRouter = express.Router();
   const mockRouter = express.Router();
+  const headerModifier = makeResponseHeaderModifier(routes);
+  if(headerModifier){
+    mockRouter.use(headerModifier);
+  }
   prefixRouter.use(prefixPattern, mockRouter);
 
   // apply mock endpoint handlers.
@@ -291,35 +316,35 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           console.log(`GET    : ${endpoint.pattern}`);
           mockRouter.get(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint)
           );
           break;
         case "POST":
           console.log(`POST   : ${endpoint.pattern}`);
           mockRouter.post(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint)
           );
           break;
         case "PUT":
           console.log(`PUT    : ${endpoint.pattern}`);
           mockRouter.put(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint)
           );
           break;
         case "PATCH":
           console.log(`PATCH  : ${endpoint.pattern}`);
           mockRouter.patch(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint)
           );
           break;
         case "DELETE":
           console.log(`DELETE : ${endpoint.pattern}`);
           mockRouter.delete(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultHeaders)
+            createHnadler(baseDir, endpoint)
           );
           break;
         default:
