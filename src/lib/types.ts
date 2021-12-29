@@ -127,6 +127,10 @@ export type RequestSummary = {
   cookies: Record<any>;
 };
 
+export type XMLRequest = express.Request & {
+  xml?: any;
+};
+
 export type ChangeDetector = {
   targetRouter: express.Router;
   routesFileName?: string;

@@ -48,15 +48,15 @@ const buildResponse = (apiYaml: any, current: any): any => {
       return ret;
     } else if (current.type && current.type === "array") {
       return [buildResponse(apiYaml, current.items)];
-    } else if(current.type==='integer'){
-      if(current.format==='int32'){
+    } else if (current.type === 'integer') {
+      if (current.format === 'int32') {
         return -1 * 2 ^ 31;
       }
       return -1 * Number.MAX_SAFE_INTEGER;
-    }else if(current.type==='number'){
+    } else if (current.type === 'number') {
       return -1 * Number.MAX_VALUE;
-    }else if(current.type==='string'){
-      switch(current.format){
+    } else if (current.type === 'string') {
+      switch (current.format) {
         case 'date':
           return '2021-12-31';
         case 'date-time':
@@ -66,7 +66,7 @@ const buildResponse = (apiYaml: any, current: any): any => {
         default:
           return 'string';
       }
-    }else if(current.type==='boolean'){
+    } else if (current.type === 'boolean') {
       return false;
     }
   }
@@ -175,19 +175,20 @@ const convertToXML = (xml: XMLStructure): string => {
   for (const key in xml.attributes) {
     attribs.push(`${key}="${xml.attributes[key].value}"`);
   }
+  const openTag = (xml.name + ' ' + attribs.join(' ')).trim();
   if (xml.children.length > 0) {
     const childXML = [];
     for (const child of xml.children) {
       childXML.push(convertToXML(child));
     }
-    return `<${xml.name} ${attribs.join(' ')}>${childXML.join('')}</${xml.name}>`
+    return `<${openTag}>${childXML.join('')}</${xml.name}>`
   } else {
     if (xml.value) {
       // terminal node
-      return `<${xml.name} ${attribs.join(' ')}>${xml.value}</${xml.name}>`
+      return `<${openTag}>${xml.value}</${xml.name}>`
     } else {
       // no child node
-      return `<${xml.name} ${attribs.join(' ')}/>`
+      return `<${openTag}/>`
     }
   }
 };
@@ -222,20 +223,20 @@ const makeHeaders = (headers: any): Header[] => {
 
 // rough copy method...
 const easyCopy = (obj: any) => {
-  if(!obj) return undefined;
+  if (!obj) return undefined;
   return JSON.parse(JSON.stringify(obj));
 };
 
 const replaceRef = (apiYaml: any, node: any) => {
-  if(!node) return;
-  if(Array.isArray(node)){
-    for(const child of node){
+  if (!node) return;
+  if (Array.isArray(node)) {
+    for (const child of node) {
       replaceRef(apiYaml, child);
     }
-  }else if(typeof node === 'object'){
-    for(const key in node){
+  } else if (typeof node === 'object') {
+    for (const key in node) {
       let child = node[key];
-      if(child && child.$ref){
+      if (child && child.$ref) {
         child = easyCopy(resolveRef(apiYaml, child.$ref));
         child.$ref = undefined;
         node[key] = child;
@@ -245,7 +246,7 @@ const replaceRef = (apiYaml: any, node: any) => {
   }
 };
 
-const makeValidatorParams= (apiYaml: any, methodInfo: any): OpenAPIRequestValidatorArgs  => {
+const makeValidatorParams = (apiYaml: any, methodInfo: any): OpenAPIRequestValidatorArgs => {
   // rough copy
   const params = easyCopy(methodInfo.parameters);
   replaceRef(apiYaml, params);
@@ -287,7 +288,7 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
           const respStatusInfo = methodInfo.responses[status];
           const headers = makeHeaders(respStatusInfo.headers);
           const contentLen = respStatusInfo.content ? Object.keys(respStatusInfo.content).length : 0;
-          if (contentLen>0) {
+          if (contentLen > 0) {
             for (const content in respStatusInfo.content) {
               const contentBody = respStatusInfo.content[content];
               const respObject = makeResponseObject(api, contentBody);

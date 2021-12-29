@@ -145,11 +145,68 @@ Content-Type: application/json
         "http://photo.co.jp"
     ]
 
-}kenta01
+}
+
+###
+PUT http://localhost:4010/prefix00/pet
+Content-Type: application/xml
+
+<Pet >
+  <id >998</id>
+  <Category >
+    <id >1332</id>
+    <name >CAT_NAME</name>
+  </Category>
+  <name >doggie</name>
+  <photoUrl >
+    <photoUrl >http://test.com/photo/xxxx</photoUrl>
+    <photoUrl >http://test.com/photo/xxxx</photoUrl>
+    <photoUrl >http://test.com/photo/xxxx</photoUrl>
+  </photoUrl>
+  <tag >
+    <Tag >
+      <id >9876</id>
+      <name >Spotty</name>
+    </Tag>
+    <Tag >
+      <id >9876</id>
+      <name >Spotty</name>
+    </Tag>
+    <Tag >
+      <id >9876</id>
+      <name >Spotty</name>
+    </Tag>
+  </tag>
+  <status >sold</status>
+</Pet>
+
+###
+POST http://localhost:4010/prefix00/pet
+Content-Type: application/xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Pet>
+	<id>0</id>
+	<Category>
+		<id>0</id>
+		<name>string</name>
+	</Category>
+	<name>doggie</name>
+	<photoUrl>
+		<photoUrl>string</photoUrl>
+	</photoUrl>
+	<tag>
+		<Tag>
+			<id>0</id>
+			<name>string</name>
+		</Tag>
+	</tag>
+	<status>available</status>
+</Pet>
 
 
 ###
-GET http://localhost:4010/prefix00/pet/findByStatus
+GET http://localhost:4010/prefix00/pet/123
 
 ###
 GET http://localhost:4010/prefix00/store/order/5

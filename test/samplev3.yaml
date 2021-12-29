@@ -113,12 +113,12 @@ paths:
         200:
           description: successful operation
           content:
-            application/json:
+            application/xml:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pet'
-            application/xml:
+            application/json:
               schema:
                 type: array
                 items:
@@ -190,10 +190,10 @@ paths:
         200:
           description: successful operation
           content:
-            application/json:
+            application/xml:
               schema:
                 $ref: '#/components/schemas/Pet'
-            application/xml:
+            application/json:
               schema:
                 $ref: '#/components/schemas/Pet'
         400:
@@ -534,10 +534,10 @@ paths:
         200:
           description: successful operation
           content:
-            application/json:
+            application/xml:
               schema:
                 $ref: '#/components/schemas/User'
-            application/xml:
+            application/json:
               schema:
                 $ref: '#/components/schemas/User'
         400:
@@ -637,7 +637,7 @@ components:
         id:
           type: integer
           format: int64
-          example: CATEGORY
+          example: 12345678
         name:
           type: string
           example: CAT_NAME

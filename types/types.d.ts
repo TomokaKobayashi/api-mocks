@@ -57,6 +57,9 @@ export declare type RequestSummary = {
     headers: IncomingHttpHeaders;
     cookies: Record<any>;
 };
+export declare type XMLRequest = express.Request & {
+    xml?: any;
+};
 export declare type ChangeDetector = {
     targetRouter: express.Router;
     routesFileName?: string;

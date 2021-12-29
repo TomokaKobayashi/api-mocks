@@ -8,12 +8,12 @@ import fastXMLparser from "fast-xml-parser";
 import {
   Metadata,
   RequestSummary,
-  Header,
   Endpoint,
   Routes,
   RouterConfig,
   DEFAULT_ROUTES_FILE,
   ChangeDetector,
+  XMLRequest,
 } from "./types";
 import { controlRouter } from "./control-router";
 import OpenAPIRequestValidator, { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
@@ -48,8 +48,8 @@ const processMetadata = (
     const respStatus = metadata.status
       ? metadata.status
       : metadata.data
-      ? 200
-      : 204;
+        ? 200
+        : 204;
     if (metadata.data) {
       if (!metadata.datatype || metadata.datatype === "file") {
         const dataFileName = metadata.data as string;
@@ -114,40 +114,119 @@ interface ModifierList {
   [key: string]: Modifier[]
 };
 
+const makeContentTypePattern = (contentType: string) => {
+  const pat = contentType.replace(/[*]/g, '[^/]+');
+  return new RegExp(pat);
+}
+
+const xmlToJSON = (obj: any, schema: OpenAPIV3.SchemaObject): any => {
+  if (typeof obj === 'undefined') return undefined;
+  if (schema.type === 'array') {
+    const items = schema.items as OpenAPIV3.SchemaObject;
+    if (schema.xml && schema.xml.wrapped) {
+      const ret = [];
+      const name = (items.xml && items.xml.name) ? items.xml.name : schema.xml.name ? schema.xml.name : undefined;
+      if (name) {
+        const obj2 = obj[name];
+        if (!Array.isArray(obj2)) {
+          const val = xmlToJSON(obj2, items);
+          if (val) ret.push(val);
+        } else {
+          for (const node of obj2) {
+            const val = xmlToJSON(node, items);
+            if (val) ret.push(val);
+          }
+        }
+        return ret;
+      }
+    }
+    return xmlToJSON(obj, items);
+  } else if (schema.properties) {
+    const ret: any = {};
+    for (const key in schema.properties) {
+      const sub = schema.properties[key] as OpenAPIV3.SchemaObject;
+      if (sub.xml && sub.xml.name) {
+        ret[key] = xmlToJSON(obj[sub.xml.name], sub);
+      } else {
+        ret[key] = xmlToJSON(obj[key], sub);
+      }
+    }
+    return ret;
+  } else {
+    return obj;
+  }
+}
+
+const createXMLToObjectModifier = (validatorArgs: OpenAPIRequestValidatorArgs | undefined) => {
+  if (!validatorArgs || !validatorArgs.requestBody) return undefined;
+  const body = validatorArgs.requestBody;
+  const contents = body.content;
+  let target = undefined;
+  for (const content in contents) {
+    const pat = makeContentTypePattern(content);
+    if (pat.test('application/xml') || pat.test('text/xml')) {
+      target = contents[content];
+      break;
+    }
+  }
+  if (!target || !target.schema) return undefined;
+  const schema = target.schema as OpenAPIV3.SchemaObject;
+  // no name top level object is not allowed.
+  // named and wrapped property is not structure name. 
+  if (!schema.xml || !schema.xml.name) return undefined;
+  const name = schema.xml.name;
+  return (req: XMLRequest) => {
+    if (!req.xml) return;
+    if (!req.xml[name]) return;
+    const ret = xmlToJSON(req.xml[name], schema);
+    if (!ret) return;
+    req.body = { ...req.body, ...ret };
+    return;
+  };
+};
+
 // making a data modifier
 // if parameter needs array-type, convert a single parameter to an array.
 // if request body is xml, to JSON.
 const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | undefined) => {
-  if(!validatorArgs || !validatorArgs.parameters) return undefined;
-  const modifierList: ModifierList = {header: [], path: [], query: [], cookie: []};
-  for(const param of validatorArgs.parameters){
+  const xmlModifier = createXMLToObjectModifier(validatorArgs);
+  if (!validatorArgs || !validatorArgs.parameters) {
+    if (xmlModifier) {
+      return (req: XMLRequest) => {
+        if (xmlModifier) xmlModifier(req);
+      };
+    }
+    return undefined;
+  }
+  const modifierList: ModifierList = { header: [], path: [], query: [], cookie: [] };
+  for (const param of validatorArgs.parameters) {
     const v3Param = param as OpenAPIV3.ParameterObject;
-    if(v3Param && v3Param.schema && modifierList[v3Param.in]){
+    if (v3Param && v3Param.schema && modifierList[v3Param.in]) {
       const place = modifierList[v3Param.in];
       const schema = v3Param.schema as OpenAPIV3.SchemaObject;
-      if(schema.type && schema.type==='array'){
-        place.push((parameters: any)=>{
-          if(parameters && parameters[v3Param.name]){
+      if (schema.type && schema.type === 'array') {
+        place.push((parameters: any) => {
+          if (parameters && parameters[v3Param.name]) {
             const val = parameters[v3Param.name];
-            if(val && !Array.isArray(val)){
+            if (val && !Array.isArray(val)) {
               parameters[v3Param.name] = [val];
             }
           }
         });
-        if(schema.items){
+        if (schema.items) {
           const items = schema.items as OpenAPIV3.SchemaObject;
-          if(items.default){
-            place.push((parameters: any)=>{
+          if (items.default) {
+            place.push((parameters: any) => {
               console.log(`${v3Param.name} : ${parameters[v3Param.name]}`)
-              if(parameters && !parameters[v3Param.name]){
-                if(items.format==='string'){}
-                parameters[v3Param.name] = items.format==='string' ? [''+items.default] : [items.default];
+              if (parameters && !parameters[v3Param.name]) {
+                if (items.format === 'string') { }
+                parameters[v3Param.name] = items.format === 'string' ? ['' + items.default] : [items.default];
               }
             });
           }
-          if(items.type==='integer' || items.type==='number'){
-            place.push((parameters: any)=>{
-              if(parameters && parameters[v3Param.name]){
+          if (items.type === 'integer' || items.type === 'number') {
+            place.push((parameters: any) => {
+              if (parameters && parameters[v3Param.name]) {
                 parameters[v3Param.name] = parameters[v3Param.name].map((element: any) => {
                   return Number(element);
                 });
@@ -155,17 +234,17 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
             });
           }
         }
-      }else{
-        if(schema.default){
-          place.push((parameters: any)=>{
-            if(parameters && !parameters[v3Param.name]){
-              parameters[v3Param.name] = schema.format==='string' ? ''+schema.default : schema.default;
+      } else {
+        if (schema.default) {
+          place.push((parameters: any) => {
+            if (parameters && !parameters[v3Param.name]) {
+              parameters[v3Param.name] = schema.format === 'string' ? '' + schema.default : schema.default;
             }
           });
         }
-        if(schema.type==='integer' || schema.type==='number'){
-          place.push((parameters: any)=>{
-            if(parameters && parameters[v3Param.name]){
+        if (schema.type === 'integer' || schema.type === 'number') {
+          place.push((parameters: any) => {
+            if (parameters && parameters[v3Param.name]) {
               parameters[v3Param.name] = Number(parameters[v3Param.name]);
             }
           });
@@ -173,11 +252,12 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
       }
     }
   }
-  return (req: express.Request) => {
-    if(modifierList.header) modifierList.header.forEach((modify)=>{modify(req.headers)});
-    if(modifierList.path) modifierList.path.forEach((modify)=>{modify(req.params)});
-    if(modifierList.query) modifierList.query.forEach((modify)=>{modify(req.query)});
-    if(modifierList.cookie) modifierList.cookie.forEach((modify)=>{modify(req.cookies)});
+  return (req: XMLRequest) => {
+    if (xmlModifier) xmlModifier(req);
+    if (modifierList.header) modifierList.header.forEach((modify) => { modify(req.headers) });
+    if (modifierList.path) modifierList.path.forEach((modify) => { modify(req.params) });
+    if (modifierList.query) modifierList.query.forEach((modify) => { modify(req.query) });
+    if (modifierList.cookie) modifierList.cookie.forEach((modify) => { modify(req.cookies) });
   };
 };
 
@@ -195,7 +275,7 @@ const createHnadler = (
     next: express.NextFunction
   ) {
     // modify request
-    if(modifier){
+    if (modifier) {
       modifier(req);
     }
 
@@ -213,13 +293,13 @@ const createHnadler = (
     );
 
     // validation
-    if(validator){
+    if (validator) {
       const validationResult = validator.validateRequest(req);
-      if(validationResult){
+      if (validationResult) {
         const data = {
           errors: validationResult
         };
-        res.status(422).send(JSON.stringify(data));      
+        res.status(422).send(JSON.stringify(data));
         return;
       }
     }
@@ -248,7 +328,7 @@ const createHnadler = (
       }
     }
     if (!proceed) {
-      res.status(404).send();      
+      res.status(404).send();
     }
   }
   return mockHandler;
@@ -266,31 +346,31 @@ const makePrefixPattern = (prefix: string | string[] | undefined): RegExp => {
   }
 };
 const makeResponseHeaderModifier = (routes: Routes | undefined) => {
-  if(!routes || (!routes.defaultHeaders && !routes.suppressHeaders)) return undefined;
-  const modifiers:((res: express.Response) => void)[] = [];
-  if(routes.defaultHeaders){
+  if (!routes || (!routes.defaultHeaders && !routes.suppressHeaders)) return undefined;
+  const modifiers: ((res: express.Response) => void)[] = [];
+  if (routes.defaultHeaders) {
     const headers = routes.defaultHeaders;
     modifiers.push(
       (res: express.Response) => {
-        for(const header of headers){
+        for (const header of headers) {
           res.setHeader(header.name, header.value);
         }
       }
     );
   }
-  if(routes.suppressHeaders){
+  if (routes.suppressHeaders) {
     const headers = routes.suppressHeaders;
     modifiers.push(
       (res: express.Response) => {
-        for(const header of headers){
+        for (const header of headers) {
           res.removeHeader(header);
         }
       }
     );
   }
-  if(modifiers.length==0) return undefined;
+  if (modifiers.length == 0) return undefined;
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    for(const modifier of modifiers){
+    for (const modifier of modifiers) {
       modifier(res);
     }
     next();
@@ -303,7 +383,7 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
   const prefixRouter = express.Router();
   const mockRouter = express.Router();
   const headerModifier = makeResponseHeaderModifier(routes);
-  if(headerModifier){
+  if (headerModifier) {
     mockRouter.use(headerModifier);
   }
   prefixRouter.use(prefixPattern, mockRouter);
@@ -400,9 +480,9 @@ const loadRoutes = (config: RouterConfig | undefined): Routes => {
 // xml body parser middleware by fast-xml-parser
 const CONTENT_TYPE_XML = /.*\/xml/;
 const CHARSET_PATTERN = /charset=([^ ;]+)/
-const xmlBodyParser = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+const xmlBodyParser = (req: XMLRequest, res: express.Response, next: express.NextFunction) => {
   const contentType = req.headers['content-type'];
-  if(contentType && CONTENT_TYPE_XML.test(contentType)){
+  if (contentType && CONTENT_TYPE_XML.test(contentType)) {
     const mat = contentType.match(CHARSET_PATTERN);
     const encoding = mat ? mat[1] : 'utf8';
     // object for closure.
@@ -410,18 +490,18 @@ const xmlBodyParser = (req: express.Request, res: express.Response, next: expres
       data: ''
     }
     req.setEncoding(encoding as BufferEncoding);
-    req.on('data', (chunk)=>{
+    req.on('data', (chunk) => {
       dataObj.data = dataObj.data + chunk;
     });
-    req.on('end', ()=>{
+    req.on('end', () => {
       // parse data
-      const parser = new fastXMLparser.XMLParser({ignoreAttributes: false, attributeNamePrefix: ''});
+      const parser = new fastXMLparser.XMLParser({ ignoreAttributes: false, attributeNamePrefix: '' });
       const data = dataObj.data;
       const result = parser.parse(data);
-      req.body.xml = result;
+      req.xml = result;
       next();
     });
-  }else{
+  } else {
     next();
   }
 };

@@ -34,9 +34,9 @@ import fs from 'fs';
 // if found same named endpoint, return true and increment count
 const incrementSameNameEndpoint = (endpoints: Endpoint[], name: string) => {
   let flag = false;
-  if(endpoints && name){
-    for(const endpoint of endpoints){
-      if(endpoint.source===name){
+  if (endpoints && name) {
+    for (const endpoint of endpoints) {
+      if (endpoint.source === name) {
         flag = true;
         endpoint.count = endpoint.count ? endpoint.count + 1 : 1;
       }
@@ -49,11 +49,11 @@ const incrementSameNameEndpoint = (endpoints: Endpoint[], name: string) => {
 // if count is 0, return true
 const decrementSameNameEndpoint = (endpoints: Endpoint[], name: string) => {
   let flag = false;
-  if(endpoints && name){
-    for(const endpoint of endpoints){
-      if(endpoint.source===name){
+  if (endpoints && name) {
+    for (const endpoint of endpoints) {
+      if (endpoint.source === name) {
         endpoint.count = endpoint.count ? endpoint.count - 1 : 0;
-        if(endpoint.count<=0){
+        if (endpoint.count <= 0) {
           flag = true;
         }
       }
@@ -68,8 +68,8 @@ const makeAddDebugEndpointHandler = (changeDetector: ChangeDetector) => {
     res: express.Response,
     next: express.NextFunction
   ) => {
-    if(req.body.fileName){
-      if(incrementSameNameEndpoint(addDebugYaml.target.routes.endpoints, req.body.fileName)){
+    if (req.body.fileName) {
+      if (incrementSameNameEndpoint(addDebugYaml.target.routes.endpoints, req.body.fileName)) {
         // already exists
         console.log(`not added ${req.body.fileName} , already exists`);
         res.status(200).send();
@@ -82,7 +82,7 @@ const makeAddDebugEndpointHandler = (changeDetector: ChangeDetector) => {
         changeDetector.isChanged = true;
       }
       res.status(200).send();
-    }else{
+    } else {
       // no content-type can't be accepted.
       res.status(400).send();
     }
@@ -97,14 +97,14 @@ const makeDeleteDebugEndpointHandler = (changeDetector: ChangeDetector) => {
     res: express.Response,
     next: express.NextFunction
   ) => {
-    if(req.body.fileName){
-      if(!decrementSameNameEndpoint(removeDebugYaml.target.routes.endpoints, req.body.fileName)){
+    if (req.body.fileName) {
+      if (!decrementSameNameEndpoint(removeDebugYaml.target.routes.endpoints, req.body.fileName)) {
         res.status(200).send();
         console.log(`not removed ${req.body.fileName} by count`);
         return;
       }
       let flag = false;
-      if(removeDebugYaml.target.routes){
+      if (removeDebugYaml.target.routes) {
         const newEndpoints = removeDebugYaml.target.routes.endpoints.filter(
           (value) => {
             if (value.source && value.source === req.body.fileName) {
@@ -123,7 +123,7 @@ const makeDeleteDebugEndpointHandler = (changeDetector: ChangeDetector) => {
         }
         res.status(200).send();
       }
-    }else{
+    } else {
       // no content-type can't be accepted.
       res.status(400).send();
     }
@@ -139,7 +139,7 @@ const addEndpointsHandler = (changeDetector: ChangeDetector) => {
     res: express.Response,
     next: express.NextFunction
   ) => {
-    if(incrementSameNameEndpoint(addYaml.target.routes.endpoints, req.params["name"])){
+    if (incrementSameNameEndpoint(addYaml.target.routes.endpoints, req.params["name"])) {
       // already exists
       console.log(`not added ${req.body.fileName} , already exists`);
       res.status(200).send();
@@ -180,7 +180,7 @@ const removeEndpointsHandler = (changeDetector: ChangeDetector) => {
     next: express.NextFunction
   ) => {
     const name = req.params["name"];
-    if(!decrementSameNameEndpoint(removeYaml.target.routes.endpoints, name)){
+    if (!decrementSameNameEndpoint(removeYaml.target.routes.endpoints, name)) {
       res.status(200).send();
       console.log(`not removed ${req.body.fileName} by count`);
       return;
