@@ -2,6 +2,7 @@
 import yaml from "js-yaml";
 import { Endpoint, Metadata, Pattern, Header, Record } from "./types";
 import { OpenAPIRequestValidatorArgs } from 'openapi-request-validator';
+import {v4} from "uuid";
 
 // resolve ref to obujet
 const resolve = (obj: any, refs: string[]): any => {
@@ -282,6 +283,7 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
           source: sourceName,
           validatorArgs: validatorParams,
           count: 1,
+          id: v4(),
         };
         ret.push(tmp);
         for (const status in methodInfo.responses) {

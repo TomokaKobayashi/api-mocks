@@ -18,6 +18,7 @@ import {
 import { controlRouter } from "./control-router";
 import OpenAPIRequestValidator, { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 import { OpenAPIV3 } from 'openapi-types';
+import {v4} from 'uuid';
 
 // request summary memo:
 // JSON -> body -> data
@@ -469,6 +470,11 @@ const loadRoutes = (config: RouterConfig | undefined): Routes => {
     if (routesFileName) {
       const rawRoutes = fs.readFileSync(routesFileName);
       const routes = JSON.parse(rawRoutes.toString()) as Routes;
+      for(const endpoint of routes.endpoints){
+        if(!endpoint.id){
+          endpoint.id = v4();
+        }
+      }
       return routes;
     }
   }

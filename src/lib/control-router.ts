@@ -27,9 +27,35 @@
 //   removes a group of endpoints by file path.
 
 import express from "express";
-import { ChangeDetector, Endpoint } from "./types";
+import { ChangeDetector, Endpoint, Pattern, Routes } from "./types";
 import { makeEndpointsFromYaml } from "./make-endpoints";
 import fs from 'fs';
+
+const makeEndpointsListHandler = (changeDetector: ChangeDetector) => {
+  const listHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const cdRoutes = changeDetector.routes;
+    const retRoute: Routes = {
+      prefix: cdRoutes.prefix,
+      defaultHeaders: cdRoutes.defaultHeaders ? [...cdRoutes.defaultHeaders] : undefined,
+      suppressHeaders: cdRoutes.suppressHeaders ? [...cdRoutes.suppressHeaders] : undefined,
+      defaultScript: cdRoutes.defaultScript,
+      customProps: cdRoutes.customProps ? {...cdRoutes.customProps} : undefined,
+      endpoints: [],
+      version: cdRoutes.version,
+    };
+    for(const endpoint of cdRoutes.endpoints){
+      retRoute.endpoints.push({
+        pattern: endpoint.pattern,
+        method: endpoint.method,
+        id: endpoint.id,
+        matches: [],
+        customProps: endpoint.customProps,
+      });
+    }
+    res.status(200).send(JSON.stringify(retRoute));
+  };
+  return listHandler;
+};
 
 // if found same named endpoint, return true and increment count
 const incrementSameNameEndpoint = (endpoints: Endpoint[], name: string) => {
@@ -213,6 +239,8 @@ export const controlRouter = (
   changeDetector: ChangeDetector
 ) => {
   const rootRouter = express.Router();
+  const ctrlRouter = express.Router();
+  ctrlRouter.get("/endpoints", makeEndpointsListHandler(changeDetector));
   const router = express.Router();
   router.use(express.raw({ type: "application/yaml" }));
   router.post("/endpoints/:name", addEndpointsHandler(changeDetector));
@@ -221,6 +249,6 @@ export const controlRouter = (
   debugRouter.use(express.json());
   debugRouter.post("/debug/endpoints", makeAddDebugEndpointHandler(changeDetector));
   debugRouter.delete("/debug/endpoints", makeDeleteDebugEndpointHandler(changeDetector));
-  rootRouter.use(apiRoot, router, debugRouter);
+  rootRouter.use(apiRoot, ctrlRouter, router, debugRouter);
   return rootRouter;
 };
