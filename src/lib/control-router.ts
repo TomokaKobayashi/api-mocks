@@ -1,9 +1,9 @@
 // COPYRIGHT 2021 Kobayashi, Tomoka
 
 // Control APIs
-// GET /endpoints (not yet)
+// GET /endpoints
 //   returns a list of endpoints as 'endpoints' of Routes structure.
-// GET /ednpoint/:id (not yet)
+// GET /ednpoint/:id
 //   returns an information of an endpoint as Endpoint structure.
 // PUT /endpoint/:id (not yet)
 //   updates an information of an endpoint by Endpoint stucture.
@@ -25,11 +25,14 @@
 //   and groups these endpoints by file path.
 // DELETE /debug/endpoints
 //   removes a group of endpoints by file path.
+// PUT /commit (not yet)
+//   saves all changes to files. 
 
 import express from "express";
-import { ChangeDetector, Endpoint, Pattern, Routes } from "./types";
+import { ChangeDetector, Endpoint, Metadata, Pattern, Routes } from "./types";
 import { makeEndpointsFromYaml } from "./make-endpoints";
 import fs from 'fs';
+import { loadMetadata } from "./utils";
 
 const makeEndpointsListHandler = (changeDetector: ChangeDetector) => {
   const listHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -50,11 +53,50 @@ const makeEndpointsListHandler = (changeDetector: ChangeDetector) => {
         id: endpoint.id,
         matches: [],
         customProps: endpoint.customProps,
+        name: endpoint.name,
       });
     }
+    res.set('Content-Type', 'application/json');
     res.status(200).send(JSON.stringify(retRoute));
   };
   return listHandler;
+};
+
+const makeEndpointDetailHandler = (changeDetector: ChangeDetector) => {
+  const detailHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const cdRoutes = changeDetector.routes;
+    for(const endpoint of cdRoutes.endpoints){
+      if(endpoint.id===req.params.id){
+        const matches: Pattern[] = [];
+        for(const mt of endpoint.matches){
+          let meta = undefined;
+          if(mt.metadataType==='immidiate'){
+            meta = mt.metadata;
+          }else if(mt.metadata){
+            const m = loadMetadata(changeDetector.routesDir, mt.metadata as string);
+            meta = m.metadata;
+          } 
+          matches.push({
+            conditions: mt.conditions,
+            metadata: meta ? meta : '',
+            customProps: mt.customProps,
+          });
+        }
+        const ret: Endpoint = {
+          pattern: endpoint.pattern,
+          id: endpoint.id,
+          method: endpoint.method,
+          customProps: endpoint.customProps,
+          matches: matches,
+          validatorArgs: endpoint.validatorArgs,
+        }
+        res.set('Content-Type', 'application/json');
+        res.status(200).send(JSON.stringify(ret));
+      }
+    }
+    res.status(404).send();
+  };
+  return detailHandler;
 };
 
 // if found same named endpoint, return true and increment count
@@ -241,6 +283,7 @@ export const controlRouter = (
   const rootRouter = express.Router();
   const ctrlRouter = express.Router();
   ctrlRouter.get("/endpoints", makeEndpointsListHandler(changeDetector));
+  ctrlRouter.get("/endpoints/:id", makeEndpointDetailHandler(changeDetector));
   const router = express.Router();
   router.use(express.raw({ type: "application/yaml" }));
   router.post("/endpoints/:name", addEndpointsHandler(changeDetector));

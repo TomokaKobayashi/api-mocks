@@ -227,3 +227,9 @@ Content-Type: application/json
     "fileName": "./test/samplev3.yaml"
 }
 
+
+###
+GET http://localhost:4010/control/endpoints
+
+###
+GET http://localhost:4010/control/endpoints/35f9a569-e8c3-47bc-9357-23dd48b51f32

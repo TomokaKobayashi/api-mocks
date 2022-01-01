@@ -19,63 +19,7 @@ import { controlRouter } from "./control-router";
 import OpenAPIRequestValidator, { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 import { OpenAPIV3 } from 'openapi-types';
 import {v4} from 'uuid';
-
-// request summary memo:
-// JSON -> body -> data
-// FORM -> body -> data
-// QUERY PARMAS -> query -> data
-// PATH PARAMS -> params -> data
-// MULTI-PART -> body(raw string and content-type is missed) -> data
-// HEADERS -> headers -> headers
-// COOKIES -> cookies -> cookies
-
-const processMetadata = (
-  basePath: string,
-  metadata: Metadata,
-  req: express.Request,
-  res: express.Response
-) => {
-  try {
-    if (metadata.headers) {
-      for (const header of metadata.headers) {
-        res.set(header.name, header.value);
-      }
-    }
-    if (metadata.cookies) {
-      for (const cookie of metadata.cookies) {
-        res.cookie(cookie.name, cookie.value);
-      }
-    }
-    const respStatus = metadata.status
-      ? metadata.status
-      : metadata.data
-        ? 200
-        : 204;
-    if (metadata.data) {
-      if (!metadata.datatype || metadata.datatype === "file") {
-        const dataFileName = metadata.data as string;
-        const dataPath = path.isAbsolute(dataFileName)
-          ? dataFileName
-          : basePath + "/" + dataFileName;
-        console.log("dataPath=" + dataPath);
-        const data = fs.readFileSync(dataPath);
-        res.status(respStatus).send(data);
-      } else if (metadata.datatype === "object") {
-        const data = JSON.stringify(metadata.data);
-        res.status(respStatus).send(data);
-      } else if (metadata.datatype === "value") {
-        const data = metadata.data;
-        res.status(respStatus).send(data);
-      }
-    } else {
-      console.log("no data");
-      res.status(respStatus).send();
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).send(error);
-  }
-};
+import { loadMetadata, processMetadata } from "./utils";
 
 const evaluateConditions = (
   req: RequestSummary,
@@ -98,16 +42,6 @@ const evaluateConditions = (
     console.log(error);
   }
   return false;
-};
-
-const loadMetadata = (baseDir: string, filePath: string) => {
-  const metadataPath = path.isAbsolute(filePath)
-    ? filePath
-    : baseDir + "/" + filePath;
-  console.log("definitionPath=" + metadataPath);
-  const rawDef = fs.readFileSync(metadataPath);
-  const metadata = JSON.parse(rawDef.toString()) as Metadata;
-  return { metadata, baseDir: path.dirname(metadataPath) };
 };
 
 type Modifier = ((parameters: any) => void);
