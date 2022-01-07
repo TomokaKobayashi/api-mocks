@@ -359,6 +359,11 @@ http-errors@~1.8.0:
     statuses ">= 1.5.0 < 2"
     toidentifier "1.0.1"
 
+hyperapp@^2.0.20:
+  version "2.0.20"
+  resolved "https://registry.yarnpkg.com/hyperapp/-/hyperapp-2.0.20.tgz#2e1f96eebca239018224e4a356def249d32d73f8"
+  integrity sha512-Vag0zdLCm0Jf0eJs4TSReQw/ZhDmwgrZ+WSCZsDV+5Fz8z5VgoP+9WUwsQFX80VrHK8C03o/PwXm+SDHwks2Zg==
+
 iconv-lite@0.4.24:
   version "0.4.24"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.24.tgz#2022b4b25fbddc21d2f524974a474aafe733908b"

@@ -1,3 +1,4 @@
+// COPYRIGHT 2021 Kobayashi, Tomoka
 // this functions make route info from yaml.
 import yaml from "js-yaml";
 import { Endpoint, Metadata, Pattern, Header, Record } from "./types";

@@ -4,6 +4,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.makeEndpointsFromYaml = void 0;
+// COPYRIGHT 2021 Kobayashi, Tomoka
 // this functions make route info from yaml.
 const js_yaml_1 = __importDefault(require("js-yaml"));
 const uuid_1 = require("uuid");

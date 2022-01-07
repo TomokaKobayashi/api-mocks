@@ -1,0 +1,20 @@
+{
+  "name": "client",
+  "version": "0.0.1",
+  "private": true,
+  "repository": "https://github.com/TomokaKobayashi/api-mocks.git",
+  "author": "TomokaKobayashi <chandla@bc.mbn.or.jp>",
+  "license": "MIT",
+  "keywords": [
+    "api",
+    "mock",
+    "mocking"
+  ],
+  "devDependencies": {
+    "hyperapp": "^2.0.20",
+    "typescript": "^4.5.2"
+  },
+  "scripts": {
+    "build": "echo SKIP BUILD"
+  }
+}

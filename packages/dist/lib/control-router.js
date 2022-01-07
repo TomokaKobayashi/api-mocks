@@ -30,6 +30,8 @@ exports.controlRouter = void 0;
 //   and groups these endpoints by file path.
 // DELETE /debug/endpoints
 //   removes a group of endpoints by file path.
+// PUT /commit (not yet)
+//   saves all changes to files. 
 const express_1 = __importDefault(require("express"));
 const make_endpoints_1 = require("./make-endpoints");
 const fs_1 = __importDefault(require("fs"));

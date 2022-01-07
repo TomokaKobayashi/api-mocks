@@ -1,3 +1,4 @@
+// COPYRIGHT 2021 Kobayashi, Tomoka
 import express from "express";
 import { IncomingHttpHeaders } from "http";
 import { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
