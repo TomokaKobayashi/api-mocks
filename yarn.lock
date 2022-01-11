@@ -893,16 +893,6 @@
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.6.tgz#d5e0706cf8c6acd8c6032f8d54070af261bbbb2f"
   integrity sha512-ws57AidsDvREKrZKYffXddNkyaF14iHNHm8VQnZH6t99E8gczjNN0GpvcGny0imC80yQ0tHz1xVUKk/KFQSUyA==
 
-"@hyperapp/logger@^0.5.0":
-  version "0.5.0"
-  resolved "https://registry.yarnpkg.com/@hyperapp/logger/-/logger-0.5.0.tgz#627404507c45d38fb5190343f84b4da377e103b8"
-  integrity sha512-f69Kf3Zl6LBC1sLcP3z20yDSxqfZnl65Pl8s4Tj9vED8P3CbqP7BChzLg7aIuka0bhHL1JEFDc0T/8Nmd/4rFA==
-
-"@hyperapp/router@^0.7.2":
-  version "0.7.2"
-  resolved "https://registry.yarnpkg.com/@hyperapp/router/-/router-0.7.2.tgz#6a5edbeceb65bd545d7c55fd59153d7353001c0e"
-  integrity sha512-RXZhJzx0j1UQK/Ia9j7TQlkH1N6qOvJTTEJCIS9NrM1YJabmXGoI0owkvKxieSgXi6EKQ+wUWhXHj9s+Sy9EPA==
-
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -2420,10 +2410,10 @@ human-signals@^2.1.0:
   resolved "https://registry.yarnpkg.com/human-signals/-/human-signals-2.1.0.tgz#dc91fcba42e4d06e4abaed33b3e7a3c02f514ea0"
   integrity sha512-B4FFZ6q/T2jhhksgkbEW3HBvWIfDW85snkQgawt07S7J5QXTk6BkNV+0yAeZrM5QpMAdYlocGoljn0sJ/WQkFw==
 
-hyperapp@^1.2.9:
-  version "1.2.10"
-  resolved "https://registry.yarnpkg.com/hyperapp/-/hyperapp-1.2.10.tgz#2198d71047ac5c7e7a801036f3e80d64dbe64ad1"
-  integrity sha512-6htzCy/Y9QiSXyUGgZhfTqW0NtK7uMlaGS2t/kARJifu5vR4FjMcfC/5lqVs2mLSZ6GdKLEPsMZOVBpHz5X/qg==
+hyperapp@^2.0.20:
+  version "2.0.20"
+  resolved "https://registry.yarnpkg.com/hyperapp/-/hyperapp-2.0.20.tgz#2e1f96eebca239018224e4a356def249d32d73f8"
+  integrity sha512-Vag0zdLCm0Jf0eJs4TSReQw/ZhDmwgrZ+WSCZsDV+5Fz8z5VgoP+9WUwsQFX80VrHK8C03o/PwXm+SDHwks2Zg==
 
 iconv-lite@0.4.24:
   version "0.4.24"
@@ -2863,10 +2853,10 @@ no-case@^3.0.4:
     lower-case "^2.0.2"
     tslib "^2.0.3"
 
-node-forge@^1.2.0:
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-1.2.0.tgz#850cec9230f62f9a7cd8ddd08dc74b4be52573ad"
-  integrity sha512-M4AsdaP0bGNaSPtatd/+f76asocI0cFaURRdeQVZvrJBrYp2Qohv5hDbGHykuNqCb1BYjWHjdS6HlN50qbztwA==
+node-forge@^0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/node-forge/-/node-forge-0.10.0.tgz#32dea2afb3e9926f02ee5ce8794902691a676bf3"
+  integrity sha512-PPmu8eEeG9saEUvI97fm4OYxXVB6bFvyNTyiUOBichBpFG8A1Ljw3bY62+5oOjDEMHRnd0Y7HQ+x7uzxOzC6JA==
 
 node-releases@^2.0.1:
   version "2.0.1"
@@ -3354,11 +3344,11 @@ select-hose@^2.0.0:
   integrity sha1-Yl2GWPhlr0Psliv8N2o3NZpJlMo=
 
 selfsigned@^1.10.11:
-  version "1.10.13"
-  resolved "https://registry.yarnpkg.com/selfsigned/-/selfsigned-1.10.13.tgz#763e091c684cbcbe98aa40b15b01da3716d68a12"
-  integrity sha512-UmLwTKZwNmXYDAlRFhaEdgEg0dp9k5gfJXuO7uKvSqioN1M0+Mgf4V39IlVZMSuqGoCi6h5legkhNXvWy0rFSg==
+  version "1.10.14"
+  resolved "https://registry.yarnpkg.com/selfsigned/-/selfsigned-1.10.14.tgz#ee51d84d9dcecc61e07e4aba34f229ab525c1574"
+  integrity sha512-lkjaiAye+wBZDCBsu5BGi0XiLRxeUlsGod5ZP924CRSEoGuZAw/f7y9RKu28rwTfiHVhdavhB0qH0INV6P1lEA==
   dependencies:
-    node-forge "^1.2.0"
+    node-forge "^0.10.0"
 
 semver@7.0.0:
   version "7.0.0"
