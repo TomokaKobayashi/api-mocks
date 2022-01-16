@@ -1,10 +1,11 @@
-import { h, text } from 'hyperapp'
+import { text } from 'hyperapp'
 import { Modules as M } from '../modules'
+const { div, h1, button } = require('@hyperapp/html')
 
 export const Home = (): any => (state: M.AppState) => {
-  return h('div', {}, [
-    h('h1', {}, text(state.count)),
-    h('button', {onclick: (ev) => M.actions.down(1)}, text('-')),
-    h('button', {onclick: (ev) => M.actions.up(1)}, text('+'))
+  return div({}, [
+    h1({}, text(state.count)),
+    button({onclick: M.actions.down(2)}, text('-')),
+    button({onclick: M.actions.up(2)}, text('+'))
   ])
 }
