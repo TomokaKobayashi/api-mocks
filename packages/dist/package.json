@@ -22,10 +22,6 @@
     "openapi-request-validator": "^10.0.0",
     "uuid": "^8.3.2"
   },
-  "devDependencies": {
-    "server": "^0.0.1",
-    "client": "^0.0.1"
-  },
   "scripts": {
     "start": "./bin/mock-server",
     "build": "echo SKIP BUILD",

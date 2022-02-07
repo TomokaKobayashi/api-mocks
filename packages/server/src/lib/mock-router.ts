@@ -21,6 +21,8 @@ import { OpenAPIV3 } from 'openapi-types';
 import {v4} from 'uuid';
 import { loadMetadata, processMetadata } from "./utils";
 
+const state: Record<string, any> = {};
+
 const evaluateConditions = (
   req: RequestSummary,
   conditions?: string
@@ -30,7 +32,7 @@ const evaluateConditions = (
     const result = new Function(
       "req",
       `
-      const {data, headers} = req;
+      const {data, headers, cookies} = req;
       if(${conditions}) return true;
       return false;
       `

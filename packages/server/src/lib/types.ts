@@ -28,7 +28,7 @@ export type Metadata = {
   datatype?: "file" | "value" | "object";
   // response body data file or immediate value or object
   data?: string | Record<any>;
-  // javascript string to edit response data(only JSON data or headers)
+  // script name in scripts directory
   edit?: string;
   // additional properies
   customProps?: Record<any>;
@@ -87,7 +87,7 @@ export type Routes = {
   // remove headers from all response.
   suppressHeaders?: string[];
 
-  // javascript string to edit all responses(exclude error).
+  // script name in scripts directory to edit all responses(exclude error).
   // it can edit response body when 'Content-Type' is 'application/json'.
   // ** not yet implemented **
   defaultScript?: string;
@@ -141,3 +141,5 @@ export type ChangeDetector = {
   isChanged?: boolean;
   needsUpdateFile?: boolean;
 } & express.RequestHandler;
+
+export type ResponseModifier = (request: RequestSummary, data: Record<any>, headers: Record<any>, cookies: Record<any>) => void;

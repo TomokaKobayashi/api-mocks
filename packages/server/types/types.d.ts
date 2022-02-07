@@ -69,3 +69,4 @@ export declare type ChangeDetector = {
     isChanged?: boolean;
     needsUpdateFile?: boolean;
 } & express.RequestHandler;
+export declare type ResponseModifier = (request: RequestSummary, data: Record<any>, headers: Record<any>, cookies: Record<any>) => void;

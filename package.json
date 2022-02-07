@@ -3,10 +3,11 @@
   "version": "0.1.15",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "test"
   ],
   "scripts": {
-    "start": "yarn workspace @chandla/api-mock-server run start",
+    "start": "yarn workspace test run start",
     "build": "yarn workspaces run build",
     "publish": "yarn workspace @chandla/api-mock-server run publish"
   }

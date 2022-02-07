@@ -10,13 +10,29 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.s[ac]ss$/,
+        use:[ 
+          {
+            loader: 'style-loader',
+          },
+          {
+            loader: 'css-loader'
+          },
+          {
+            loader: 'sass-loader',
+          }
+        ]
+      },
+      {
         test: /\.html$/i,
         type: "asset/resource",
       },
+/*
       {
         test: /\.html$/i,
         loader: "html-loader",
       },
+*/
       {
         test: /\.m?js$/,
         exclude: /(node_modules|bower_components)/,
@@ -47,7 +63,7 @@ module.exports = {
   resolve: {
     // 拡張子を配列で指定
     extensions: [
-      '.js', '.ts', '.tsx', '.json', '.css', '.html'
+      '.js', '.ts', '.tsx', '.json', '.css', '.html', 'scss', 'sass'
     ],
   },
   target: ['web', 'es5'],

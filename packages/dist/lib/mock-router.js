@@ -15,12 +15,13 @@ const control_router_1 = require("./control-router");
 const openapi_request_validator_1 = __importDefault(require("openapi-request-validator"));
 const uuid_1 = require("uuid");
 const utils_1 = require("./utils");
+const state = {};
 const evaluateConditions = (req, conditions) => {
     if (!conditions)
         return true;
     try {
         const result = new Function("req", `
-      const {data, headers} = req;
+      const {data, headers, cookies} = req;
       if(${conditions}) return true;
       return false;
       `)(req);
