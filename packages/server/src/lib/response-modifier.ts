@@ -72,7 +72,7 @@ export const getFunction = (moduleName: string, funcName: string): ResponseModif
     const stat = fs.statSync(mod.fullName);
     if(stat.mtime.getTime()!=mod.timeStamp){
       // script is modified
-      delete require.cache[mod.key];
+      if(require.cache[mod.key]) delete require.cache[mod.key];
       const mod2 = loadDynamic(modifiers.baseDir, mod.fullName);
       if(mod2){
         modifiers.modules[moduleName] = mod2;
