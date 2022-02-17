@@ -66,7 +66,7 @@ export const loadScripts = (dirName: string) => {
   }
 };
 
-export const getFunction = (moduleName: string, funcName: string): ResponseModifier | undefined => {
+const getFunctionInner = (moduleName: string, funcName: string): ResponseModifier | undefined => {
   const mod = modifiers.modules[moduleName];
   if(mod){
     const stat = fs.statSync(mod.fullName);
@@ -84,4 +84,12 @@ export const getFunction = (moduleName: string, funcName: string): ResponseModif
     return mod.module[funcName];
   }
   return undefined;
+};
+
+export const getFunction = (name: string): ResponseModifier | undefined => {
+  const period = name.indexOf(':');
+  if(period<0) return undefined;
+  const mod = name.substring(0, period);
+  const fnc = name.substring(period+1);
+  return getFunctionInner(mod, fnc);
 };

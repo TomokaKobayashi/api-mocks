@@ -14,14 +14,14 @@ import {
   DEFAULT_ROUTES_FILE,
   ChangeDetector,
   XMLRequest,
+  Record,
 } from "./types";
 import { controlRouter } from "./control-router";
 import OpenAPIRequestValidator, { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 import { OpenAPIV3 } from 'openapi-types';
 import {v4} from 'uuid';
 import { loadMetadata, processMetadata } from "./utils";
-
-const state: Record<string, any> = {};
+import { loadScripts } from "./response-modifier";
 
 const evaluateConditions = (
   req: RequestSummary,
@@ -201,7 +201,8 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
 /// making a endpoint handler
 const createHnadler = (
   baseDir: string,
-  endpoint: Endpoint
+  endpoint: Endpoint,
+  defaultScript?: string,
 ) => {
   const modifier = createRequestModifier(endpoint.validatorArgs);
   const validator = !endpoint.validatorArgs ? undefined : new OpenAPIRequestValidator(endpoint.validatorArgs);
@@ -250,14 +251,16 @@ const createHnadler = (
           processMetadata(
             metadata.baseDir,
             metadata.metadata,
-            req,
+            defaultScript,
+            requestSummary,
             res
           );
         } else if (pat.metadataType === "immidiate") {
           processMetadata(
             baseDir,
             pat.metadata as Metadata,
-            req,
+            defaultScript,
+            requestSummary,
             res
           );
         }
@@ -509,6 +512,11 @@ const makeChangeDetector = (
 /// making a router from difinition file.
 export const mockRouter = (config?: RouterConfig): express.Router => {
   const routes = loadRoutes(config);
+
+  // load scripts
+  if(routes.scripts){
+    loadScripts(routes.scripts);
+  }
 
   // root router is the entry point.
   const rootRouter = express.Router();

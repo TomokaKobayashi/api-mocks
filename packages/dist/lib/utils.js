@@ -7,6 +7,9 @@ exports.loadMetadata = exports.processMetadata = void 0;
 // COPYRIGHT 2021 Kobayashi, Tomoka
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
+const response_modifier_1 = require("./response-modifier");
+// state Object
+const state = {};
 // request summary memo:
 // JSON -> body -> data
 // FORM -> body -> data
@@ -15,16 +18,18 @@ const fs_1 = __importDefault(require("fs"));
 // MULTI-PART -> body(raw string and content-type is missed) -> data
 // HEADERS -> headers -> headers
 // COOKIES -> cookies -> cookies
-const processMetadata = (basePath, metadata, req, res) => {
+const processMetadata = (basePath, metadata, defaultScript, req, res) => {
     try {
+        const headers = {};
         if (metadata.headers) {
             for (const header of metadata.headers) {
-                res.set(header.name, header.value);
+                headers[header.name] = header.value;
             }
         }
+        const cookies = {};
         if (metadata.cookies) {
             for (const cookie of metadata.cookies) {
-                res.cookie(cookie.name, cookie.value);
+                cookies[cookie.name] = cookie.value;
             }
         }
         const respStatus = metadata.status
@@ -32,6 +37,11 @@ const processMetadata = (basePath, metadata, req, res) => {
             : metadata.data
                 ? 200
                 : 204;
+        const respSummary = {
+            status: respStatus,
+            headers,
+            cookies,
+        };
         if (metadata.data) {
             if (!metadata.datatype || metadata.datatype === "file") {
                 const dataFileName = metadata.data;
@@ -43,16 +53,40 @@ const processMetadata = (basePath, metadata, req, res) => {
                 res.status(respStatus).send(data);
             }
             else if (metadata.datatype === "object") {
-                const data = JSON.stringify(metadata.data);
-                res.status(respStatus).send(data);
+                respSummary.data = metadata.data;
             }
             else if (metadata.datatype === "value") {
-                const data = metadata.data;
-                res.status(respStatus).send(data);
+                respSummary.rawData = metadata.data;
             }
         }
+        // modify response
+        if (defaultScript) {
+            const func = (0, response_modifier_1.getFunction)(defaultScript);
+            if (func) {
+                func(req, respSummary, state);
+            }
+        }
+        if (metadata.edit) {
+            const func = (0, response_modifier_1.getFunction)(metadata.edit);
+            if (func) {
+                func(req, respSummary, state);
+            }
+        }
+        // set headers
+        for (const key in respSummary.headers) {
+            res.set(key, respSummary.headers[key]);
+        }
+        // set cookies
+        for (const key in respSummary.cookies) {
+            res.cookie(key, respSummary.cookies[key]);
+        }
+        if (respSummary.data) {
+            res.status(respSummary.status).send(JSON.stringify(respSummary.data));
+        }
+        if (respSummary.rawData) {
+            res.status(respSummary.status).send(respSummary.rawData);
+        }
         else {
-            console.log("no data");
             res.status(respStatus).send();
         }
     }

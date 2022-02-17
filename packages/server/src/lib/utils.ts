@@ -2,7 +2,11 @@
 import path from "path";
 import fs from 'fs';
 import express from "express";
-import { Metadata } from "./types";
+import { Metadata, RequestSummary, ResponseSummary, Record } from "./types";
+import { getFunction } from "./response-modifier";
+
+// state Object
+const state: Record<any> = {};
 
 // request summary memo:
 // JSON -> body -> data
@@ -16,25 +20,37 @@ import { Metadata } from "./types";
 export const processMetadata = (
   basePath: string,
   metadata: Metadata,
-  req: express.Request,
+  defaultScript: string | undefined,
+  req: RequestSummary,
   res: express.Response
 ) => {
   try {
+    const headers: Record<any> = {};
     if (metadata.headers) {
       for (const header of metadata.headers) {
-        res.set(header.name, header.value);
+        headers[header.name] = header.value;
       }
     }
+
+    const cookies: Record<any> = {};
     if (metadata.cookies) {
       for (const cookie of metadata.cookies) {
-        res.cookie(cookie.name, cookie.value);
+        cookies[cookie.name] = cookie.value;
       }
     }
+
     const respStatus = metadata.status
       ? metadata.status
       : metadata.data
         ? 200
         : 204;
+
+    const respSummary: ResponseSummary = {
+      status: respStatus,
+      headers,
+      cookies,
+    }
+    
     if (metadata.data) {
       if (!metadata.datatype || metadata.datatype === "file") {
         const dataFileName = metadata.data as string;
@@ -45,14 +61,38 @@ export const processMetadata = (
         const data = fs.readFileSync(dataPath);
         res.status(respStatus).send(data);
       } else if (metadata.datatype === "object") {
-        const data = JSON.stringify(metadata.data);
-        res.status(respStatus).send(data);
+        respSummary.data = metadata.data as Record<any>;
       } else if (metadata.datatype === "value") {
-        const data = metadata.data;
-        res.status(respStatus).send(data);
+        respSummary.rawData = metadata.data;
       }
-    } else {
-      console.log("no data");
+    }
+
+    // modify response
+    if(defaultScript){
+      const func = getFunction(defaultScript);
+      if(func){
+        func(req, respSummary, state);
+      }
+    }
+    if(metadata.edit){
+      const func = getFunction(metadata.edit);
+      if(func){
+        func(req, respSummary, state);
+      }
+    }
+    // set headers
+    for(const key in respSummary.headers){
+      res.set(key, respSummary.headers[key]);
+    }
+    // set cookies
+    for(const key in respSummary.cookies){
+      res.cookie(key, respSummary.cookies[key]);
+    }
+    if(respSummary.data){
+      res.status(respSummary.status).send(JSON.stringify(respSummary.data));
+    }if(respSummary.rawData){
+      res.status(respSummary.status).send(respSummary.rawData);
+    }else{
       res.status(respStatus).send();
     }
   } catch (error) {

@@ -50,13 +50,14 @@ const loadScripts = (dirName) => {
     }
 };
 exports.loadScripts = loadScripts;
-const getFunction = (moduleName, funcName) => {
+const getFunctionInner = (moduleName, funcName) => {
     const mod = modifiers.modules[moduleName];
     if (mod) {
         const stat = fs_1.default.statSync(mod.fullName);
         if (stat.mtime.getTime() != mod.timeStamp) {
             // script is modified
-            delete require.cache[mod.key];
+            if (require.cache[mod.key])
+                delete require.cache[mod.key];
             const mod2 = loadDynamic(modifiers.baseDir, mod.fullName);
             if (mod2) {
                 modifiers.modules[moduleName] = mod2;
@@ -69,5 +70,13 @@ const getFunction = (moduleName, funcName) => {
         return mod.module[funcName];
     }
     return undefined;
+};
+const getFunction = (name) => {
+    const period = name.indexOf(':');
+    if (period < 0)
+        return undefined;
+    const mod = name.substring(0, period);
+    const fnc = name.substring(period + 1);
+    return getFunctionInner(mod, fnc);
 };
 exports.getFunction = getFunction;

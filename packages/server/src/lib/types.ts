@@ -87,6 +87,9 @@ export type Routes = {
   // remove headers from all response.
   suppressHeaders?: string[];
 
+  // scripts directory for editting responses
+  scripts?: string;
+
   // script name in scripts directory to edit all responses(exclude error).
   // it can edit response body when 'Content-Type' is 'application/json'.
   // ** not yet implemented **
@@ -128,6 +131,20 @@ export type RequestSummary = {
   cookies: Record<any>;
 };
 
+// respose data is use to edit response.
+export type ResponseSummary = {
+  // response status
+  status: number;
+  // response data body (only JSON).
+  data?: Record<any>;
+  // response headers
+  headers: Record<any>;
+  // response cookies
+  cookies: Record<any>;
+  // row response data
+  rawData?: any;
+};
+
 export type XMLRequest = express.Request & {
   xml?: any;
 };
@@ -142,4 +159,4 @@ export type ChangeDetector = {
   needsUpdateFile?: boolean;
 } & express.RequestHandler;
 
-export type ResponseModifier = (request: RequestSummary, data: Record<any>, headers: Record<any>, cookies: Record<any>) => void;
+export type ResponseModifier = (request: RequestSummary, response: ResponseSummary, state: Record<any>) => void;

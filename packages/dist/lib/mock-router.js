@@ -15,7 +15,7 @@ const control_router_1 = require("./control-router");
 const openapi_request_validator_1 = __importDefault(require("openapi-request-validator"));
 const uuid_1 = require("uuid");
 const utils_1 = require("./utils");
-const state = {};
+const response_modifier_1 = require("./response-modifier");
 const evaluateConditions = (req, conditions) => {
     if (!conditions)
         return true;
@@ -199,7 +199,7 @@ const createRequestModifier = (validatorArgs) => {
     };
 };
 /// making a endpoint handler
-const createHnadler = (baseDir, endpoint) => {
+const createHnadler = (baseDir, endpoint, defaultScript) => {
     const modifier = createRequestModifier(endpoint.validatorArgs);
     const validator = !endpoint.validatorArgs ? undefined : new openapi_request_validator_1.default(endpoint.validatorArgs);
     function mockHandler(req, res, next) {
@@ -230,10 +230,10 @@ const createHnadler = (baseDir, endpoint) => {
                 proceed = true;
                 if (!pat.metadataType || pat.metadataType === "file") {
                     const metadata = (0, utils_1.loadMetadata)(baseDir, pat.metadata);
-                    (0, utils_1.processMetadata)(metadata.baseDir, metadata.metadata, req, res);
+                    (0, utils_1.processMetadata)(metadata.baseDir, metadata.metadata, defaultScript, requestSummary, res);
                 }
                 else if (pat.metadataType === "immidiate") {
-                    (0, utils_1.processMetadata)(baseDir, pat.metadata, req, res);
+                    (0, utils_1.processMetadata)(baseDir, pat.metadata, defaultScript, requestSummary, res);
                 }
                 break;
             }
@@ -447,6 +447,10 @@ const makeChangeDetector = (config, routes, targetRouter) => {
 /// making a router from difinition file.
 const mockRouter = (config) => {
     const routes = loadRoutes(config);
+    // load scripts
+    if (routes.scripts) {
+        (0, response_modifier_1.loadScripts)(routes.scripts);
+    }
     // root router is the entry point.
     const rootRouter = express_1.default.Router();
     rootRouter.use(express_1.default.urlencoded({ extended: true }));

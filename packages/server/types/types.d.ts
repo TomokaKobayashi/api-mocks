@@ -39,6 +39,7 @@ export declare type Routes = {
     prefix?: string[] | string;
     defaultHeaders?: Header[];
     suppressHeaders?: string[];
+    scripts?: string;
     defaultScript?: string;
     endpoints: Endpoint[];
     customProps?: Record<any>;
@@ -57,6 +58,13 @@ export declare type RequestSummary = {
     headers: IncomingHttpHeaders;
     cookies: Record<any>;
 };
+export declare type ResponseSummary = {
+    status: number;
+    data?: Record<any>;
+    headers: Record<any>;
+    cookies: Record<any>;
+    rawData?: any;
+};
 export declare type XMLRequest = express.Request & {
     xml?: any;
 };
@@ -69,4 +77,4 @@ export declare type ChangeDetector = {
     isChanged?: boolean;
     needsUpdateFile?: boolean;
 } & express.RequestHandler;
-export declare type ResponseModifier = (request: RequestSummary, data: Record<any>, headers: Record<any>, cookies: Record<any>) => void;
+export declare type ResponseModifier = (request: RequestSummary, response: ResponseSummary, state: Record<any>) => void;
