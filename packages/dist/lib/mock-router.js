@@ -431,7 +431,6 @@ const mockRouter = (config) => {
     const routes = loadRoutes(config);
     const routesDir = makeRoutesDir(config);
     // load scripts
-    console.log('routes.scripts = ' + routes.scripts);
     if (routes.scripts) {
         const scriptPath = path_1.default.resolve(routesDir, routes.scripts);
         (0, response_modifier_1.loadScripts)(scriptPath);

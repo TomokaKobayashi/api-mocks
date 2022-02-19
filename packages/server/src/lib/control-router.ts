@@ -33,6 +33,7 @@ import { ChangeDetector, Endpoint, Metadata, Pattern, Routes } from "./types";
 import { makeEndpointsFromYaml } from "./make-endpoints";
 import fs from 'fs';
 import { loadMetadata } from "./utils";
+import path from "path";
 
 const makeEndpointsListHandler = (changeDetector: ChangeDetector) => {
   const listHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -292,6 +293,13 @@ export const controlRouter = (
   debugRouter.use(express.json());
   debugRouter.post("/debug/endpoints", makeAddDebugEndpointHandler(changeDetector));
   debugRouter.delete("/debug/endpoints", makeDeleteDebugEndpointHandler(changeDetector));
-  rootRouter.use(apiRoot, ctrlRouter, router, debugRouter);
+
+  // static contents for gui
+  const publicDir = path.resolve(module.path, '../public');
+  console.log(`gui dir = ${publicDir}`);
+  const statHandler = express.static(publicDir);
+  const pubRouter = express.Router();
+  pubRouter.use('/gui', statHandler);
+  rootRouter.use(apiRoot, ctrlRouter, router, debugRouter, pubRouter);
   return rootRouter;
 };
