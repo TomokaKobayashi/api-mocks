@@ -20,31 +20,8 @@ import { controlRouter } from "./control-router";
 import OpenAPIRequestValidator, { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 import { OpenAPIV3 } from 'openapi-types';
 import {v4} from 'uuid';
-import { loadMetadata, processMetadata } from "./utils";
+import { evaluateConditions, loadMetadata, processMetadata } from "./utils";
 import { loadScripts } from "./response-modifier";
-
-const evaluateConditions = (
-  req: RequestSummary,
-  conditions?: string
-): boolean => {
-  if (!conditions) return true;
-  try {
-    const result = new Function(
-      "req",
-      `
-      const {data, headers, cookies} = req;
-      if(${conditions}) return true;
-      return false;
-      `
-    )(req);
-    return result;
-  } catch (error) {
-    console.log("*** condition parse error ***");
-    console.log(conditions);
-    console.log(error);
-  }
-  return false;
-};
 
 type Modifier = ((parameters: any) => void);
 interface ModifierList {
@@ -336,35 +313,35 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           console.log(`GET    : ${endpoint.pattern}`);
           mockRouter.get(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint)
+            createHnadler(baseDir, endpoint, routes.defaultScript),
           );
           break;
         case "POST":
           console.log(`POST   : ${endpoint.pattern}`);
           mockRouter.post(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint)
+            createHnadler(baseDir, endpoint, routes.defaultScript)
           );
           break;
         case "PUT":
           console.log(`PUT    : ${endpoint.pattern}`);
           mockRouter.put(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint)
+            createHnadler(baseDir, endpoint, routes.defaultScript)
           );
           break;
         case "PATCH":
           console.log(`PATCH  : ${endpoint.pattern}`);
           mockRouter.patch(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint)
+            createHnadler(baseDir, endpoint, routes.defaultScript)
           );
           break;
         case "DELETE":
           console.log(`DELETE : ${endpoint.pattern}`);
           mockRouter.delete(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint)
+            createHnadler(baseDir, endpoint, routes.defaultScript)
           );
           break;
         default:
@@ -512,10 +489,12 @@ const makeChangeDetector = (
 /// making a router from difinition file.
 export const mockRouter = (config?: RouterConfig): express.Router => {
   const routes = loadRoutes(config);
+  const routesDir = makeRoutesDir(config);
 
   // load scripts
   if(routes.scripts){
-    loadScripts(routes.scripts);
+    const scriptPath = path.resolve(routesDir, routes.scripts);
+    loadScripts(scriptPath);
   }
 
   // root router is the entry point.
@@ -550,7 +529,6 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
   }
 
   // prefix router is mocking root.
-  const routesDir = makeRoutesDir(config);
   const prefixRouter = makePrefixRouter(routesDir, routes);
 
   // thunk router is the target of change detector.

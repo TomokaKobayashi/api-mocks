@@ -4,6 +4,8 @@
     "/prefix01",
     "/prefix02"
   ],
+  "scripts": "./scripts",
+  "defaultScript": "sample1.js:aaa",
   "defaultHeaders": [
     {
       "name": "x-def-header",

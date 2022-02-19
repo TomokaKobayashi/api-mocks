@@ -16,24 +16,6 @@ const openapi_request_validator_1 = __importDefault(require("openapi-request-val
 const uuid_1 = require("uuid");
 const utils_1 = require("./utils");
 const response_modifier_1 = require("./response-modifier");
-const evaluateConditions = (req, conditions) => {
-    if (!conditions)
-        return true;
-    try {
-        const result = new Function("req", `
-      const {data, headers, cookies} = req;
-      if(${conditions}) return true;
-      return false;
-      `)(req);
-        return result;
-    }
-    catch (error) {
-        console.log("*** condition parse error ***");
-        console.log(conditions);
-        console.log(error);
-    }
-    return false;
-};
 ;
 const makeContentTypePattern = (contentType) => {
     const pat = contentType.replace(/[*]/g, '[^/]+');
@@ -226,7 +208,7 @@ const createHnadler = (baseDir, endpoint, defaultScript) => {
         }
         let proceed = false;
         for (const pat of endpoint.matches) {
-            if (evaluateConditions(requestSummary, pat.conditions)) {
+            if ((0, utils_1.evaluateConditions)(requestSummary, pat.conditions)) {
                 proceed = true;
                 if (!pat.metadataType || pat.metadataType === "file") {
                     const metadata = (0, utils_1.loadMetadata)(baseDir, pat.metadata);
@@ -302,23 +284,23 @@ const makePrefixRouter = (baseDir, routes) => {
             switch (endpoint.method) {
                 case "GET":
                     console.log(`GET    : ${endpoint.pattern}`);
-                    mockRouter.get(endpoint.pattern, createHnadler(baseDir, endpoint));
+                    mockRouter.get(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
                     break;
                 case "POST":
                     console.log(`POST   : ${endpoint.pattern}`);
-                    mockRouter.post(endpoint.pattern, createHnadler(baseDir, endpoint));
+                    mockRouter.post(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
                     break;
                 case "PUT":
                     console.log(`PUT    : ${endpoint.pattern}`);
-                    mockRouter.put(endpoint.pattern, createHnadler(baseDir, endpoint));
+                    mockRouter.put(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
                     break;
                 case "PATCH":
                     console.log(`PATCH  : ${endpoint.pattern}`);
-                    mockRouter.patch(endpoint.pattern, createHnadler(baseDir, endpoint));
+                    mockRouter.patch(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
                     break;
                 case "DELETE":
                     console.log(`DELETE : ${endpoint.pattern}`);
-                    mockRouter.delete(endpoint.pattern, createHnadler(baseDir, endpoint));
+                    mockRouter.delete(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
                     break;
                 default:
                     console.error(`error: method '${endpoint.method}' is not supported.`);
@@ -447,9 +429,12 @@ const makeChangeDetector = (config, routes, targetRouter) => {
 /// making a router from difinition file.
 const mockRouter = (config) => {
     const routes = loadRoutes(config);
+    const routesDir = makeRoutesDir(config);
     // load scripts
+    console.log('routes.scripts = ' + routes.scripts);
     if (routes.scripts) {
-        (0, response_modifier_1.loadScripts)(routes.scripts);
+        const scriptPath = path_1.default.resolve(routesDir, routes.scripts);
+        (0, response_modifier_1.loadScripts)(scriptPath);
     }
     // root router is the entry point.
     const rootRouter = express_1.default.Router();
@@ -478,7 +463,6 @@ const mockRouter = (config) => {
         }
     }
     // prefix router is mocking root.
-    const routesDir = makeRoutesDir(config);
     const prefixRouter = makePrefixRouter(routesDir, routes);
     // thunk router is the target of change detector.
     const thunkRouter = express_1.default.Router();

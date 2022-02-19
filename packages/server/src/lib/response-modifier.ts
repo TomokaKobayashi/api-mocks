@@ -55,10 +55,18 @@ const loadDynamic = (dir: string, name: string): ModifierScript | undefined => {
   }
 }
 
+const resetModifiers = () => {
+  for(const key in modifiers.modules){
+
+  }
+};
+
 export const loadScripts = (dirName: string) => {
+  console.log('load scripts from ' + dirName);
   modifiers.baseDir = dirName;
   const scripts = findJs(dirName);
   for(const s of scripts){
+    console.log('  ' + s);
     const module: ModifierScript | undefined = loadDynamic(dirName, s);
     if(module){
       modifiers.modules[module.name] = module;

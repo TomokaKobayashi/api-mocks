@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadMetadata = exports.processMetadata = void 0;
+exports.loadMetadata = exports.processMetadata = exports.evaluateConditions = void 0;
 // COPYRIGHT 2021 Kobayashi, Tomoka
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
@@ -18,12 +18,31 @@ const state = {};
 // MULTI-PART -> body(raw string and content-type is missed) -> data
 // HEADERS -> headers -> headers
 // COOKIES -> cookies -> cookies
+const evaluateConditions = (req, conditions) => {
+    if (!conditions)
+        return true;
+    try {
+        const result = new Function("req", "state", `
+      const {data, headers, cookies} = req;
+      if(${conditions}) return true;
+      return false;
+      `)(req, state);
+        return result;
+    }
+    catch (error) {
+        console.log("*** condition parse error ***");
+        console.log(conditions);
+        console.log(error);
+    }
+    return false;
+};
+exports.evaluateConditions = evaluateConditions;
 const processMetadata = (basePath, metadata, defaultScript, req, res) => {
     try {
         const headers = {};
         if (metadata.headers) {
             for (const header of metadata.headers) {
-                headers[header.name] = header.value;
+                headers[header.name.toLowerCase()] = header.value;
             }
         }
         const cookies = {};
@@ -50,7 +69,12 @@ const processMetadata = (basePath, metadata, defaultScript, req, res) => {
                     : basePath + "/" + dataFileName;
                 console.log("dataPath=" + dataPath);
                 const data = fs_1.default.readFileSync(dataPath);
-                res.status(respStatus).send(data);
+                if (headers['content-type'] && headers['content-type'].indexOf('application/json') >= 0) {
+                    respSummary.data = JSON.parse(data.toString());
+                }
+                else {
+                    respSummary.rawData = data;
+                }
             }
             else if (metadata.datatype === "object") {
                 respSummary.data = metadata.data;

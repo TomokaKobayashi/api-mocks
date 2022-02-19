@@ -17,6 +17,29 @@ const state: Record<any> = {};
 // HEADERS -> headers -> headers
 // COOKIES -> cookies -> cookies
 
+export const evaluateConditions = (
+  req: RequestSummary,
+  conditions?: string
+): boolean => {
+  if (!conditions) return true;
+  try {
+    const result = new Function(
+      "req", "state",
+      `
+      const {data, headers, cookies} = req;
+      if(${conditions}) return true;
+      return false;
+      `
+    )(req, state);
+    return result;
+  } catch (error) {
+    console.log("*** condition parse error ***");
+    console.log(conditions);
+    console.log(error);
+  }
+  return false;
+};
+
 export const processMetadata = (
   basePath: string,
   metadata: Metadata,
@@ -28,7 +51,7 @@ export const processMetadata = (
     const headers: Record<any> = {};
     if (metadata.headers) {
       for (const header of metadata.headers) {
-        headers[header.name] = header.value;
+        headers[header.name.toLowerCase()] = header.value;
       }
     }
 
@@ -59,7 +82,11 @@ export const processMetadata = (
           : basePath + "/" + dataFileName;
         console.log("dataPath=" + dataPath);
         const data = fs.readFileSync(dataPath);
-        res.status(respStatus).send(data);
+        if(headers['content-type'] && headers['content-type'].indexOf('application/json')>=0){
+          respSummary.data = JSON.parse(data.toString());
+        }else{
+          respSummary.rawData = data;
+        }
       } else if (metadata.datatype === "object") {
         respSummary.data = metadata.data as Record<any>;
       } else if (metadata.datatype === "value") {

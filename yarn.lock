@@ -888,19 +888,6 @@
     "@babel/helper-validator-identifier" "^7.16.7"
     to-fast-properties "^2.0.0"
 
-"@chandla/api-mock-server@latest":
-  version "0.1.14"
-  resolved "https://registry.yarnpkg.com/@chandla/api-mock-server/-/api-mock-server-0.1.14.tgz#4b1466efbbff9203d8c1634f32bfab09c85af166"
-  integrity sha512-wPXZEfidTxBHIkRzQpyfL2rrwv9v1VYQVda8njP31LzZIPphUdMqYESFiX732ahBv7yjKo0NQBzVmqGBO84inw==
-  dependencies:
-    commander "^8.3.0"
-    express "^4.17.1"
-    express-form-data "^2.0.17"
-    fast-xml-parser "^4.0.0-beta.8"
-    js-yaml "^4.1.0"
-    openapi-request-validator "^10.0.0"
-    uuid "^8.3.2"
-
 "@discoveryjs/json-ext@^0.5.0":
   version "0.5.6"
   resolved "https://registry.yarnpkg.com/@discoveryjs/json-ext/-/json-ext-0.5.6.tgz#d5e0706cf8c6acd8c6032f8d54070af261bbbb2f"
