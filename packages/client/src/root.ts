@@ -1,4 +1,5 @@
 import { h } from 'hyperapp'
-import { Components } from './components'
+//import { Components } from './components'
+import { MainPage } from './pages/index';
 
-export const view = Components.Home()
+export const view = MainPage();

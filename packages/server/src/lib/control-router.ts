@@ -34,6 +34,7 @@ import { makeEndpointsFromYaml } from "./make-endpoints";
 import fs from 'fs';
 import { loadMetadata } from "./utils";
 import path from "path";
+import { getState, setState } from './utils';
 
 const makeEndpointsListHandler = (changeDetector: ChangeDetector) => {
   const listHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -277,6 +278,14 @@ const removeEndpointsHandler = (changeDetector: ChangeDetector) => {
   return removeYaml;
 };
 
+const getStateHandler = (
+  req: express.Request,
+  res: express.Response,
+) => {
+  res.set('content-type', 'application/json');
+  res.status(200).send(JSON.stringify(getState()));
+}
+
 export const controlRouter = (
   apiRoot: string,
   changeDetector: ChangeDetector
@@ -293,6 +302,8 @@ export const controlRouter = (
   debugRouter.use(express.json());
   debugRouter.post("/debug/endpoints", makeAddDebugEndpointHandler(changeDetector));
   debugRouter.delete("/debug/endpoints", makeDeleteDebugEndpointHandler(changeDetector));
+  const monitorRouter = express.Router();
+  monitorRouter.get('/monitor/state', getStateHandler);
 
   // static contents for gui
   const publicDir = path.resolve(module.path, '../public');
@@ -300,6 +311,6 @@ export const controlRouter = (
   const statHandler = express.static(publicDir);
   const pubRouter = express.Router();
   pubRouter.use('/gui', statHandler);
-  rootRouter.use(apiRoot, ctrlRouter, router, debugRouter, pubRouter);
+  rootRouter.use(apiRoot, ctrlRouter, router, debugRouter, monitorRouter, pubRouter);
   return rootRouter;
 };

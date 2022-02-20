@@ -1,9 +1,9 @@
 import { app } from 'hyperapp'
 
-import { Modules as M } from './modules'
+import { state } from './modules/state'
 import { view } from './root'
 import './styles'
 const node = document.getElementById('app')
 if(node){
-  const main = app({init: M.state, view, node})
+  const main = app({init: state, view, node})
 }

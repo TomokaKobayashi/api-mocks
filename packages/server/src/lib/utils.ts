@@ -6,7 +6,11 @@ import { Metadata, RequestSummary, ResponseSummary, Record } from "./types";
 import { getFunction } from "./response-modifier";
 
 // state Object
-const state: Record<any> = {};
+let state: Record<any> = {};
+export const getState = () => state;
+export const setState = (st: any) => {
+  state = {...state, ...st};
+}
 
 // request summary memo:
 // JSON -> body -> data

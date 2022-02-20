@@ -1,4 +1,5 @@
 const CopyPlugin = require("copy-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require('path');
 
 module.exports = {
@@ -12,8 +13,11 @@ module.exports = {
       {
         test: /\.s[ac]ss$/,
         use:[ 
-          {
+/*          {
             loader: 'style-loader',
+          },*/
+          {
+            loader: MiniCssExtractPlugin.loader,
           },
           {
             loader: 'css-loader'
@@ -34,12 +38,18 @@ module.exports = {
       },
 */
       {
-        test: /\.m?js$/,
+        test: /\.m?jsx?$/,
         exclude: /(node_modules|bower_components)/,
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env']
+            presets: ['@babel/preset-env'],
+            "plugins": [
+              ["@babel/plugin-transform-react-jsx", {
+                "pragma": "h",
+                "pragmaFrag": "''"
+              }]
+            ]
           }
         }
       },
@@ -59,11 +69,14 @@ module.exports = {
         },
       ],
     }),
+    new MiniCssExtractPlugin({
+      filename: "main.css",
+    }),
   ],
   resolve: {
     // 拡張子を配列で指定
     extensions: [
-      '.js', '.ts', '.tsx', '.json', '.css', '.html', 'scss', 'sass'
+      '.js', '.jsx', '.ts', '.tsx', '.json', '.css', '.html', '.scss', '.sass'
     ],
   },
   target: ['web', 'es5'],
