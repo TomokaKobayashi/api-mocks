@@ -37,6 +37,7 @@ const make_endpoints_1 = require("./make-endpoints");
 const fs_1 = __importDefault(require("fs"));
 const utils_1 = require("./utils");
 const path_1 = __importDefault(require("path"));
+const utils_2 = require("./utils");
 const makeEndpointsListHandler = (changeDetector) => {
     const listHandler = (req, res, next) => {
         const cdRoutes = changeDetector.routes;
@@ -257,6 +258,10 @@ const removeEndpointsHandler = (changeDetector) => {
     removeYaml.target = changeDetector;
     return removeYaml;
 };
+const getStateHandler = (req, res) => {
+    res.set('content-type', 'application/json');
+    res.status(200).send(JSON.stringify((0, utils_2.getState)()));
+};
 const controlRouter = (apiRoot, changeDetector) => {
     const rootRouter = express_1.default.Router();
     const ctrlRouter = express_1.default.Router();
@@ -270,13 +275,15 @@ const controlRouter = (apiRoot, changeDetector) => {
     debugRouter.use(express_1.default.json());
     debugRouter.post("/debug/endpoints", makeAddDebugEndpointHandler(changeDetector));
     debugRouter.delete("/debug/endpoints", makeDeleteDebugEndpointHandler(changeDetector));
+    const monitorRouter = express_1.default.Router();
+    monitorRouter.get('/monitor/state', getStateHandler);
     // static contents for gui
     const publicDir = path_1.default.resolve(module.path, '../public');
     console.log(`gui dir = ${publicDir}`);
     const statHandler = express_1.default.static(publicDir);
     const pubRouter = express_1.default.Router();
     pubRouter.use('/gui', statHandler);
-    rootRouter.use(apiRoot, ctrlRouter, router, debugRouter, pubRouter);
+    rootRouter.use(apiRoot, ctrlRouter, router, debugRouter, monitorRouter, pubRouter);
     return rootRouter;
 };
 exports.controlRouter = controlRouter;

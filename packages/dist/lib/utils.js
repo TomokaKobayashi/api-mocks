@@ -3,13 +3,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadMetadata = exports.processMetadata = exports.evaluateConditions = void 0;
+exports.loadMetadata = exports.processMetadata = exports.evaluateConditions = exports.setState = exports.getState = void 0;
 // COPYRIGHT 2021 Kobayashi, Tomoka
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const response_modifier_1 = require("./response-modifier");
 // state Object
-const state = {};
+let state = {};
+const getState = () => state;
+exports.getState = getState;
+const setState = (st) => {
+    state = Object.assign(Object.assign({}, state), st);
+};
+exports.setState = setState;
 // request summary memo:
 // JSON -> body -> data
 // FORM -> body -> data

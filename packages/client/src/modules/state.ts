@@ -33,13 +33,36 @@ export const state: AppState = {
   }
 }
 
-export const setActiveTab = (tab: TabKind) => {
-  return (state: any) => {
-    console.log(`set tab = ${tab}`);
-    return {...state, activeTab: tab};
-  }
+export const setActiveTab = (state: any, tab: TabKind) => {
+  console.log(`set tab = ${tab}`);
+  return {...state, activeTab: tab};
 }
 
 export const setServerState = (state: any, serverState: any) => {
-  return {...state, serverState: serverState};
+  const ret = {...state};
+  ret.monitor.serverState = serverState;
+  console.log(JSON.stringify(ret, null, '  '))
+  return ret;
 }
+
+type fetchOption = {
+  url: string;
+  action: any;
+}
+
+const fetchJson = (dispatch: any, options: fetchOption) => {
+  fetch(options.url)
+  .then(response => response.json())
+  .then(data => dispatch(options.action, data))
+}
+
+export const getServerState = (state: any) => [
+  state,
+  [
+    fetchJson,
+    {
+      url: '/control/monitor/state',
+      action: setServerState
+    }
+  ]
+];

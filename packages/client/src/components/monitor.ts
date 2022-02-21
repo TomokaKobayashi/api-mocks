@@ -2,7 +2,7 @@ import { h, text } from 'hyperapp';
 import { AppState } from '../modules/state';
 
 const stateMonitor = (state: AppState) => {
-  return h('div', {}, [text('stateMonitor')]);
+  return h('div', {}, [text(JSON.stringify(state.monitor.serverState, null, '  '))]);
 };
 
 const logMonitor = (state: AppState) => {

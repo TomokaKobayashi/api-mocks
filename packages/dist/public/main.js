@@ -20,33 +20,33 @@ eval("__webpack_require__.r(__webpack_exports__);\n// extracted by mini-css-extr
 
 /***/ }),
 
+/***/ "./src/components/monitor.ts":
+/*!***********************************!*\
+  !*** ./src/components/monitor.ts ***!
+  \***********************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.monitor = void 0;\nconst hyperapp_1 = __webpack_require__(/*! hyperapp */ \"../../node_modules/hyperapp/index.js\");\nconst stateMonitor = (state) => {\n    return (0, hyperapp_1.h)('div', {}, [(0, hyperapp_1.text)(JSON.stringify(state.monitor.serverState, null, '  '))]);\n};\nconst logMonitor = (state) => {\n    return (0, hyperapp_1.h)('div', {}, [(0, hyperapp_1.text)('logMonitor')]);\n};\nconst monitor = (state) => {\n    return (0, hyperapp_1.h)('div', { class: '' }, [\n        stateMonitor(state),\n        logMonitor(state),\n    ]);\n};\nexports.monitor = monitor;\n\n\n//# sourceURL=webpack://client/./src/components/monitor.ts?");
+
+/***/ }),
+
 /***/ "./src/index.ts":
 /*!**********************!*\
   !*** ./src/index.ts ***!
   \**********************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nconst hyperapp_1 = __webpack_require__(/*! hyperapp */ \"../../node_modules/hyperapp/index.js\");\nconst modules_1 = __webpack_require__(/*! ./modules */ \"./src/modules/index.ts\");\nconst root_1 = __webpack_require__(/*! ./root */ \"./src/root.ts\");\n__webpack_require__(/*! ./styles */ \"./src/styles.ts\");\nconst node = document.getElementById('app');\nif (node) {\n    const main = (0, hyperapp_1.app)({ init: modules_1.Modules.state, view: root_1.view, node });\n}\n\n\n//# sourceURL=webpack://client/./src/index.ts?");
+eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nconst hyperapp_1 = __webpack_require__(/*! hyperapp */ \"../../node_modules/hyperapp/index.js\");\nconst state_1 = __webpack_require__(/*! ./modules/state */ \"./src/modules/state.ts\");\nconst root_1 = __webpack_require__(/*! ./root */ \"./src/root.ts\");\n__webpack_require__(/*! ./styles */ \"./src/styles.ts\");\nconst node = document.getElementById('app');\nif (node) {\n    const main = (0, hyperapp_1.app)({ init: state_1.state, view: root_1.view, node });\n}\n\n\n//# sourceURL=webpack://client/./src/index.ts?");
 
 /***/ }),
 
-/***/ "./src/modules/counter.ts":
-/*!********************************!*\
-  !*** ./src/modules/counter.ts ***!
-  \********************************/
+/***/ "./src/modules/state.ts":
+/*!******************************!*\
+  !*** ./src/modules/state.ts ***!
+  \******************************/
 /***/ (function(__unused_webpack_module, exports) {
 
-eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.Counter = void 0;\nvar Counter;\n(function (Counter) {\n    Counter.state = {\n        count: 0\n    };\n    Counter.actions = {\n        down: (value) => (state) => ({ count: state.count - value }),\n        up: (value) => (state) => ({ count: state.count + value })\n    };\n})(Counter = exports.Counter || (exports.Counter = {}));\n\n\n//# sourceURL=webpack://client/./src/modules/counter.ts?");
-
-/***/ }),
-
-/***/ "./src/modules/index.ts":
-/*!******************************!*\
-  !*** ./src/modules/index.ts ***!
-  \******************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.Modules = void 0;\nconst counter_1 = __webpack_require__(/*! ./counter */ \"./src/modules/counter.ts\");\nvar Modules;\n(function (Modules) {\n    Modules.state = Object.assign({}, counter_1.Counter.state);\n    Modules.actions = Object.assign({}, counter_1.Counter.actions);\n})(Modules = exports.Modules || (exports.Modules = {}));\n\n\n//# sourceURL=webpack://client/./src/modules/index.ts?");
+eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.getServerState = exports.setServerState = exports.setActiveTab = exports.state = void 0;\nexports.state = {\n    activeTab: 'monitor',\n    endpoints: {},\n    monitor: {\n        serverState: {},\n        serverLogs: [],\n    }\n};\nconst setActiveTab = (state, tab) => {\n    console.log(`set tab = ${tab}`);\n    return Object.assign(Object.assign({}, state), { activeTab: tab });\n};\nexports.setActiveTab = setActiveTab;\nconst setServerState = (state, serverState) => {\n    const ret = Object.assign({}, state);\n    ret.monitor.serverState = serverState;\n    console.log(JSON.stringify(ret, null, '  '));\n    return ret;\n};\nexports.setServerState = setServerState;\nconst fetchJson = (dispatch, options) => {\n    fetch(options.url)\n        .then(response => response.json())\n        .then(data => dispatch(options.action, data));\n};\nconst getServerState = (state) => [\n    state,\n    [\n        fetchJson,\n        {\n            url: '/control/monitor/state',\n            action: exports.setServerState\n        }\n    ]\n];\nexports.getServerState = getServerState;\n\n\n//# sourceURL=webpack://client/./src/modules/state.ts?");
 
 /***/ }),
 
@@ -56,7 +56,7 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexpo
   \****************************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.MainPage = void 0;\nconst hyperapp_1 = __webpack_require__(/*! hyperapp */ \"../../node_modules/hyperapp/index.js\");\nconst MainPage = () => {\n    return (0, hyperapp_1.h)(\"h1\", {}, (0, hyperapp_1.text)('MainPage worked'));\n};\nexports.MainPage = MainPage;\n\n\n//# sourceURL=webpack://client/./src/pages/index.ts?");
+eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.MainPage = void 0;\nconst hyperapp_1 = __webpack_require__(/*! hyperapp */ \"../../node_modules/hyperapp/index.js\");\nconst monitor_1 = __webpack_require__(/*! ../components/monitor */ \"./src/components/monitor.ts\");\nconst state_1 = __webpack_require__(/*! ../modules/state */ \"./src/modules/state.ts\");\nconst MainPage = () => (state) => {\n    const main = state.activeTab === 'endpoints' ?\n        (0, hyperapp_1.h)('div', {}, (0, hyperapp_1.text)('endpoints')) :\n        (0, hyperapp_1.h)('div', {}, (0, monitor_1.monitor)(state));\n    return (0, hyperapp_1.h)('div', {}, [\n        (0, hyperapp_1.h)('div', { class: 'tabs is-toggle is-small' }, [\n            (0, hyperapp_1.h)('ul', {}, [\n                (0, hyperapp_1.h)('li', {\n                    onclick: (state) => (0, state_1.setActiveTab)(state, 'endpoints'),\n                    class: state.activeTab === 'endpoints' ? 'is-active' : undefined,\n                }, [(0, hyperapp_1.h)('a', {}, (0, hyperapp_1.text)('Endpoints'))]),\n                (0, hyperapp_1.h)('li', {\n                    onclick: (state) => (0, state_1.getServerState)((0, state_1.setActiveTab)(state, 'monitor')),\n                    class: state.activeTab === 'monitor' ? 'is-active' : undefined,\n                }, [(0, hyperapp_1.h)('a', {}, (0, hyperapp_1.text)('Monitor'))]),\n            ])\n        ]),\n        main\n    ]);\n};\nexports.MainPage = MainPage;\n\n\n//# sourceURL=webpack://client/./src/pages/index.ts?");
 
 /***/ }),
 
@@ -66,7 +66,7 @@ eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexpo
   \*********************/
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.view = void 0;\n//import { Components } from './components'\nconst index_1 = __webpack_require__(/*! ./pages/index */ \"./src/pages/index.ts\");\nexports.view = index_1.MainPage;\n\n\n//# sourceURL=webpack://client/./src/root.ts?");
+eval("\nObject.defineProperty(exports, \"__esModule\", ({ value: true }));\nexports.view = void 0;\n//import { Components } from './components'\nconst pages_1 = __webpack_require__(/*! ./pages */ \"./src/pages/index.ts\");\nexports.view = (0, pages_1.MainPage)();\n\n\n//# sourceURL=webpack://client/./src/root.ts?");
 
 /***/ }),
 
