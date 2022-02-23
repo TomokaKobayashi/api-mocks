@@ -1,5 +1,6 @@
 import { h, text } from 'hyperapp'
 import { monitor } from '../components/monitor';
+import { TestNode } from '../components/tree-view';
 import { AppState, getServerState, setActiveTab } from '../modules/state';
 
 export const MainPage = (): any => (state: AppState) => {
@@ -8,6 +9,7 @@ export const MainPage = (): any => (state: AppState) => {
     h('div', {}, monitor(state));
   return h('div', {}, [ 
     h('div', {class: 'tabs is-toggle is-small'}, [
+      TestNode({name:'name', value:'value', children:[]}),
       h('ul', {}, [
         h('li', {
           onclick: (state) => setActiveTab(state, 'endpoints'),

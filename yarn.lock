@@ -3345,6 +3345,11 @@ map-obj@^4.0.0:
   resolved "https://registry.yarnpkg.com/map-obj/-/map-obj-4.3.0.tgz#9304f906e93faae70880da102a9f1df0ea8bb05a"
   integrity sha512-hdN1wVrZbb29eBGiGjJbeP8JbKjq1urkHJ/LIP/NY48MZ1QVXUsQBV1G1zvYFHn1XE06cwjBsOI2K3Ulnj1YXQ==
 
+material-icons@^1.10.7:
+  version "1.10.7"
+  resolved "https://registry.yarnpkg.com/material-icons/-/material-icons-1.10.7.tgz#5c1d2aa8ac73c7079851fc6925d0043a9ff47b73"
+  integrity sha512-DVW/37okFL2Dkjf/85nModJHNFlPdyOvvLJxRdiqSD1UbuTGez51hQt6f0IeXE6c42ww3YmFw0nsXePbufmNbA==
+
 media-typer@0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/media-typer/-/media-typer-0.3.0.tgz#8710d7af0aa626f8fffa1ce00168545263255748"

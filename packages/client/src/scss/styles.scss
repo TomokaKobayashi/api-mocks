@@ -1,4 +1,6 @@
 @charset "utf-8";
 $block-spacing: 0.5em;
 @import "../../../../node_modules/bulma/bulma.sass";
-
+$material-icons-font-path: '~material-icons/iconfont/';
+$material-icons-font-size: 16px !default;
+@import "material-icons/iconfont/material-icons.scss";
