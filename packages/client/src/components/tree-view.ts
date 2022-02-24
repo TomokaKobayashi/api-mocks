@@ -1,22 +1,30 @@
 import { ElementVNode, h, text } from 'hyperapp';
 
-type TreeNode = {
+export type TreeNode = {
   name: string;
-  value: string | number | boolean | null | undefined | any[];
-  children: TreeNode[];
+  value?: string | number | boolean | null | undefined | any[];
+  expanded?: boolean;
+  children?: TreeNode[];
 };
 
-const TreeBranch = (node: TreeNode, level=0): ElementVNode<unknown> => {
+export const TreeBranch = (node: TreeNode, level=0): ElementVNode<unknown> => {
   const children:ElementVNode<unknown>[] = [];
-  if(node.children.length>0){
-
+  let icon = (node.children && node.children.length>0 && node.expanded) ? 'expand_less' : (node.children && node.children.length>0) ? 'expand_more' : '';
+  children.push(h('li', {}, [
+    h('span', {class:'icon'}, [h('span', {class: 'material-icons'}, text(icon))]),
+    h('span', {}, text('test')),
+  ]));
+  if(node.children && node.children.length>0 && node.expanded){
+    node.children.forEach((value)=>{
+      children.push(h('li', {}, TreeBranch(value, level+1)));
+    });
   }
-  return h('div', {}, children);
+  return h('div', {class: 'block', style: {flexDirection: 'column'}}, h('ul', {}, children));
 };
 
 export const TestNode = (node: TreeNode) => {
   return h('ul', {}, [
-    h('span', {class:'icon'}, [h('span', {class: 'material-icons-outlined'}, text('add_box'))]),
+    h('span', {class:'icon'}, [h('span', {class: 'material-icons'}, text('expand_more'))]),
     h('span', {}, text('test')),
   ])
 };

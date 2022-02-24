@@ -1,15 +1,30 @@
 import { h, text } from 'hyperapp'
 import { monitor } from '../components/monitor';
-import { TestNode } from '../components/tree-view';
+import { TreeBranch, TreeNode } from '../components/tree-view';
 import { AppState, getServerState, setActiveTab } from '../modules/state';
+
+const testData: TreeNode = {
+  name: 'root',
+  expanded: true,
+  children:[
+    {
+      name: 'child1',
+      value: 'value1'
+    },
+    {
+      name: 'child2',
+      value: 'value2'
+    },
+  ]
+}
 
 export const MainPage = (): any => (state: AppState) => {
   const main = state.activeTab==='endpoints' ? 
     h('div', {}, text('endpoints')) :
     h('div', {}, monitor(state));
   return h('div', {}, [ 
+    TreeBranch(testData),
     h('div', {class: 'tabs is-toggle is-small'}, [
-      TestNode({name:'name', value:'value', children:[]}),
       h('ul', {}, [
         h('li', {
           onclick: (state) => setActiveTab(state, 'endpoints'),
