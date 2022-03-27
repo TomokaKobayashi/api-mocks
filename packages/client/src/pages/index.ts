@@ -13,7 +13,13 @@ const testData: TreeNode = {
     },
     {
       name: 'child2',
-      value: 'value2'
+      value: 'value2',
+      children: [
+        {
+          name: 'grand-child1',
+          value: 'grand-child-value1'
+        }
+      ]
     },
   ]
 }
