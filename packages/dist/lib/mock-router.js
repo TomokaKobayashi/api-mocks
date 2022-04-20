@@ -214,7 +214,7 @@ const createHnadler = (baseDir, endpoint, defaultScript) => {
                     const metadata = (0, utils_1.loadMetadata)(baseDir, pat.metadata);
                     (0, utils_1.processMetadata)(metadata.baseDir, metadata.metadata, defaultScript, requestSummary, res);
                 }
-                else if (pat.metadataType === "immidiate") {
+                else if (pat.metadataType === "immediate") {
                     (0, utils_1.processMetadata)(baseDir, pat.metadata, defaultScript, requestSummary, res);
                 }
                 break;

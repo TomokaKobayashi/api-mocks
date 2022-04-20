@@ -305,7 +305,7 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
                         ? makeXMLResponse(api, contentBody, respObject)
                         : "Sample value";
                 const pat: Pattern = {
-                  metadataType: "immidiate",
+                  metadataType: "immediate",
                   metadata: {
                     status: Number(status),
                     headers: [
@@ -322,7 +322,7 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
                 tmp.matches.push(pat);
               } else {
                 const pat: Pattern = {
-                  metadataType: "immidiate",
+                  metadataType: "immediate",
                   metadata: {
                     status: Number(status),
                     headers: [...headers],
@@ -333,7 +333,7 @@ export const makeEndpointsFromYaml = (apiYaml: string, sourceName: string) => {
             }
           } else {
             const pat: Pattern = {
-              metadataType: "immidiate",
+              metadataType: "immediate",
               metadata: {
                 status: Number(status),
                 headers: [...headers],

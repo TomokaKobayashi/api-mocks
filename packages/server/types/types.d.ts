@@ -20,7 +20,7 @@ export declare type Metadata = {
 };
 export declare type Pattern = {
     conditions?: string;
-    metadataType?: "file" | "immidiate";
+    metadataType?: "file" | "immediate";
     metadata: string | Metadata;
     customProps?: Record<any>;
 };

@@ -73,7 +73,7 @@ const makeEndpointDetailHandler = (changeDetector) => {
                 const matches = [];
                 for (const mt of endpoint.matches) {
                     let meta = undefined;
-                    if (mt.metadataType === 'immidiate') {
+                    if (mt.metadataType === 'immediate') {
                         meta = mt.metadata;
                     }
                     else if (mt.metadata) {

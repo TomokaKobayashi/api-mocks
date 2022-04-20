@@ -42,7 +42,7 @@ export type Pattern = {
   // like this, 'data.param1===\"AAAA\" || data.param2===\"BBBB\"
   conditions?: string;
   // type of metadata(default: file)
-  metadataType?: "file" | "immidiate";
+  metadataType?: "file" | "immediate";
   // response metadata file path or Metadata by JSON
   metadata: string | Metadata;
   // additional properies

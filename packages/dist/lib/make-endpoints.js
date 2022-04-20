@@ -305,7 +305,7 @@ const makeEndpointsFromYaml = (apiYaml, sourceName) => {
                                             ? makeXMLResponse(api, contentBody, respObject)
                                             : "Sample value";
                                 const pat = {
-                                    metadataType: "immidiate",
+                                    metadataType: "immediate",
                                     metadata: {
                                         status: Number(status),
                                         headers: [
@@ -323,7 +323,7 @@ const makeEndpointsFromYaml = (apiYaml, sourceName) => {
                             }
                             else {
                                 const pat = {
-                                    metadataType: "immidiate",
+                                    metadataType: "immediate",
                                     metadata: {
                                         status: Number(status),
                                         headers: [...headers],
@@ -335,7 +335,7 @@ const makeEndpointsFromYaml = (apiYaml, sourceName) => {
                     }
                     else {
                         const pat = {
-                            metadataType: "immidiate",
+                            metadataType: "immediate",
                             metadata: {
                                 status: Number(status),
                                 headers: [...headers],

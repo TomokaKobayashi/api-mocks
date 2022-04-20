@@ -72,7 +72,7 @@ const makeEndpointDetailHandler = (changeDetector: ChangeDetector) => {
         const matches: Pattern[] = [];
         for(const mt of endpoint.matches){
           let meta = undefined;
-          if(mt.metadataType==='immidiate'){
+          if(mt.metadataType==='immediate'){
             meta = mt.metadata;
           }else if(mt.metadata){
             const m = loadMetadata(changeDetector.routesDir, mt.metadata as string);

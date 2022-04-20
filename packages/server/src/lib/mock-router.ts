@@ -232,7 +232,7 @@ const createHnadler = (
             requestSummary,
             res
           );
-        } else if (pat.metadataType === "immidiate") {
+        } else if (pat.metadataType === "immediate") {
           processMetadata(
             baseDir,
             pat.metadata as Metadata,
