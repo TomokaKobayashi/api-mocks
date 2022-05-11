@@ -1,7 +1,7 @@
 /*!***********************************************************************************************************************!*\
   !*** css ../../node_modules/css-loader/dist/cjs.js!../../node_modules/sass-loader/dist/cjs.js!./src/scss/styles.scss ***!
   \***********************************************************************************************************************/
-/*! bulma.io v0.9.3 | MIT License | github.com/jgthms/bulma */
+/*! bulma.io v0.9.4 | MIT License | github.com/jgthms/bulma */
 /* Bulma Utilities */
 .button, .input, .textarea, .select select, .file-cta,
 .file-name, .pagination-previous,
@@ -489,7 +489,7 @@ a.box:active {
     .button.is-white[disabled],
     fieldset[disabled] .button.is-white {
       background-color: white;
-      border-color: transparent;
+      border-color: white;
       box-shadow: none; }
     .button.is-white.is-inverted {
       background-color: #0a0a0a;
@@ -557,7 +557,7 @@ a.box:active {
     .button.is-black[disabled],
     fieldset[disabled] .button.is-black {
       background-color: #0a0a0a;
-      border-color: transparent;
+      border-color: #0a0a0a;
       box-shadow: none; }
     .button.is-black.is-inverted {
       background-color: white;
@@ -625,7 +625,7 @@ a.box:active {
     .button.is-light[disabled],
     fieldset[disabled] .button.is-light {
       background-color: whitesmoke;
-      border-color: transparent;
+      border-color: whitesmoke;
       box-shadow: none; }
     .button.is-light.is-inverted {
       background-color: rgba(0, 0, 0, 0.7);
@@ -693,7 +693,7 @@ a.box:active {
     .button.is-dark[disabled],
     fieldset[disabled] .button.is-dark {
       background-color: #363636;
-      border-color: transparent;
+      border-color: #363636;
       box-shadow: none; }
     .button.is-dark.is-inverted {
       background-color: #fff;
@@ -761,7 +761,7 @@ a.box:active {
     .button.is-primary[disabled],
     fieldset[disabled] .button.is-primary {
       background-color: #00d1b2;
-      border-color: transparent;
+      border-color: #00d1b2;
       box-shadow: none; }
     .button.is-primary.is-inverted {
       background-color: #fff;
@@ -840,7 +840,7 @@ a.box:active {
     .button.is-link[disabled],
     fieldset[disabled] .button.is-link {
       background-color: #485fc7;
-      border-color: transparent;
+      border-color: #485fc7;
       box-shadow: none; }
     .button.is-link.is-inverted {
       background-color: #fff;
@@ -919,7 +919,7 @@ a.box:active {
     .button.is-info[disabled],
     fieldset[disabled] .button.is-info {
       background-color: #3e8ed0;
-      border-color: transparent;
+      border-color: #3e8ed0;
       box-shadow: none; }
     .button.is-info.is-inverted {
       background-color: #fff;
@@ -998,7 +998,7 @@ a.box:active {
     .button.is-success[disabled],
     fieldset[disabled] .button.is-success {
       background-color: #48c78e;
-      border-color: transparent;
+      border-color: #48c78e;
       box-shadow: none; }
     .button.is-success.is-inverted {
       background-color: #fff;
@@ -1077,7 +1077,7 @@ a.box:active {
     .button.is-warning[disabled],
     fieldset[disabled] .button.is-warning {
       background-color: #ffe08a;
-      border-color: transparent;
+      border-color: #ffe08a;
       box-shadow: none; }
     .button.is-warning.is-inverted {
       background-color: rgba(0, 0, 0, 0.7);
@@ -1156,7 +1156,7 @@ a.box:active {
     .button.is-danger[disabled],
     fieldset[disabled] .button.is-danger {
       background-color: #f14668;
-      border-color: transparent;
+      border-color: #f14668;
       box-shadow: none; }
     .button.is-danger.is-inverted {
       background-color: #fff;
@@ -1302,6 +1302,28 @@ a.box:active {
     .buttons.is-right:not(.has-addons) .button:not(.is-fullwidth) {
       margin-left: 0.25rem;
       margin-right: 0.25rem; }
+
+@media screen and (max-width: 768px) {
+  .button.is-responsive.is-small {
+    font-size: 0.5625rem; }
+  .button.is-responsive,
+  .button.is-responsive.is-normal {
+    font-size: 0.65625rem; }
+  .button.is-responsive.is-medium {
+    font-size: 0.75rem; }
+  .button.is-responsive.is-large {
+    font-size: 1rem; } }
+
+@media screen and (min-width: 769px) and (max-width: 1023px) {
+  .button.is-responsive.is-small {
+    font-size: 0.65625rem; }
+  .button.is-responsive,
+  .button.is-responsive.is-normal {
+    font-size: 0.75rem; }
+  .button.is-responsive.is-medium {
+    font-size: 1rem; }
+  .button.is-responsive.is-large {
+    font-size: 1.25rem; } }
 
 .container {
   flex-grow: 1;
@@ -1871,7 +1893,7 @@ div.icon-text {
   .table th {
     color: #363636; }
     .table th:not([align]) {
-      text-align: inherit; }
+      text-align: left; }
   .table tr.is-selected {
     background-color: #00d1b2;
     color: #fff; }
@@ -2442,7 +2464,8 @@ a.tag:hover {
   .select.is-large {
     font-size: 1.5rem; }
   .select.is-disabled::after {
-    border-color: #7a7a7a; }
+    border-color: #7a7a7a !important;
+    opacity: 0.5; }
   .select.is-fullwidth {
     width: 100%; }
     .select.is-fullwidth select {
@@ -4027,6 +4050,11 @@ body.has-navbar-fixed-bottom {
 
 .navbar-burger {
   color: #4a4a4a;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  border: none;
   cursor: pointer;
   display: block;
   height: 3.25rem;
@@ -4370,9 +4398,11 @@ a.navbar-item,
   .pagination-next:active,
   .pagination-link:active {
     box-shadow: inset 0 1px 2px rgba(10, 10, 10, 0.2); }
-  .pagination-previous[disabled],
+  .pagination-previous[disabled], .pagination-previous.is-disabled,
   .pagination-next[disabled],
-  .pagination-link[disabled] {
+  .pagination-next.is-disabled,
+  .pagination-link[disabled],
+  .pagination-link.is-disabled {
     background-color: #dbdbdb;
     border-color: #dbdbdb;
     box-shadow: none;
@@ -7854,7 +7884,7 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url(aba5a2a316a1d312db26.woff2) format("woff2"), url(824b570fb059ee0a44a9.woff) format("woff"); }
+  src: url(722057e9f33fda8a2324.woff2) format("woff2"), url(f7d18af287d297e063aa.woff) format("woff"); }
 
 .material-icons {
   font-family: "Material Icons";
@@ -7878,7 +7908,7 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url(5d7deb03b9cecba7d247.woff2) format("woff2"), url(123a7ad6784163c39aaa.woff) format("woff"); }
+  src: url(c8b9e5ee043059d66b4a.woff2) format("woff2"), url(c6960162db3259790067.woff) format("woff"); }
 
 .material-icons-outlined {
   font-family: "Material Icons Outlined";
@@ -7902,7 +7932,7 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url(7c985a8aea387341edf9.woff2) format("woff2"), url(159dc8004e17a33f287f.woff) format("woff"); }
+  src: url(01fe2854284471dc63c3.woff2) format("woff2"), url(c21a102f46184af31c2e.woff) format("woff"); }
 
 .material-icons-round {
   font-family: "Material Icons Round";
@@ -7926,7 +7956,7 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url(25f4d306806e85bc60f6.woff2) format("woff2"), url(77bc1b022b575be35fa7.woff) format("woff"); }
+  src: url(7bbf51b27e537506e3a6.woff2) format("woff2"), url(7f8046dbb159a433111e.woff) format("woff"); }
 
 .material-icons-sharp {
   font-family: "Material Icons Sharp";
@@ -7950,7 +7980,7 @@ a.has-text-danger-dark:hover, a.has-text-danger-dark:focus {
   font-style: normal;
   font-weight: 400;
   font-display: block;
-  src: url(7e94e72135150c6b387c.woff2) format("woff2"), url(ee71463e28071436d096.woff) format("woff"); }
+  src: url(3352a8cb8f4c5c7814d8.woff2) format("woff2"), url(b54389a2137b3bb1f10c.woff) format("woff"); }
 
 .material-icons-two-tone {
   font-family: "Material Icons Two Tone";

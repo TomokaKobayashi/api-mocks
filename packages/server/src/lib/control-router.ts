@@ -27,14 +27,44 @@
 //   removes a group of endpoints by file path.
 // PUT /commit (not yet)
 //   saves all changes to files. 
+// POST /switch-routes
+//   switch the 'routes.json' file.
 
 import express from "express";
-import { ChangeDetector, Endpoint, Metadata, Pattern, Routes } from "./types";
+import { ChangeDetector, DEFAULT_ROUTES_FILE, Endpoint, Metadata, Pattern, Routes } from "./types";
 import { makeEndpointsFromYaml } from "./make-endpoints";
 import fs from 'fs';
 import { loadMetadata } from "./utils";
 import path from "path";
 import { getState, setState } from './utils';
+
+const makeSwitchRoutesHandler = (changeDetector: ChangeDetector) => {
+  const switchHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const newRoutePath = req.body.routes;
+    // check existance of new routes.json
+    if(!fs.existsSync(newRoutePath)){
+      // not exist
+      res.set('Content-Type', 'application/json');
+      res.status(400).send(JSON.stringify({result: 'error', reason: `'${newRoutePath}' does not exist.`}));
+      return;
+    }
+    // check stat
+    const stat = fs.statSync(newRoutePath);
+    if(stat.isDirectory()){
+      // the path is directory
+      changeDetector.routesTimestamp = 0;
+      changeDetector.routesFileName = `${newRoutePath}/${DEFAULT_ROUTES_FILE}`;
+      changeDetector.routesDir = newRoutePath;
+    }else{
+      changeDetector.routesTimestamp = 0;
+      changeDetector.routesFileName = newRoutePath;
+      changeDetector.routesDir = path.dirname(newRoutePath);
+    }
+    res.set('Content-Type', 'application/json');
+    res.status(200).send(JSON.stringify({result: 'success'}));
+  };
+  return switchHandler;
+};
 
 const makeEndpointsListHandler = (changeDetector: ChangeDetector) => {
   const listHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -294,6 +324,7 @@ export const controlRouter = (
   const ctrlRouter = express.Router();
   ctrlRouter.get("/endpoints", makeEndpointsListHandler(changeDetector));
   ctrlRouter.get("/endpoints/:id", makeEndpointDetailHandler(changeDetector));
+  ctrlRouter.post("/switch-routes", makeSwitchRoutesHandler(changeDetector));
   const router = express.Router();
   router.use(express.raw({ type: "application/yaml" }));
   router.post("/endpoints/:name", addEndpointsHandler(changeDetector));

@@ -1,0 +1,79 @@
+{
+  "prefix": [
+    "/prefix03",
+    "/prefix04",
+    "/prefix05"
+  ],
+  "scripts": "./scripts",
+  "defaultScript": "sample1.js:aaa",
+  "defaultHeaders": [
+    {
+      "name": "x-def-header",
+      "value": "def-header-value"
+    }
+  ],
+  "suppressHeaders": [
+    "Date"
+  ],
+  "endpoints": [
+    {
+      "pattern": "/aaa/bbb",
+      "method": "GET",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json",
+          "conditions": "data.AAA===\"BBB\""
+        },
+        {
+          "metadata": "responses/response_b/define.json",
+          "conditions": "data.CCC[0]===\"DDD\""
+        }
+      ]
+    },
+    {
+      "pattern": "/ccc/ddd",
+      "method": "GET",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json"
+        }
+      ]
+    },
+    {
+      "pattern": "/ddd/eee",
+      "method": "POST",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json"
+        }
+      ]
+    },
+    {
+      "pattern": "/fff/ggg/:name/:type",
+      "method": "POST",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json"
+        }
+      ]
+    },
+    {
+      "pattern": "/hhh/iii/:name/:type",
+      "method": "POST",
+      "matches": [
+        {
+          "metadata": "responses/response_b/define.json"
+        }
+      ]
+    },
+    {
+      "pattern": "/image/:name",
+      "method": "GET",
+      "matches": [
+        {
+          "metadata": "responses/response_c/define.json"
+        }
+      ]
+    }
+  ]
+}
