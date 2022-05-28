@@ -4,6 +4,7 @@ import express from "express";
 import { program } from "commander";
 import { mockRouter } from "./mock-router";
 import fs from "fs";
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 export type AppConfig = {
   port: number;
@@ -132,8 +133,16 @@ const router = mockRouter({
 app.use(router);
 
 // apply static handler
+const proxyPattern = /https?:\/\//;
 if (finalConfig.staticContents) {
-  app.use(express.static(finalConfig.staticContents));
+  if(proxyPattern.test(finalConfig.staticContents)){
+    app.use(createProxyMiddleware({
+      target: finalConfig.staticContents,
+      changeOrigin: true,
+    }));
+  }else{
+    app.use(express.static(finalConfig.staticContents));
+  }
 }
 
 // starting to serve

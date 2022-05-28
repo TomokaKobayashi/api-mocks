@@ -8,6 +8,7 @@ const express_1 = __importDefault(require("express"));
 const commander_1 = require("commander");
 const mock_router_1 = require("./mock-router");
 const fs_1 = __importDefault(require("fs"));
+const http_proxy_middleware_1 = require("http-proxy-middleware");
 const defConfig = {
     port: 4010,
     disabledSettings: ["x-powered-by", "etag"],
@@ -104,8 +105,17 @@ const router = (0, mock_router_1.mockRouter)({
 // apply mock-router
 app.use(router);
 // apply static handler
+const proxyPattern = /https?:\/\//;
 if (finalConfig.staticContents) {
-    app.use(express_1.default.static(finalConfig.staticContents));
+    if (proxyPattern.test(finalConfig.staticContents)) {
+        app.use((0, http_proxy_middleware_1.createProxyMiddleware)({
+            target: finalConfig.staticContents,
+            changeOrigin: true,
+        }));
+    }
+    else {
+        app.use(express_1.default.static(finalConfig.staticContents));
+    }
 }
 // starting to serve
 app.listen(finalConfig.port, () => {

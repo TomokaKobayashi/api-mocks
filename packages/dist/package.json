@@ -1,6 +1,6 @@
 {
   "name": "@chandla/api-mock-server",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "main": "./lib/mock-server.js",
   "repository": "https://github.com/TomokaKobayashi/api-mocks.git",
   "author": "TomokaKobayashi <chandla@bc.mbn.or.jp>",
@@ -18,13 +18,13 @@
     "express": "^4.17.1",
     "express-form-data": "^2.0.17",
     "fast-xml-parser": "^4.0.0-beta.8",
+    "http-proxy-middleware": "^2.0.6",
     "js-yaml": "^4.1.0",
     "openapi-request-validator": "^10.0.0",
     "uuid": "^8.3.2"
   },
   "scripts": {
     "start": "./bin/mock-server",
-    "build": "echo SKIP BUILD",
-    "publish": "npm login && npm publish --access=public && npm logout"
+    "build": "echo SKIP BUILD"
   }
 }
