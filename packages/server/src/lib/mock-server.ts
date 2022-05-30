@@ -5,6 +5,7 @@ import { program } from "commander";
 import { mockRouter } from "./mock-router";
 import fs from "fs";
 import { createProxyMiddleware } from 'http-proxy-middleware';
+import ProxyAgent from 'proxy-agent';
 
 export type AppConfig = {
   port: number;
@@ -138,6 +139,8 @@ if (finalConfig.staticContents) {
   if(proxyPattern.test(finalConfig.staticContents)){
     app.use(createProxyMiddleware({
       target: finalConfig.staticContents,
+      agent: new ProxyAgent(),
+      secure: false,
       changeOrigin: true,
     }));
   }else{
