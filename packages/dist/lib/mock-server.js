@@ -18,6 +18,12 @@ const defConfig = {
     apiRoot: "/control",
     uploadPath: "./upload",
     fileUpdate: true,
+    staticProxy: {
+        secure: false,
+        autoRewrite: true,
+        protocolRewrite: 'http',
+        changeOrigin: true,
+    }
 };
 const loadConfig = (path) => {
     if (!path)
@@ -58,6 +64,7 @@ const finalConfig = {
     uploadPath: commander_1.program.getOptionValue("upload") || config.uploadPath,
     fileUpdate: commander_1.program.getOptionValue("fileUpdate") || config.fileUpdate,
     disabledSettings: commander_1.program.getOptionValue("disabledSettings") || config.disabledSettings,
+    staticProxy: config.staticProxy,
 };
 // a sample middleware to parse JSON in request headers
 const sampleMiddleware = (req, res, next) => {
@@ -109,12 +116,7 @@ app.use(router);
 const proxyPattern = /https?:\/\//;
 if (finalConfig.staticContents) {
     if (proxyPattern.test(finalConfig.staticContents)) {
-        app.use((0, http_proxy_middleware_1.createProxyMiddleware)({
-            target: finalConfig.staticContents,
-            agent: new proxy_agent_1.default(),
-            secure: false,
-            changeOrigin: true,
-        }));
+        app.use((0, http_proxy_middleware_1.createProxyMiddleware)(Object.assign(Object.assign({}, finalConfig.staticProxy), { target: finalConfig.staticContents, agent: new proxy_agent_1.default() })));
     }
     else {
         app.use(express_1.default.static(finalConfig.staticContents));

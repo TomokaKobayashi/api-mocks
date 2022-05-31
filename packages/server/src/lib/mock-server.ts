@@ -4,7 +4,7 @@ import express from "express";
 import { program } from "commander";
 import { mockRouter } from "./mock-router";
 import fs from "fs";
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import { createProxyMiddleware, Options } from 'http-proxy-middleware';
 import ProxyAgent from 'proxy-agent';
 
 export type AppConfig = {
@@ -15,6 +15,7 @@ export type AppConfig = {
   apiRoot?: string;
   uploadPath?: string;
   fileUpdate?: boolean;
+  staticProxy?: Options;
 };
 
 const defConfig: AppConfig = {
@@ -25,6 +26,12 @@ const defConfig: AppConfig = {
   apiRoot: "/control",
   uploadPath: "./upload",
   fileUpdate: true,
+  staticProxy: {
+    secure: false,
+    autoRewrite: true,
+    protocolRewrite: 'http',
+    changeOrigin: true,
+  }
 };
 
 const loadConfig = (path?: string): AppConfig => {
@@ -76,6 +83,7 @@ const finalConfig: AppConfig = {
   fileUpdate: program.getOptionValue("fileUpdate") || config.fileUpdate,
   disabledSettings:
     program.getOptionValue("disabledSettings") || config.disabledSettings,
+  staticProxy: config.staticProxy,
 };
 
 // a sample middleware to parse JSON in request headers
@@ -138,10 +146,9 @@ const proxyPattern = /https?:\/\//;
 if (finalConfig.staticContents) {
   if(proxyPattern.test(finalConfig.staticContents)){
     app.use(createProxyMiddleware({
+      ...finalConfig.staticProxy,
       target: finalConfig.staticContents,
       agent: new ProxyAgent(),
-      secure: false,
-      changeOrigin: true,
     }));
   }else{
     app.use(express.static(finalConfig.staticContents));
