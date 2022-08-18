@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const commander_1 = require("commander");
+const commander_1 = __importDefault(require("commander"));
 const mock_router_1 = require("./mock-router");
 const fs_1 = __importDefault(require("fs"));
 const http_proxy_middleware_1 = require("http-proxy-middleware");
@@ -41,7 +41,7 @@ const loadConfig = (path) => {
 const parseDisabledSettings = (headers) => {
     return headers.split(",");
 };
-commander_1.program
+commander_1.default
     .version("0.0.1", "-v --version")
     .usage("[options]")
     .option("-c --config <fileName>", "configuration file name")
@@ -55,15 +55,15 @@ commander_1.program
 })
     .option("-d --disabledSettings <param,...>", "disable express settings", parseDisabledSettings)
     .parse(process.argv);
-const config = loadConfig(commander_1.program.getOptionValue("config"));
+const config = loadConfig(commander_1.default.getOptionValue("config"));
 const finalConfig = {
-    port: commander_1.program.getOptionValue("port") || config.port,
-    routesPath: commander_1.program.getOptionValue("routes") || config.routesPath,
-    staticContents: commander_1.program.getOptionValue("static") || config.staticContents,
-    apiRoot: commander_1.program.getOptionValue("apiBaseUri") || config.apiRoot,
-    uploadPath: commander_1.program.getOptionValue("upload") || config.uploadPath,
-    fileUpdate: commander_1.program.getOptionValue("fileUpdate") || config.fileUpdate,
-    disabledSettings: commander_1.program.getOptionValue("disabledSettings") || config.disabledSettings,
+    port: commander_1.default.getOptionValue("port") || config.port,
+    routesPath: commander_1.default.getOptionValue("routes") || config.routesPath,
+    staticContents: commander_1.default.getOptionValue("static") || config.staticContents,
+    apiRoot: commander_1.default.getOptionValue("apiBaseUri") || config.apiRoot,
+    uploadPath: commander_1.default.getOptionValue("upload") || config.uploadPath,
+    fileUpdate: commander_1.default.getOptionValue("fileUpdate") || config.fileUpdate,
+    disabledSettings: commander_1.default.getOptionValue("disabledSettings") || config.disabledSettings,
     staticProxy: config.staticProxy,
 };
 // a sample middleware to parse JSON in request headers
