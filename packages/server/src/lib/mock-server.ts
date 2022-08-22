@@ -1,7 +1,7 @@
 // COPYRIGHT 2021 Kobayashi, Tomoka
 
 import express from "express";
-import { program } from "commander";
+import commander from "commander";
 import { mockRouter } from "./mock-router";
 import fs from "fs";
 import { createProxyMiddleware, Options } from 'http-proxy-middleware';
@@ -50,7 +50,7 @@ const parseDisabledSettings = (headers: string) => {
   return headers.split(",");
 };
 
-program
+commander
   .version("0.0.1", "-v --version")
   .usage("[options]")
   .option("-c --config <fileName>", "configuration file name")
@@ -73,16 +73,16 @@ program
   )
   .parse(process.argv);
 
-const config = loadConfig(program.getOptionValue("config"));
+const config = loadConfig(commander.getOptionValue("config"));
 const finalConfig: AppConfig = {
-  port: program.getOptionValue("port") || config.port,
-  routesPath: program.getOptionValue("routes") || config.routesPath,
-  staticContents: program.getOptionValue("static") || config.staticContents,
-  apiRoot: program.getOptionValue("apiBaseUri") || config.apiRoot,
-  uploadPath: program.getOptionValue("upload") || config.uploadPath,
-  fileUpdate: program.getOptionValue("fileUpdate") || config.fileUpdate,
+  port: commander.getOptionValue("port") || config.port,
+  routesPath: commander.getOptionValue("routes") || config.routesPath,
+  staticContents: commander.getOptionValue("static") || config.staticContents,
+  apiRoot: commander.getOptionValue("apiBaseUri") || config.apiRoot,
+  uploadPath: commander.getOptionValue("upload") || config.uploadPath,
+  fileUpdate: commander.getOptionValue("fileUpdate") || config.fileUpdate,
   disabledSettings:
-    program.getOptionValue("disabledSettings") || config.disabledSettings,
+    commander.getOptionValue("disabledSettings") || config.disabledSettings,
   staticProxy: config.staticProxy,
 };
 

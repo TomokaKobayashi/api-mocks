@@ -1,0 +1,18 @@
+{
+  "prefix": [
+    "/prefix00",
+    "/prefix01",
+    "/prefix02"
+  ],
+  "scripts": "./routes/scripts",
+  "defaultScript": "sample1.js:aaa",
+  "defaultHeaders": [
+    {
+      "name": "x-def-header",
+      "value": "def-header-value"
+    }
+  ],
+  "suppressHeaders": [
+    "Date"
+  ]
+}

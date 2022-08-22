@@ -134,12 +134,25 @@ Content-Type: application/xml
   </bbb>
 </aaa>
 
-###
+### SUCCESS
 PUT http://localhost:4010/prefix00/pet
 Content-Type: application/json
 
 {
     "id": 1245,
+    "name": "NAMAE",
+    "photoUrls": [
+        "http://photo.co.jp"
+    ]
+
+}
+
+### BAD PARAMETER
+PUT http://localhost:4010/prefix00/pet
+Content-Type: application/json
+
+{
+    "id": "1245",
     "name": "NAMAE",
     "photoUrls": [
         "http://photo.co.jp"
