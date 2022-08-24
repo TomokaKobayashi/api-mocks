@@ -1,6 +1,6 @@
 // COPYRIGHT 2021 Kobayashi, Tomoka
 
-import express from "express";
+import express, { NextFunction } from "express";
 import fs from "fs";
 import path from "path";
 import form from "express-form-data";
@@ -22,6 +22,7 @@ import { OpenAPIV3 } from 'openapi-types';
 import {v4} from 'uuid';
 import { evaluateConditions, loadMetadata, processMetadata } from "./utils";
 import { loadScripts } from "./response-modifier";
+import { ErrorLogger } from './logger';
 
 type Modifier = ((parameters: any) => void);
 interface ModifierList {
@@ -294,7 +295,7 @@ const makeResponseHeaderModifier = (routes: Routes | undefined) => {
   };
 };
 
-const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
+const makePrefixRouter = (baseDir: string, routes: Routes | undefined, notFoundHandler: express.RequestHandler | undefined) => {
   const prefix = routes && routes.prefix ? routes.prefix : undefined;
   const prefixPattern = makePrefixPattern(prefix);
   const prefixRouter = express.Router();
@@ -349,6 +350,9 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           throw `'${endpoint.method}' is not supported.`;
       }
     }
+  }
+  if(notFoundHandler){
+    prefixRouter.use(prefixPattern, notFoundHandler);
   }
   return prefixRouter;
 };
@@ -428,13 +432,37 @@ const xmlBodyParser = (req: XMLRequest, res: express.Response, next: express.Nex
   }
 };
 
+// not fount handler
+const makeNotFoundHandler = (logger: ErrorLogger | undefined) => {
+  if(!logger) return undefined;
+  const handler = (req: express.Request, res: express.Response, next: express.NextFunction)=>{
+    console.log(`Not Found : ${req.url}`);
+    // if not found, log request.
+    logger.log({
+      status: 404,
+      data: {
+        ...req.query,
+        ...req.params,
+        ...req.body,
+      },
+      headers: req.headers,
+      cookies: req.cookies,
+      url: req.url,
+      timeStamp: Date.now(),
+    });
+    res.status(404).send();
+  };
+  return handler;
+};
+
 // change deector
 // detects routes settings (on memory or file).
 // change the targetRouter's routes new setting.
 const makeChangeDetector = (
   config: RouterConfig | undefined,
   routes: Routes,
-  targetRouter: express.Router
+  targetRouter: express.Router,
+  notFoundHandler: express.RequestHandler | undefined,
 ): ChangeDetector => {
   function changeDetector(
     req: express.Request,
@@ -450,7 +478,8 @@ const makeChangeDetector = (
         const newRoutes = JSON.parse(rawRoutes.toString()) as Routes;
         const prefixRouter = makePrefixRouter(
           changeDetector.routesDir,
-          newRoutes
+          newRoutes,
+          changeDetector.notFoundHandler,
         );
         changeDetector.targetRouter.stack.splice(0);
         changeDetector.targetRouter.use(prefixRouter);
@@ -462,7 +491,8 @@ const makeChangeDetector = (
       console.log("*** ROUTES ON MEMORY CHANGE DETECTED ***");
       const prefixRouter = makePrefixRouter(
         changeDetector.routesDir,
-        changeDetector.routes
+        changeDetector.routes,
+        changeDetector.notFoundHandler,
       );
       changeDetector.targetRouter.stack.splice(0);
       changeDetector.targetRouter.use(prefixRouter);
@@ -483,6 +513,7 @@ const makeChangeDetector = (
   changeDetector.routes = routes;
   changeDetector.isChanged = false;
   changeDetector.needsUpdateFile = config && config.needRoutesUpdate;
+  changeDetector.notFoundHandler = notFoundHandler;
   return changeDetector;
 };
 
@@ -490,6 +521,10 @@ const makeChangeDetector = (
 export const mockRouter = (config?: RouterConfig): express.Router => {
   const routes = loadRoutes(config);
   const routesDir = makeRoutesDir(config);
+
+  //  create error logger 
+  const logger = config ? new ErrorLogger(config.logNum) : undefined;
+  const notFoundHandler = makeNotFoundHandler(logger);
 
   // load scripts
   if(routes.scripts){
@@ -529,14 +564,14 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
   }
 
   // prefix router is mocking root.
-  const prefixRouter = makePrefixRouter(routesDir, routes);
+  const prefixRouter = makePrefixRouter(routesDir, routes, notFoundHandler);
 
   // thunk router is the target of change detector.
   const thunkRouter = express.Router();
   thunkRouter.use(prefixRouter);
 
   // apply change detector.
-  const changeDetector = makeChangeDetector(config, routes, thunkRouter);
+  const changeDetector = makeChangeDetector(config, routes, thunkRouter, notFoundHandler);
   rootRouter.use(changeDetector);
 
   // apply thunk router.
@@ -544,7 +579,7 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
 
   // create control router.
   if (config?.apiRoot) {
-    const ctrlRouter = controlRouter(config.apiRoot, changeDetector);
+    const ctrlRouter = controlRouter(config.apiRoot, changeDetector, logger);
     rootRouter.use(ctrlRouter);
   }
 

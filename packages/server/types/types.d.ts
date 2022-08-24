@@ -52,6 +52,7 @@ export declare type RouterConfig = {
     uploadPath?: string;
     preprocessMiddle?: express.Handler[] | express.Handler;
     needRoutesUpdate?: boolean;
+    logNum: number;
 };
 export declare type RequestSummary = {
     data: Record<any>;
@@ -76,5 +77,11 @@ export declare type ChangeDetector = {
     routes: Routes;
     isChanged?: boolean;
     needsUpdateFile?: boolean;
+    notFoundHandler?: express.RequestHandler;
 } & express.RequestHandler;
 export declare type ResponseModifier = (request: RequestSummary, response: ResponseSummary, state: Record<any>) => void;
+export declare type ErrorLog = RequestSummary & {
+    status: number;
+    timeStamp: number;
+    url: string;
+};

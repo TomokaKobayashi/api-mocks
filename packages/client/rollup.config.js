@@ -38,7 +38,7 @@ export default {
 		sourcemap: true,
 		format: 'iife',
 		name: 'app',
-		file: 'dist/bundle.js'
+		file: '../dist/public/bundle.js'
 	},
 	plugins: [
 		svelte({
@@ -70,7 +70,7 @@ export default {
 			targets: [
 				{
 					src: "src/images/**/*",
-					dest: "dist/images",
+					dest: "../dist/public/images",
 				}
 			]
 		}),
@@ -78,7 +78,7 @@ export default {
 			template: 'src/index.html',
 			title: 'svelte app',
 			favicon: 'src/favicon.png',
-			fileName: 'dist/index.html',
+			fileName: '../dist/public/index.html',
 			onlinePath: '.',
 		}),
 		// In dev mode, call `npm run start` once

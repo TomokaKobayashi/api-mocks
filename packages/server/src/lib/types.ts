@@ -119,6 +119,8 @@ export type RouterConfig = {
   preprocessMiddle?: express.Handler[] | express.Handler;
   // needs to update 'routes.json' when the file is modified by control-router.
   needRoutesUpdate?: boolean;
+  // number of logs
+  logNum: number;
 };
 
 // request data is use to evaluate condiitons of matching.
@@ -157,6 +159,13 @@ export type ChangeDetector = {
   routes: Routes;
   isChanged?: boolean;
   needsUpdateFile?: boolean;
+  notFoundHandler?: express.RequestHandler;
 } & express.RequestHandler;
 
 export type ResponseModifier = (request: RequestSummary, response: ResponseSummary, state: Record<any>) => void;
+
+export type ErrorLog = RequestSummary & {
+  status: number;
+  timeStamp: number;
+  url: string;
+};

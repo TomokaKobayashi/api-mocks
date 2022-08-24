@@ -16,6 +16,7 @@ export type AppConfig = {
   uploadPath?: string;
   fileUpdate?: boolean;
   staticProxy?: Options;
+  logNum: number;
 };
 
 const defConfig: AppConfig = {
@@ -31,7 +32,8 @@ const defConfig: AppConfig = {
     autoRewrite: true,
     protocolRewrite: 'http',
     changeOrigin: true,
-  }
+  },
+  logNum: 1000,
 };
 
 const loadConfig = (path?: string): AppConfig => {
@@ -59,6 +61,7 @@ commander
   .option("-s --static <directory>", "static contents directory")
   .option("-a --apiBaseUri <uri>", "control api base uri")
   .option("-u --upload <directory>", "directory for upload")
+  .option("-l --logNum <numberOfLogs>", "number of logs")
   .option(
     "-f --fileUpdate <true|false>",
     "routes update by control apis",
@@ -84,6 +87,7 @@ const finalConfig: AppConfig = {
   disabledSettings:
     commander.getOptionValue("disabledSettings") || config.disabledSettings,
   staticProxy: config.staticProxy,
+  logNum: commander.getOptionValue("logNum") || config.logNum,
 };
 
 // a sample middleware to parse JSON in request headers
@@ -136,6 +140,7 @@ const router = mockRouter({
   uploadPath: finalConfig.uploadPath,
   needRoutesUpdate: finalConfig.fileUpdate,
   preprocessMiddle: sampleMiddleware,
+  logNum: finalConfig.logNum,
 });
 
 // apply mock-router

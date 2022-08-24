@@ -293,7 +293,14 @@ const getStateHandler = (req, res) => {
     res.set('content-type', 'application/json');
     res.status(200).send(JSON.stringify((0, utils_2.getState)()));
 };
-const controlRouter = (apiRoot, changeDetector) => {
+const makeGetErrorLogHandler = (logger) => {
+    const handler = (req, res, next) => {
+        res.set('content-type', 'application/json');
+        res.status(200).send(JSON.stringify(logger.getLog()));
+    };
+    return handler;
+};
+const controlRouter = (apiRoot, changeDetector, logger) => {
     const rootRouter = express_1.default.Router();
     const ctrlRouter = express_1.default.Router();
     ctrlRouter.get("/endpoints", makeEndpointsListHandler(changeDetector));
@@ -309,6 +316,9 @@ const controlRouter = (apiRoot, changeDetector) => {
     debugRouter.delete("/debug/endpoints", makeDeleteDebugEndpointHandler(changeDetector));
     const monitorRouter = express_1.default.Router();
     monitorRouter.get('/monitor/state', getStateHandler);
+    if (logger) {
+        monitorRouter.get('/monitor/errorLogs', makeGetErrorLogHandler(logger));
+    }
     // static contents for gui
     const publicDir = path_1.default.resolve(module.path, '../public');
     console.log(`gui dir = ${publicDir}`);

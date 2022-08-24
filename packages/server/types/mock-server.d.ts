@@ -8,4 +8,5 @@ export declare type AppConfig = {
     uploadPath?: string;
     fileUpdate?: boolean;
     staticProxy?: Options;
+    logNum: number;
 };

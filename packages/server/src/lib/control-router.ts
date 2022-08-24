@@ -37,6 +37,7 @@ import fs from 'fs';
 import { loadMetadata } from "./utils";
 import path from "path";
 import { getState, setState } from './utils';
+import { ErrorLogger } from "./logger";
 
 const makeSwitchRoutesHandler = (changeDetector: ChangeDetector) => {
   const switchHandler = (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -316,9 +317,22 @@ const getStateHandler = (
   res.status(200).send(JSON.stringify(getState()));
 }
 
+const makeGetErrorLogHandler = (logger: ErrorLogger) => {
+  const handler = (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
+    res.set('content-type', 'application/json');
+    res.status(200).send(JSON.stringify(logger.getLog()));
+  }
+  return handler;
+};
+
 export const controlRouter = (
   apiRoot: string,
-  changeDetector: ChangeDetector
+  changeDetector: ChangeDetector,
+  logger: ErrorLogger | undefined
 ) => {
   const rootRouter = express.Router();
   const ctrlRouter = express.Router();
@@ -335,6 +349,9 @@ export const controlRouter = (
   debugRouter.delete("/debug/endpoints", makeDeleteDebugEndpointHandler(changeDetector));
   const monitorRouter = express.Router();
   monitorRouter.get('/monitor/state', getStateHandler);
+  if(logger){
+    monitorRouter.get('/monitor/errorLogs', makeGetErrorLogHandler(logger));
+  }
 
   // static contents for gui
   const publicDir = path.resolve(module.path, '../public');

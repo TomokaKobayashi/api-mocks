@@ -5,7 +5,7 @@
   let endpointList = [];
 
   const getEndpoints = async () => {
-		const serverURL = "";
+		const serverURL = "/control/endpoints";
 		const response = await fetch(
 			serverURL,
 			{
@@ -17,12 +17,17 @@
 		return await response.json();    
   }
 
+	onMount(async ()=>{
+		const epList = await getEndpoints();
+		endpointList = [...epList.endpoints];
+	});
 
-</script>
+</script>	
 
 
 <OrderedList>
-  <ListItem>Ordered list item</ListItem>
-  <ListItem>Ordered list item</ListItem>
-  <ListItem>Ordered list item</ListItem>
+	<h1>Endpoints</h1>
+	{#each endpointList as endpoint}
+		<ListItem>{endpoint.pattern}</ListItem>
+	{/each}
 </OrderedList>
