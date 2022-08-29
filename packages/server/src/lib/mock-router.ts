@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import form from "express-form-data";
 import fastXMLparser from "fast-xml-parser";
+import cookieParser from 'cookie-parser';
 import {
   Metadata,
   RequestSummary,
@@ -536,6 +537,7 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
   const rootRouter = express.Router();
   rootRouter.use(express.urlencoded({ extended: true }));
   rootRouter.use(express.json());
+  rootRouter.use(cookieParser());
 
   // express-form-data needs temporary directory to upload.
   if (config && config.uploadPath) {

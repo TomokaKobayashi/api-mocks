@@ -10,6 +10,7 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const express_form_data_1 = __importDefault(require("express-form-data"));
 const fast_xml_parser_1 = __importDefault(require("fast-xml-parser"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const types_1 = require("./types");
 const control_router_1 = require("./control-router");
 const openapi_request_validator_1 = __importDefault(require("openapi-request-validator"));
@@ -466,6 +467,7 @@ const mockRouter = (config) => {
     const rootRouter = express_1.default.Router();
     rootRouter.use(express_1.default.urlencoded({ extended: true }));
     rootRouter.use(express_1.default.json());
+    rootRouter.use((0, cookie_parser_1.default)());
     // express-form-data needs temporary directory to upload.
     if (config && config.uploadPath) {
         rootRouter.use(express_form_data_1.default.parse({ uploadDir: config.uploadPath, autoClean: true }));
