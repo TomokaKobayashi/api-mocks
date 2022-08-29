@@ -4,6 +4,26 @@ import { makeEndpointsFromYaml } from './make-endpoints';
 import commander from "commander";
 import { Endpoint, Metadata } from './types';
 
+const yamlPat = /^.+.\ya?ml$/;
+const findFiles = (dirName: string): string[] | undefined=> {
+  const ret: string[] = [];
+  const dir = fs.readdirSync(dirName);
+  for(const file of dir){
+    const filePath = path.join(dirName, file);
+    if(yamlPat.test(file)){
+      ret.push(filePath);
+    }else{
+      const stat = fs.statSync(filePath);
+      if(stat.isDirectory()){
+        const children = findFiles(filePath);
+        if(children) ret.push(...children);
+      }
+    }
+  }
+  if(ret.length==0) return undefined;
+  return ret;
+};
+
 commander
   .version("0.0.1", "-v --version")
   .usage("[options]")
@@ -30,26 +50,23 @@ if(!fs.existsSync(input)){
   process.exit(1);
 }
 // input is file or dir?
+const yamlPat2 = /^.+\/all.\ya?ml$/;
 const stat = fs.statSync(input);
 const dirFlag = stat.isDirectory();
 const targets: string[] = [];
-const yamlPat = /^.+.\ya?ml$/;
-const yamlPat2 = /^all.\ya?ml$/;
+const temp: string[] = [];
 if(dirFlag){
   // directory
-  const dir = fs.readdirSync(input);
-  const temp: string[] = [];
-  for(const ent of dir){
-    if(yamlPat.test(ent)){
+  const founds = findFiles(input);
+  if(founds){
+    for(const ent of founds){
       if(yamlPat2.test(ent)){
-        // if 'all.yaml' exists, process only 'all.yaml'.
         targets.push(ent);
         break;
       }
       temp.push(ent);
     }
     if(targets.length==0){
-      // 'all.yaml does not exist.
       targets.push(...temp);
     }
   }
@@ -122,7 +139,7 @@ try{
             }else if(metaData.datatype=='value'){
               const value = data as string;
               try{
-                const jsonData = JSON.parse(value)
+                const jsonData = JSON.parse(value);
                 fs.writeFileSync(fullPath, JSON.stringify(jsonData, null, '  '));
               }catch(err){
                 fs.writeFileSync(fullPath, value);
@@ -133,6 +150,26 @@ try{
           }
         }
       });
+    });
+  }else{
+    // if datatype is 'value', try to convert 'object'.
+    endpoints.forEach((endpoint)=>{
+      endpoint.matches.forEach(match=>{
+        const metaData = match.metadata as Metadata;
+        const data = metaData.data;
+        if(data){
+          if(metaData.datatype=='value'){
+            const value = data as string;
+            try{
+              const jsonData = JSON.parse(value);
+              metaData.datatype = 'object';
+              metaData.data = jsonData;
+            }catch(err){
+              // no action
+            }
+          }
+        }
+      });  
     });
   }
 
