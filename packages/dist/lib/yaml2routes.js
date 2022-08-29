@@ -7,6 +7,28 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const make_endpoints_1 = require("./make-endpoints");
 const commander_1 = __importDefault(require("commander"));
+const yamlPat = /^.+.\ya?ml$/;
+const findFiles = (dirName) => {
+    const ret = [];
+    const dir = fs_1.default.readdirSync(dirName);
+    for (const file of dir) {
+        const filePath = path_1.default.join(dirName, file);
+        if (yamlPat.test(file)) {
+            ret.push(filePath);
+        }
+        else {
+            const stat = fs_1.default.statSync(filePath);
+            if (stat.isDirectory()) {
+                const children = findFiles(filePath);
+                if (children)
+                    ret.push(...children);
+            }
+        }
+    }
+    if (ret.length == 0)
+        return undefined;
+    return ret;
+};
 commander_1.default
     .version("0.0.1", "-v --version")
     .usage("[options]")
@@ -31,26 +53,23 @@ if (!fs_1.default.existsSync(input)) {
     process.exit(1);
 }
 // input is file or dir?
+const yamlPat2 = /^.+\/all.\ya?ml$/;
 const stat = fs_1.default.statSync(input);
 const dirFlag = stat.isDirectory();
 const targets = [];
-const yamlPat = /^.+.\ya?ml$/;
-const yamlPat2 = /^all.\ya?ml$/;
+const temp = [];
 if (dirFlag) {
     // directory
-    const dir = fs_1.default.readdirSync(input);
-    const temp = [];
-    for (const ent of dir) {
-        if (yamlPat.test(ent)) {
+    const founds = findFiles(input);
+    if (founds) {
+        for (const ent of founds) {
             if (yamlPat2.test(ent)) {
-                // if 'all.yaml' exists, process only 'all.yaml'.
                 targets.push(ent);
                 break;
             }
             temp.push(ent);
         }
         if (targets.length == 0) {
-            // 'all.yaml does not exist.
             targets.push(...temp);
         }
     }
@@ -131,6 +150,28 @@ try {
                             }
                             metaData.datatype = 'file';
                             metaData.data = fileName;
+                        }
+                    }
+                }
+            });
+        });
+    }
+    else {
+        // if datatype is 'value', try to convert 'object'.
+        endpoints.forEach((endpoint) => {
+            endpoint.matches.forEach(match => {
+                const metaData = match.metadata;
+                const data = metaData.data;
+                if (data) {
+                    if (metaData.datatype == 'value') {
+                        const value = data;
+                        try {
+                            const jsonData = JSON.parse(value);
+                            metaData.datatype = 'object';
+                            metaData.data = jsonData;
+                        }
+                        catch (err) {
+                            // no action
                         }
                     }
                 }
