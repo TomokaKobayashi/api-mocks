@@ -487,6 +487,22 @@ const makeChangeDetector = (
   return changeDetector;
 };
 
+const corsMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, access_token'
+  );
+
+  // intercept OPTIONS method
+  if ('OPTIONS' === req.method) {
+    res.sendStatus(200);
+  } else {
+    next();
+  }
+};
+
 /// making a router from difinition file.
 export const mockRouter = (config?: RouterConfig): express.Router => {
   const routes = loadRoutes(config);
@@ -500,6 +516,7 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
 
   // root router is the entry point.
   const rootRouter = express.Router();
+  rootRouter.use(corsMiddleware);
   rootRouter.use(express.urlencoded({ extended: true }));
   rootRouter.use(express.json());
   rootRouter.use(cookieParser());
