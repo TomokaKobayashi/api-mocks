@@ -103,6 +103,9 @@ export type Routes = {
 
   // file version
   version?: string;
+
+  // suppress content-length header.
+  suppressContentLength?: boolean;
 };
 
 // default routes file name.

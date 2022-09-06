@@ -49,7 +49,8 @@ export const processMetadata = (
   metadata: Metadata,
   defaultScript: string | undefined,
   req: RequestSummary,
-  res: express.Response
+  res: express.Response,
+  suppressContentLength?: boolean,
 ) => {
   try {
     const headers: Record<any> = {};
@@ -119,16 +120,30 @@ export const processMetadata = (
     for(const key in respSummary.cookies){
       res.cookie(key, respSummary.cookies[key]);
     }
-    if(respSummary.data){
-      res.status(respSummary.status).send(JSON.stringify(respSummary.data));
-    }if(respSummary.rawData){
-      res.status(respSummary.status).send(respSummary.rawData);
+    if(suppressContentLength){
+      if(respSummary.data){
+        res.status(respSummary.status).write(JSON.stringify(respSummary.data), ()=>res.send());
+      }if(respSummary.rawData){
+        res.status(respSummary.status).write(respSummary.rawData, ()=>res.send());
+      }else{
+        res.status(respStatus).send();
+      }
     }else{
-      res.status(respStatus).send();
+      if(respSummary.data){
+        res.status(respSummary.status).send(JSON.stringify(respSummary.data));
+      }if(respSummary.rawData){
+        res.status(respSummary.status).send(respSummary.rawData);
+      }else{
+        res.status(respStatus).send();
+      }
     }
   } catch (error) {
     console.log(error);
-    res.status(500).send(error);
+    if(suppressContentLength){
+      res.status(500).write(error, ()=>res.send());
+    }else{
+      res.status(500).send(error);
+    }
   }
 };
 

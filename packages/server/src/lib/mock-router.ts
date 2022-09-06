@@ -181,6 +181,7 @@ const createHnadler = (
   baseDir: string,
   endpoint: Endpoint,
   defaultScript?: string,
+  suppressContentLength?: boolean,
 ) => {
   const modifier = createRequestModifier(endpoint.validatorArgs);
   const validator = !endpoint.validatorArgs ? undefined : new OpenAPIRequestValidator(endpoint.validatorArgs);
@@ -215,7 +216,11 @@ const createHnadler = (
         const data = {
           errors: validationResult
         };
-        res.status(422).send(JSON.stringify(data));
+        if(suppressContentLength){
+          res.status(422).write(JSON.stringify(data), ()=>res.send());
+        }else{
+          res.status(422).send(JSON.stringify(data));
+        }
         return;
       }
     }
@@ -231,7 +236,8 @@ const createHnadler = (
             metadata.metadata,
             defaultScript,
             requestSummary,
-            res
+            res,
+            suppressContentLength,
           );
         } else if (pat.metadataType === "immediate") {
           processMetadata(
@@ -239,7 +245,8 @@ const createHnadler = (
             pat.metadata as Metadata,
             defaultScript,
             requestSummary,
-            res
+            res,
+            suppressContentLength,
           );
         }
         break;
@@ -314,35 +321,35 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
           console.log(`GET    : ${endpoint.pattern}`);
           mockRouter.get(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript),
+            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength),
           );
           break;
         case "POST":
           console.log(`POST   : ${endpoint.pattern}`);
           mockRouter.post(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript)
+            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength)
           );
           break;
         case "PUT":
           console.log(`PUT    : ${endpoint.pattern}`);
           mockRouter.put(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript)
+            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength)
           );
           break;
         case "PATCH":
           console.log(`PATCH  : ${endpoint.pattern}`);
           mockRouter.patch(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript)
+            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength)
           );
           break;
         case "DELETE":
           console.log(`DELETE : ${endpoint.pattern}`);
           mockRouter.delete(
             endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript)
+            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength)
           );
           break;
         default:
