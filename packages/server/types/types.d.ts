@@ -44,6 +44,7 @@ export declare type Routes = {
     endpoints: Endpoint[];
     customProps?: Record<any>;
     version?: string;
+    suppressContentLength?: boolean;
 };
 export declare const DEFAULT_ROUTES_FILE = "routes.json";
 export declare type RouterConfig = {
