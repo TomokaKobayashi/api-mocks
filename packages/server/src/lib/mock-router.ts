@@ -523,7 +523,9 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
 
   // root router is the entry point.
   const rootRouter = express.Router();
-  rootRouter.use(corsMiddleware);
+  if(config && config.enableCors){
+    rootRouter.use(corsMiddleware);
+  }
   rootRouter.use(express.urlencoded({ extended: true }));
   rootRouter.use(express.json());
   rootRouter.use(cookieParser());

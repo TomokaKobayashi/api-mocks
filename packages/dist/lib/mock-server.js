@@ -23,7 +23,8 @@ const defConfig = {
         autoRewrite: true,
         protocolRewrite: 'http',
         changeOrigin: true,
-    }
+    },
+    enableCors: false,
 };
 const loadConfig = (path) => {
     if (!path)
@@ -50,6 +51,7 @@ commander_1.default
     .option("-s --static <directory>", "static contents directory")
     .option("-a --apiBaseUri <uri>", "control api base uri")
     .option("-u --upload <directory>", "directory for upload")
+    .option("-x --enable-cors", "enable CORS headers and preflight request")
     .option("-f --fileUpdate <true|false>", "routes update by control apis", (val) => {
     return val === "true";
 })
@@ -65,6 +67,7 @@ const finalConfig = {
     fileUpdate: commander_1.default.getOptionValue("fileUpdate") || config.fileUpdate,
     disabledSettings: commander_1.default.getOptionValue("disabledSettings") || config.disabledSettings,
     staticProxy: config.staticProxy,
+    enableCors: commander_1.default.getOptionValue("enableCors") || config.enableCors,
 };
 // a sample middleware to parse JSON in request headers
 const sampleMiddleware = (req, res, next) => {
@@ -108,6 +111,7 @@ const router = (0, mock_router_1.mockRouter)({
     apiRoot: finalConfig.apiRoot,
     uploadPath: finalConfig.uploadPath,
     needRoutesUpdate: finalConfig.fileUpdate,
+    enableCors: finalConfig.enableCors,
     preprocessMiddle: sampleMiddleware,
 });
 // apply mock-router
