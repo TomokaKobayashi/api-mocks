@@ -37,6 +37,7 @@ commander_1.default
     .option("-p --prefix <prefix>", "response data file prefix")
     .option("-s --stereo-type <fileName", "prototype of output routes.jsib")
     .option("-w --with-validation", "enable to output validation parameters")
+    .option("-c --suppress-content-length", "set suppressContentLength flag")
     .parse(process.argv);
 const options = commander_1.default.opts();
 const input = options.input;
@@ -44,6 +45,7 @@ const prefix = options.prefix;
 const output = options.output || 'routes.json';
 const withValidation = options.withValidation;
 const stereoTypeFile = options.stereoType;
+const suppressContentLength = options.suppressContentLength;
 if (!input) {
     console.error('ERROR: input is required.');
     process.exit(1);
@@ -179,8 +181,8 @@ try {
         });
     }
     // output routes.json
-    const outputData = Object.assign(Object.assign({}, stereoType), { endpoints });
-    fs_1.default.writeFileSync(path_1.default.resolve(dirName, output), JSON.stringify(outputData, null, '  '));
+    const outputData = Object.assign(Object.assign({}, stereoType), { suppressContentLength, endpoints });
+    fs_1.default.writeFileSync(output, JSON.stringify(outputData, null, '  '));
 }
 catch (error) {
     console.error('ERROR: some error occurred!');

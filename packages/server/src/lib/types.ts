@@ -122,6 +122,8 @@ export type RouterConfig = {
   preprocessMiddle?: express.Handler[] | express.Handler;
   // needs to update 'routes.json' when the file is modified by control-router.
   needRoutesUpdate?: boolean;
+  // enable CORS headers and preflight request(OPTION).
+  enableCors?: boolean;
 };
 
 // request data is use to evaluate condiitons of matching.

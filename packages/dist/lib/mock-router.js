@@ -432,6 +432,18 @@ const makeChangeDetector = (config, routes, targetRouter) => {
     changeDetector.needsUpdateFile = config && config.needRoutesUpdate;
     return changeDetector;
 };
+const corsMiddleware = (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, access_token');
+    // intercept OPTIONS method
+    if ('OPTIONS' === req.method) {
+        res.sendStatus(200);
+    }
+    else {
+        next();
+    }
+};
 /// making a router from difinition file.
 const mockRouter = (config) => {
     const routes = loadRoutes(config);
@@ -443,6 +455,9 @@ const mockRouter = (config) => {
     }
     // root router is the entry point.
     const rootRouter = express_1.default.Router();
+    if (config && config.enableCors) {
+        rootRouter.use(corsMiddleware);
+    }
     rootRouter.use(express_1.default.urlencoded({ extended: true }));
     rootRouter.use(express_1.default.json());
     rootRouter.use((0, cookie_parser_1.default)());

@@ -53,6 +53,7 @@ export declare type RouterConfig = {
     uploadPath?: string;
     preprocessMiddle?: express.Handler[] | express.Handler;
     needRoutesUpdate?: boolean;
+    enableCors?: boolean;
 };
 export declare type RequestSummary = {
     data: Record<any>;
