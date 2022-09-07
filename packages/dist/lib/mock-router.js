@@ -183,7 +183,7 @@ const createRequestModifier = (validatorArgs) => {
     };
 };
 /// making a endpoint handler
-const createHnadler = (baseDir, endpoint, defaultScript) => {
+const createHnadler = (baseDir, endpoint, defaultScript, suppressContentLength) => {
     const modifier = createRequestModifier(endpoint.validatorArgs);
     const validator = !endpoint.validatorArgs ? undefined : new openapi_request_validator_1.default(endpoint.validatorArgs);
     function mockHandler(req, res, next) {
@@ -204,7 +204,12 @@ const createHnadler = (baseDir, endpoint, defaultScript) => {
                 const data = {
                     errors: validationResult
                 };
-                res.status(422).send(JSON.stringify(data));
+                if (suppressContentLength) {
+                    res.status(422).write(JSON.stringify(data), () => res.send());
+                }
+                else {
+                    res.status(422).send(JSON.stringify(data));
+                }
                 return;
             }
         }
@@ -214,10 +219,10 @@ const createHnadler = (baseDir, endpoint, defaultScript) => {
                 proceed = true;
                 if (!pat.metadataType || pat.metadataType === "file") {
                     const metadata = (0, utils_1.loadMetadata)(baseDir, pat.metadata);
-                    (0, utils_1.processMetadata)(metadata.baseDir, metadata.metadata, defaultScript, requestSummary, res);
+                    (0, utils_1.processMetadata)(metadata.baseDir, metadata.metadata, defaultScript, requestSummary, res, suppressContentLength);
                 }
                 else if (pat.metadataType === "immediate") {
-                    (0, utils_1.processMetadata)(baseDir, pat.metadata, defaultScript, requestSummary, res);
+                    (0, utils_1.processMetadata)(baseDir, pat.metadata, defaultScript, requestSummary, res, suppressContentLength);
                 }
                 break;
             }
@@ -286,23 +291,23 @@ const makePrefixRouter = (baseDir, routes, notFoundHandler) => {
             switch (endpoint.method) {
                 case "GET":
                     console.log(`GET    : ${endpoint.pattern}`);
-                    mockRouter.get(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
+                    mockRouter.get(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength));
                     break;
                 case "POST":
                     console.log(`POST   : ${endpoint.pattern}`);
-                    mockRouter.post(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
+                    mockRouter.post(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength));
                     break;
                 case "PUT":
                     console.log(`PUT    : ${endpoint.pattern}`);
-                    mockRouter.put(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
+                    mockRouter.put(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength));
                     break;
                 case "PATCH":
                     console.log(`PATCH  : ${endpoint.pattern}`);
-                    mockRouter.patch(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
+                    mockRouter.patch(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength));
                     break;
                 case "DELETE":
                     console.log(`DELETE : ${endpoint.pattern}`);
-                    mockRouter.delete(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript));
+                    mockRouter.delete(endpoint.pattern, createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength));
                     break;
                 default:
                     console.error(`error: method '${endpoint.method}' is not supported.`);
@@ -451,6 +456,18 @@ const makeChangeDetector = (config, routes, targetRouter, notFoundHandler) => {
     changeDetector.notFoundHandler = notFoundHandler;
     return changeDetector;
 };
+const corsMiddleware = (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, access_token');
+    // intercept OPTIONS method
+    if ('OPTIONS' === req.method) {
+        res.sendStatus(200);
+    }
+    else {
+        next();
+    }
+};
 /// making a router from difinition file.
 const mockRouter = (config) => {
     const routes = loadRoutes(config);
@@ -465,6 +482,9 @@ const mockRouter = (config) => {
     }
     // root router is the entry point.
     const rootRouter = express_1.default.Router();
+    if (config && config.enableCors) {
+        rootRouter.use(corsMiddleware);
+    }
     rootRouter.use(express_1.default.urlencoded({ extended: true }));
     rootRouter.use(express_1.default.json());
     rootRouter.use((0, cookie_parser_1.default)());

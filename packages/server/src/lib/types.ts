@@ -103,6 +103,9 @@ export type Routes = {
 
   // file version
   version?: string;
+
+  // suppress content-length header.
+  suppressContentLength?: boolean;
 };
 
 // default routes file name.
@@ -121,6 +124,8 @@ export type RouterConfig = {
   needRoutesUpdate?: boolean;
   // number of logs
   logNum: number;
+  // enable CORS headers and preflight request(OPTION).
+  enableCors?: boolean;
 };
 
 // request data is use to evaluate condiitons of matching.

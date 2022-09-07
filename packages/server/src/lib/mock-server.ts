@@ -17,6 +17,7 @@ export type AppConfig = {
   fileUpdate?: boolean;
   staticProxy?: Options;
   logNum: number;
+  enableCors?: boolean;
 };
 
 const defConfig: AppConfig = {
@@ -34,6 +35,7 @@ const defConfig: AppConfig = {
     changeOrigin: true,
   },
   logNum: 1000,
+  enableCors: false,
 };
 
 const loadConfig = (path?: string): AppConfig => {
@@ -62,6 +64,7 @@ commander
   .option("-a --apiBaseUri <uri>", "control api base uri")
   .option("-u --upload <directory>", "directory for upload")
   .option("-l --logNum <numberOfLogs>", "number of logs")
+  .option("-x --enable-cors", "enable CORS headers and preflight request")
   .option(
     "-f --fileUpdate <true|false>",
     "routes update by control apis",
@@ -88,6 +91,7 @@ const finalConfig: AppConfig = {
     commander.getOptionValue("disabledSettings") || config.disabledSettings,
   staticProxy: config.staticProxy,
   logNum: commander.getOptionValue("logNum") || config.logNum,
+  enableCors: commander.getOptionValue("enableCors") || config.enableCors,
 };
 
 // a sample middleware to parse JSON in request headers
@@ -139,6 +143,7 @@ const router = mockRouter({
   apiRoot: finalConfig.apiRoot,
   uploadPath: finalConfig.uploadPath,
   needRoutesUpdate: finalConfig.fileUpdate,
+  enableCors: finalConfig.enableCors,
   preprocessMiddle: sampleMiddleware,
   logNum: finalConfig.logNum,
 });

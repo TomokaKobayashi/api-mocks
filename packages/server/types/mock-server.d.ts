@@ -9,4 +9,5 @@ export declare type AppConfig = {
     fileUpdate?: boolean;
     staticProxy?: Options;
     logNum: number;
+    enableCors?: boolean;
 };
