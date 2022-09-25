@@ -1,7 +1,7 @@
 // COPYRIGHT 2021 Kobayashi, Tomoka
 // this functions make route info from yaml.
 import yaml from "js-yaml";
-import { Endpoint, Metadata, Pattern, Header, Record } from "./types";
+import { Endpoint, Metadata, Pattern, Header, Record } from "common";
 import { OpenAPIRequestValidatorArgs } from 'openapi-request-validator';
 import {v4} from "uuid";
 

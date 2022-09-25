@@ -1,16 +1,17 @@
 // COPYRIGHT 2021 Kobayashi, Tomoka
 import path from "path";
-import fs from 'fs';
+import fs from "fs";
 import express from "express";
-import { Metadata, RequestSummary, ResponseSummary, Record } from "./types";
+import { Metadata, Record } from "common";
+import { RequestSummary, ResponseSummary } from "./types";
 import { getFunction } from "./response-modifier";
 
 // state Object
 let state: Record<any> = {};
 export const getState = () => state;
 export const setState = (st: any) => {
-  state = {...state, ...st};
-}
+  state = { ...state, ...st };
+};
 
 // request summary memo:
 // JSON -> body -> data
@@ -28,7 +29,8 @@ export const evaluateConditions = (
   if (!conditions) return true;
   try {
     const result = new Function(
-      "req", "state",
+      "req",
+      "state",
       `
       const {data, headers, cookies} = req;
       if(${conditions}) return true;
@@ -49,8 +51,7 @@ export const processMetadata = (
   metadata: Metadata,
   defaultScript: string | undefined,
   req: RequestSummary,
-  res: express.Response,
-  suppressContentLength?: boolean,
+  res: express.Response
 ) => {
   try {
     const headers: Record<any> = {};
@@ -70,15 +71,15 @@ export const processMetadata = (
     const respStatus = metadata.status
       ? metadata.status
       : metadata.data
-        ? 200
-        : 204;
+      ? 200
+      : 204;
 
     const respSummary: ResponseSummary = {
       status: respStatus,
       headers,
       cookies,
-    }
-    
+    };
+
     if (metadata.data) {
       if (!metadata.datatype || metadata.datatype === "file") {
         const dataFileName = metadata.data as string;
@@ -87,9 +88,12 @@ export const processMetadata = (
           : basePath + "/" + dataFileName;
         console.log("dataPath=" + dataPath);
         const data = fs.readFileSync(dataPath);
-        if(headers['content-type'] && headers['content-type'].indexOf('application/json')>=0){
+        if (
+          headers["content-type"] &&
+          headers["content-type"].indexOf("application/json") >= 0
+        ) {
           respSummary.data = JSON.parse(data.toString());
-        }else{
+        } else {
           respSummary.rawData = data;
         }
       } else if (metadata.datatype === "object") {
@@ -100,54 +104,48 @@ export const processMetadata = (
     }
 
     // modify response
-    if(defaultScript){
+    if (defaultScript) {
       const func = getFunction(defaultScript);
-      if(func){
+      if (func) {
         func(req, respSummary, state);
       }
     }
-    if(metadata.edit){
+    if (metadata.edit) {
       const func = getFunction(metadata.edit);
-      if(func){
+      if (func) {
         func(req, respSummary, state);
       }
     }
     // set headers
-    for(const key in respSummary.headers){
+    for (const key in respSummary.headers) {
       res.set(key, respSummary.headers[key]);
     }
     // set cookies
-    for(const key in respSummary.cookies){
+    for (const key in respSummary.cookies) {
       res.cookie(key, respSummary.cookies[key]);
     }
-    if(suppressContentLength){
-      if(respSummary.data){
-        res.status(respSummary.status).write(JSON.stringify(respSummary.data), ()=>res.send());
-      }if(respSummary.rawData){
-        res.status(respSummary.status).write(respSummary.rawData, ()=>res.send());
-      }else{
-        res.status(respStatus).send();
-      }
-    }else{
-      if(respSummary.data){
-        res.status(respSummary.status).send(JSON.stringify(respSummary.data));
-      }if(respSummary.rawData){
-        res.status(respSummary.status).send(respSummary.rawData);
-      }else{
-        res.status(respStatus).send();
-      }
+    if (respSummary.data) {
+      res
+        .status(respSummary.status)
+        .write(JSON.stringify(respSummary.data), () => res.send());
+    }
+    if (respSummary.rawData) {
+      res
+        .status(respSummary.status)
+        .write(respSummary.rawData, () => res.send());
+    } else {
+      res.status(respStatus).send();
     }
   } catch (error) {
     console.log(error);
-    if(suppressContentLength){
-      res.status(500).write(error, ()=>res.send());
-    }else{
-      res.status(500).send(error);
-    }
+    res.status(500).write(error, () => res.send());
   }
 };
 
-export const loadMetadata = (baseDir: string, filePath: string): {metadata: Metadata, baseDir: string} => {
+export const loadMetadata = (
+  baseDir: string,
+  filePath: string
+): { metadata: Metadata; baseDir: string } => {
   const metadataPath = path.isAbsolute(filePath)
     ? filePath
     : baseDir + "/" + filePath;
@@ -155,4 +153,23 @@ export const loadMetadata = (baseDir: string, filePath: string): {metadata: Meta
   const rawDef = fs.readFileSync(metadataPath);
   const metadata = JSON.parse(rawDef.toString()) as Metadata;
   return { metadata, baseDir: path.dirname(metadataPath) };
+};
+
+export const findFiles = (dirName: string, pattern: RegExp): string[] | undefined=> {
+  const ret: string[] = [];
+  const dir = fs.readdirSync(dirName);
+  for(const file of dir){
+    const filePath = path.join(dirName, file);
+    if(pattern.test(file)){
+      ret.push(filePath);
+    }else{
+      const stat = fs.statSync(filePath);
+      if(stat.isDirectory()){
+        const children = findFiles(filePath, pattern);
+        if(children) ret.push(...children);
+      }
+    }
+  }
+  if(ret.length==0) return undefined;
+  return ret;
 };

@@ -2,27 +2,10 @@ import fs from 'fs';
 import path from 'path';
 import { makeEndpointsFromYaml } from './make-endpoints';
 import commander from "commander";
-import { Endpoint, Metadata } from './types';
+import { Endpoint, Metadata } from 'common';
+import { findFiles } from './utils';
 
-const yamlPat = /^.+.\ya?ml$/;
-const findFiles = (dirName: string): string[] | undefined=> {
-  const ret: string[] = [];
-  const dir = fs.readdirSync(dirName);
-  for(const file of dir){
-    const filePath = path.join(dirName, file);
-    if(yamlPat.test(file)){
-      ret.push(filePath);
-    }else{
-      const stat = fs.statSync(filePath);
-      if(stat.isDirectory()){
-        const children = findFiles(filePath);
-        if(children) ret.push(...children);
-      }
-    }
-  }
-  if(ret.length==0) return undefined;
-  return ret;
-};
+const yamlPat = /^.+\.ya?ml$/;
 
 commander
   .version("0.0.1", "-v --version")
@@ -32,7 +15,7 @@ commander
   .option("-p --prefix <prefix>", "response data file prefix")
   .option("-s --stereo-type <fileName", "prototype of output routes.jsib")
   .option("-w --with-validation", "enable to output validation parameters")
-  .option("-c --suppress-content-length", "set suppressContentLength flag")
+  .option("-c --suppress-content-length", "set suppressContentLength flag(omitted)")
   .parse(process.argv);
 
 const options = commander.opts();
@@ -41,7 +24,6 @@ const prefix = options.prefix as string;
 const output = options.output as string || 'routes.json';
 const withValidation = options.withValidation as boolean;
 const stereoTypeFile = options.stereoType;
-const suppressContentLength = options.suppressContentLength;
 
 if(!input){
   console.error('ERROR: input is required.');
@@ -59,7 +41,7 @@ const targets: string[] = [];
 const temp: string[] = [];
 if(dirFlag){
   // directory
-  const founds = findFiles(input);
+  const founds = findFiles(input, yamlPat);
   if(founds){
     for(const ent of founds){
       if(yamlPat2.test(ent)){
@@ -176,7 +158,7 @@ try{
   }
 
   // output routes.json
-  const outputData = {...stereoType, suppressContentLength, endpoints};
+  const outputData = {...stereoType, endpoints};
   fs.writeFileSync(output, JSON.stringify(outputData, null, '  '));
 }catch(error){
   console.error('ERROR: some error occurred!');

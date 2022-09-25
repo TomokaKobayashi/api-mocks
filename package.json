@@ -3,6 +3,7 @@
   "version": "0.1.16",
   "private": true,
   "workspaces": [
+    "common",
     "packages/*",
     "test"
   ],

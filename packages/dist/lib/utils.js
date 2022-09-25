@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.loadMetadata = exports.processMetadata = exports.evaluateConditions = exports.setState = exports.getState = void 0;
+exports.findFiles = exports.loadMetadata = exports.processMetadata = exports.evaluateConditions = exports.setState = exports.getState = void 0;
 // COPYRIGHT 2021 Kobayashi, Tomoka
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
@@ -43,7 +43,7 @@ const evaluateConditions = (req, conditions) => {
     return false;
 };
 exports.evaluateConditions = evaluateConditions;
-const processMetadata = (basePath, metadata, defaultScript, req, res, suppressContentLength) => {
+const processMetadata = (basePath, metadata, defaultScript, req, res) => {
     try {
         const headers = {};
         if (metadata.headers) {
@@ -75,7 +75,8 @@ const processMetadata = (basePath, metadata, defaultScript, req, res, suppressCo
                     : basePath + "/" + dataFileName;
                 console.log("dataPath=" + dataPath);
                 const data = fs_1.default.readFileSync(dataPath);
-                if (headers['content-type'] && headers['content-type'].indexOf('application/json') >= 0) {
+                if (headers["content-type"] &&
+                    headers["content-type"].indexOf("application/json") >= 0) {
                     respSummary.data = JSON.parse(data.toString());
                 }
                 else {
@@ -110,37 +111,23 @@ const processMetadata = (basePath, metadata, defaultScript, req, res, suppressCo
         for (const key in respSummary.cookies) {
             res.cookie(key, respSummary.cookies[key]);
         }
-        if (suppressContentLength) {
-            if (respSummary.data) {
-                res.status(respSummary.status).write(JSON.stringify(respSummary.data), () => res.send());
-            }
-            if (respSummary.rawData) {
-                res.status(respSummary.status).write(respSummary.rawData, () => res.send());
-            }
-            else {
-                res.status(respStatus).send();
-            }
+        if (respSummary.data) {
+            res
+                .status(respSummary.status)
+                .write(JSON.stringify(respSummary.data), () => res.send());
+        }
+        if (respSummary.rawData) {
+            res
+                .status(respSummary.status)
+                .write(respSummary.rawData, () => res.send());
         }
         else {
-            if (respSummary.data) {
-                res.status(respSummary.status).send(JSON.stringify(respSummary.data));
-            }
-            if (respSummary.rawData) {
-                res.status(respSummary.status).send(respSummary.rawData);
-            }
-            else {
-                res.status(respStatus).send();
-            }
+            res.status(respStatus).send();
         }
     }
     catch (error) {
         console.log(error);
-        if (suppressContentLength) {
-            res.status(500).write(error, () => res.send());
-        }
-        else {
-            res.status(500).send(error);
-        }
+        res.status(500).write(error, () => res.send());
     }
 };
 exports.processMetadata = processMetadata;
@@ -154,3 +141,25 @@ const loadMetadata = (baseDir, filePath) => {
     return { metadata, baseDir: path_1.default.dirname(metadataPath) };
 };
 exports.loadMetadata = loadMetadata;
+const findFiles = (dirName, pattern) => {
+    const ret = [];
+    const dir = fs_1.default.readdirSync(dirName);
+    for (const file of dir) {
+        const filePath = path_1.default.join(dirName, file);
+        if (pattern.test(file)) {
+            ret.push(filePath);
+        }
+        else {
+            const stat = fs_1.default.statSync(filePath);
+            if (stat.isDirectory()) {
+                const children = (0, exports.findFiles)(filePath, pattern);
+                if (children)
+                    ret.push(...children);
+            }
+        }
+    }
+    if (ret.length == 0)
+        return undefined;
+    return ret;
+};
+exports.findFiles = findFiles;

@@ -1,4 +1,4 @@
-import { Options } from 'http-proxy-middleware';
+import { Options } from "http-proxy-middleware";
 export declare type AppConfig = {
     port: number;
     routesPath?: string;
@@ -6,7 +6,6 @@ export declare type AppConfig = {
     staticContents?: string;
     apiRoot?: string;
     uploadPath?: string;
-    fileUpdate?: boolean;
     staticProxy?: Options;
     enableCors?: boolean;
 };
