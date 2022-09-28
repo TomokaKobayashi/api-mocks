@@ -1,6 +1,6 @@
 {
   "name": "@chandla/api-mock-server",
-  "version": "0.1.26",
+  "version": "0.1.27",
   "main": "./lib/mock-server.js",
   "repository": "https://github.com/TomokaKobayashi/api-mocks.git",
   "author": "TomokaKobayashi <chandla@bc.mbn.or.jp>",
@@ -12,7 +12,8 @@
   ],
   "bin": {
     "mock-server": "./bin/mock-server",
-    "yaml2routes": "./bin/yaml2routes"
+    "yaml2routes": "./bin/yaml2routes",
+    "editor-server": "./bin/editor-server"
   },
   "dependencies": {
     "commander": "^8.3.0",

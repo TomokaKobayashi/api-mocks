@@ -1,6 +1,4 @@
 /// <reference types='node' />
-import express from "express";
-import { IncomingHttpHeaders } from "http";
 import { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 
 // general map string to T.
@@ -105,7 +103,6 @@ export declare type Routes = {
 
   // script name in scripts directory to edit all responses(exclude error).
   // it can edit response body when 'Content-Type' is 'application/json'.
-  // ** not yet implemented **
   defaultScript?: string;
 
   // type of endpoints
