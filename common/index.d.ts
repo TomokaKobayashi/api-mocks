@@ -84,6 +84,9 @@ export declare type Endpoint = {
 // types of endpoints. default is 'immediate'.
 export declare type EndpointsType = "file" | "dir" | "immediate";
 
+// name of inner endpoints file in routes
+export declare const INNER_ENDPOINTS = "__inner__";
+
 // structure definition of 'routers.json'
 export declare type Routes = {
   // endpoint prefix pattern RegExp.
