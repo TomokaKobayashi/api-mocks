@@ -17,11 +17,10 @@ const defConfig = {
     staticContents: "./public",
     apiRoot: "/control",
     uploadPath: "./upload",
-    fileUpdate: true,
     staticProxy: {
         secure: false,
         autoRewrite: true,
-        protocolRewrite: 'http',
+        protocolRewrite: "http",
         changeOrigin: true,
     },
     enableCors: false,
@@ -64,7 +63,6 @@ const finalConfig = {
     staticContents: commander_1.default.getOptionValue("static") || config.staticContents,
     apiRoot: commander_1.default.getOptionValue("apiBaseUri") || config.apiRoot,
     uploadPath: commander_1.default.getOptionValue("upload") || config.uploadPath,
-    fileUpdate: commander_1.default.getOptionValue("fileUpdate") || config.fileUpdate,
     disabledSettings: commander_1.default.getOptionValue("disabledSettings") || config.disabledSettings,
     staticProxy: config.staticProxy,
     enableCors: commander_1.default.getOptionValue("enableCors") || config.enableCors,
@@ -110,7 +108,6 @@ const router = (0, mock_router_1.mockRouter)({
     routesPath: finalConfig.routesPath,
     apiRoot: finalConfig.apiRoot,
     uploadPath: finalConfig.uploadPath,
-    needRoutesUpdate: finalConfig.fileUpdate,
     enableCors: finalConfig.enableCors,
     preprocessMiddle: sampleMiddleware,
 });

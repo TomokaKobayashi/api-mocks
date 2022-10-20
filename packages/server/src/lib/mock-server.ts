@@ -4,8 +4,8 @@ import express from "express";
 import commander from "commander";
 import { mockRouter } from "./mock-router";
 import fs from "fs";
-import { createProxyMiddleware, Options } from 'http-proxy-middleware';
-import ProxyAgent from 'proxy-agent';
+import { createProxyMiddleware, Options } from "http-proxy-middleware";
+import ProxyAgent from "proxy-agent";
 
 export type AppConfig = {
   port: number;
@@ -14,7 +14,6 @@ export type AppConfig = {
   staticContents?: string;
   apiRoot?: string;
   uploadPath?: string;
-  fileUpdate?: boolean;
   staticProxy?: Options;
   enableCors?: boolean;
 };
@@ -26,11 +25,10 @@ const defConfig: AppConfig = {
   staticContents: "./public",
   apiRoot: "/control",
   uploadPath: "./upload",
-  fileUpdate: true,
   staticProxy: {
     secure: false,
     autoRewrite: true,
-    protocolRewrite: 'http',
+    protocolRewrite: "http",
     changeOrigin: true,
   },
   enableCors: false,
@@ -83,7 +81,6 @@ const finalConfig: AppConfig = {
   staticContents: commander.getOptionValue("static") || config.staticContents,
   apiRoot: commander.getOptionValue("apiBaseUri") || config.apiRoot,
   uploadPath: commander.getOptionValue("upload") || config.uploadPath,
-  fileUpdate: commander.getOptionValue("fileUpdate") || config.fileUpdate,
   disabledSettings:
     commander.getOptionValue("disabledSettings") || config.disabledSettings,
   staticProxy: config.staticProxy,
@@ -138,7 +135,6 @@ const router = mockRouter({
   routesPath: finalConfig.routesPath,
   apiRoot: finalConfig.apiRoot,
   uploadPath: finalConfig.uploadPath,
-  needRoutesUpdate: finalConfig.fileUpdate,
   enableCors: finalConfig.enableCors,
   preprocessMiddle: sampleMiddleware,
 });
@@ -149,13 +145,15 @@ app.use(router);
 // apply static handler
 const proxyPattern = /https?:\/\//;
 if (finalConfig.staticContents) {
-  if(proxyPattern.test(finalConfig.staticContents)){
-    app.use(createProxyMiddleware({
-      ...finalConfig.staticProxy,
-      target: finalConfig.staticContents,
-      agent: new ProxyAgent(),
-    }));
-  }else{
+  if (proxyPattern.test(finalConfig.staticContents)) {
+    app.use(
+      createProxyMiddleware({
+        ...finalConfig.staticProxy,
+        target: finalConfig.staticContents,
+        agent: new ProxyAgent(),
+      })
+    );
+  } else {
     app.use(express.static(finalConfig.staticContents));
   }
 }

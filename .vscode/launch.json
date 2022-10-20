@@ -5,14 +5,29 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "pwa-node",
+      "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "name": "Launch Server",
       "skipFiles": [
         "<node_internals>/**"
       ],
       "cwd": "${workspaceFolder}/test",
       "program": "${workspaceFolder}/packages/dist/lib/mock-server.js",
+      "args": ["-r", "./routes/only.json"],
+      "outFiles": [
+        "${workspaceFolder}/**/*.js"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch yaml2routes",
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "cwd": "${workspaceFolder}/test",
+      "program": "${workspaceFolder}/packages/dist/lib/yaml2routes.js",
+      "args": ["-i", "samplev3.yaml", "-o", "testout1.json", "-r", "1"],
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ]

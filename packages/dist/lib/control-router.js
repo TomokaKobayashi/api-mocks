@@ -6,20 +6,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.controlRouter = void 0;
 // Control APIs
-// GET /endpoints
-//   returns a list of endpoints as 'endpoints' of Routes structure.
-// GET /ednpoint/:id
-//   returns an information of an endpoint as Endpoint structure.
-// PUT /endpoint/:id (not yet)
-//   updates an information of an endpoint by Endpoint stucture.
-// POST /endpoint (not yet)
-//   adds a new information of an endpoint by Endpoint structure.
-// DELETE /endpoint/:id (not yet)
-//   removes an information if an endpoint by id.
-// GET /response-data/:id/:index (not yet)
-//   returns a response data by an id and an index of 'patterns' of Endpoint structure.
-// PUT /response-data/:id/:index (not yet)
-//   updates a response data by an id and an index of 'patterns' of Endpoint structure.
 // POST /endpoints/:name
 //   adds endpoints by Open API specification YAML file.
 //   and groups these endpoints by name.
@@ -30,25 +16,25 @@ exports.controlRouter = void 0;
 //   and groups these endpoints by file path.
 // DELETE /debug/endpoints
 //   removes a group of endpoints by file path.
-// PUT /commit (not yet)
-//   saves all changes to files. 
 // POST /switch-routes
 //   switch the 'routes.json' file.
 const express_1 = __importDefault(require("express"));
 const types_1 = require("./types");
 const make_endpoints_1 = require("./make-endpoints");
 const fs_1 = __importDefault(require("fs"));
-const utils_1 = require("./utils");
 const path_1 = __importDefault(require("path"));
-const utils_2 = require("./utils");
+const utils_1 = require("./utils");
 const makeSwitchRoutesHandler = (changeDetector) => {
     const switchHandler = (req, res, next) => {
         const newRoutePath = req.body.routes;
         // check existance of new routes.json
         if (!fs_1.default.existsSync(newRoutePath)) {
             // not exist
-            res.set('Content-Type', 'application/json');
-            res.status(400).send(JSON.stringify({ result: 'error', reason: `'${newRoutePath}' does not exist.` }));
+            res.set("Content-Type", "application/json");
+            res.status(400).send(JSON.stringify({
+                result: "error",
+                reason: `'${newRoutePath}' does not exist.`,
+            }));
             return;
         }
         // check stat
@@ -64,74 +50,10 @@ const makeSwitchRoutesHandler = (changeDetector) => {
             changeDetector.routesFileName = newRoutePath;
             changeDetector.routesDir = path_1.default.dirname(newRoutePath);
         }
-        res.set('Content-Type', 'application/json');
-        res.status(200).send(JSON.stringify({ result: 'success' }));
+        res.set("Content-Type", "application/json");
+        res.status(200).send(JSON.stringify({ result: "success" }));
     };
     return switchHandler;
-};
-const makeEndpointsListHandler = (changeDetector) => {
-    const listHandler = (req, res, next) => {
-        const cdRoutes = changeDetector.routes;
-        const retRoute = {
-            prefix: cdRoutes.prefix,
-            defaultHeaders: cdRoutes.defaultHeaders ? [...cdRoutes.defaultHeaders] : undefined,
-            suppressHeaders: cdRoutes.suppressHeaders ? [...cdRoutes.suppressHeaders] : undefined,
-            defaultScript: cdRoutes.defaultScript,
-            customProps: cdRoutes.customProps ? Object.assign({}, cdRoutes.customProps) : undefined,
-            endpoints: [],
-            version: cdRoutes.version,
-        };
-        for (const endpoint of cdRoutes.endpoints) {
-            retRoute.endpoints.push({
-                pattern: endpoint.pattern,
-                method: endpoint.method,
-                id: endpoint.id,
-                matches: [],
-                customProps: endpoint.customProps,
-                name: endpoint.name,
-            });
-        }
-        res.set('Content-Type', 'application/json');
-        res.status(200).send(JSON.stringify(retRoute));
-    };
-    return listHandler;
-};
-const makeEndpointDetailHandler = (changeDetector) => {
-    const detailHandler = (req, res, next) => {
-        const cdRoutes = changeDetector.routes;
-        for (const endpoint of cdRoutes.endpoints) {
-            if (endpoint.id === req.params.id) {
-                const matches = [];
-                for (const mt of endpoint.matches) {
-                    let meta = undefined;
-                    if (mt.metadataType === 'immediate') {
-                        meta = mt.metadata;
-                    }
-                    else if (mt.metadata) {
-                        const m = (0, utils_1.loadMetadata)(changeDetector.routesDir, mt.metadata);
-                        meta = m.metadata;
-                    }
-                    matches.push({
-                        conditions: mt.conditions,
-                        metadata: meta ? meta : '',
-                        customProps: mt.customProps,
-                    });
-                }
-                const ret = {
-                    pattern: endpoint.pattern,
-                    id: endpoint.id,
-                    method: endpoint.method,
-                    customProps: endpoint.customProps,
-                    matches: matches,
-                    validatorArgs: endpoint.validatorArgs,
-                };
-                res.set('Content-Type', 'application/json');
-                res.status(200).send(JSON.stringify(ret));
-            }
-        }
-        res.status(404).send();
-    };
-    return detailHandler;
 };
 // if found same named endpoint, return true and increment count
 const incrementSameNameEndpoint = (endpoints, name) => {
@@ -290,14 +212,12 @@ const removeEndpointsHandler = (changeDetector) => {
     return removeYaml;
 };
 const getStateHandler = (req, res) => {
-    res.set('content-type', 'application/json');
-    res.status(200).send(JSON.stringify((0, utils_2.getState)()));
+    res.set("content-type", "application/json");
+    res.status(200).send(JSON.stringify((0, utils_1.getState)()));
 };
 const controlRouter = (apiRoot, changeDetector) => {
     const rootRouter = express_1.default.Router();
     const ctrlRouter = express_1.default.Router();
-    ctrlRouter.get("/endpoints", makeEndpointsListHandler(changeDetector));
-    ctrlRouter.get("/endpoints/:id", makeEndpointDetailHandler(changeDetector));
     ctrlRouter.post("/switch-routes", makeSwitchRoutesHandler(changeDetector));
     const router = express_1.default.Router();
     router.use(express_1.default.raw({ type: "application/yaml" }));
@@ -308,14 +228,8 @@ const controlRouter = (apiRoot, changeDetector) => {
     debugRouter.post("/debug/endpoints", makeAddDebugEndpointHandler(changeDetector));
     debugRouter.delete("/debug/endpoints", makeDeleteDebugEndpointHandler(changeDetector));
     const monitorRouter = express_1.default.Router();
-    monitorRouter.get('/monitor/state', getStateHandler);
-    // static contents for gui
-    const publicDir = path_1.default.resolve(module.path, '../public');
-    console.log(`gui dir = ${publicDir}`);
-    const statHandler = express_1.default.static(publicDir);
-    const pubRouter = express_1.default.Router();
-    pubRouter.use('/gui', statHandler);
-    rootRouter.use(apiRoot, ctrlRouter, router, debugRouter, monitorRouter, pubRouter);
+    monitorRouter.get("/monitor/state", getStateHandler);
+    rootRouter.use(apiRoot, ctrlRouter, router, debugRouter, monitorRouter);
     return rootRouter;
 };
 exports.controlRouter = controlRouter;

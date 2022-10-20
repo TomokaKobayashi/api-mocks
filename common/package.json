@@ -1,0 +1,6 @@
+{
+  "name": "@types/common",
+  "version": "0.0.1",
+  "license": "MIT",
+  "types": "index.d.ts"
+}

@@ -265,3 +265,6 @@ AAA=BBB&CCC=DDD&CCC=EEE
 
 ###
 GET /
+
+###
+GET http://localhost:4010/pet/findByTags

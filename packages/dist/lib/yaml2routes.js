@@ -7,37 +7,18 @@ const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const make_endpoints_1 = require("./make-endpoints");
 const commander_1 = __importDefault(require("commander"));
-const yamlPat = /^.+.\ya?ml$/;
-const findFiles = (dirName) => {
-    const ret = [];
-    const dir = fs_1.default.readdirSync(dirName);
-    for (const file of dir) {
-        const filePath = path_1.default.join(dirName, file);
-        if (yamlPat.test(file)) {
-            ret.push(filePath);
-        }
-        else {
-            const stat = fs_1.default.statSync(filePath);
-            if (stat.isDirectory()) {
-                const children = findFiles(filePath);
-                if (children)
-                    ret.push(...children);
-            }
-        }
-    }
-    if (ret.length == 0)
-        return undefined;
-    return ret;
-};
+const utils_1 = require("./utils");
+const yamlPat = /^.+\.ya?ml$/;
 commander_1.default
     .version("0.0.1", "-v --version")
     .usage("[options]")
     .option("-i --input <fileName | dirName>", "input file or directory name(required)")
     .option("-o --output <fileName>", "output file name for routes.json(default: 'routes.json'")
     .option("-p --prefix <prefix>", "response data file prefix")
+    .option("-r --required-only <level>", "output only 'required' data", parseInt)
     .option("-s --stereo-type <fileName", "prototype of output routes.jsib")
     .option("-w --with-validation", "enable to output validation parameters")
-    .option("-c --suppress-content-length", "set suppressContentLength flag")
+    .option("-c --suppress-content-length", "set suppressContentLength flag(omitted)")
     .parse(process.argv);
 const options = commander_1.default.opts();
 const input = options.input;
@@ -45,7 +26,7 @@ const prefix = options.prefix;
 const output = options.output || 'routes.json';
 const withValidation = options.withValidation;
 const stereoTypeFile = options.stereoType;
-const suppressContentLength = options.suppressContentLength;
+const requiredOnly = options.requiredOnly;
 if (!input) {
     console.error('ERROR: input is required.');
     process.exit(1);
@@ -62,7 +43,7 @@ const targets = [];
 const temp = [];
 if (dirFlag) {
     // directory
-    const founds = findFiles(input);
+    const founds = (0, utils_1.findFiles)(input, yamlPat);
     if (founds) {
         for (const ent of founds) {
             if (yamlPat2.test(ent)) {
@@ -109,7 +90,7 @@ try {
     for (const target of targets) {
         try {
             const content = fs_1.default.readFileSync(target, 'utf-8');
-            const endpoint = (0, make_endpoints_1.makeEndpointsFromYaml)(content, target);
+            const endpoint = (0, make_endpoints_1.makeEndpointsFromYaml)(content, target, requiredOnly);
             endpoints.push(...endpoint);
         }
         catch (err) {
@@ -181,7 +162,7 @@ try {
         });
     }
     // output routes.json
-    const outputData = Object.assign(Object.assign({}, stereoType), { suppressContentLength, endpoints });
+    const outputData = Object.assign(Object.assign({}, stereoType), { endpoints });
     fs_1.default.writeFileSync(output, JSON.stringify(outputData, null, '  '));
 }
 catch (error) {

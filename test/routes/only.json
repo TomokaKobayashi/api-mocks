@@ -1,0 +1,22 @@
+{
+  "prefix": [
+    "/prefix00",
+    "/prefix01",
+    "/prefix02"
+  ],
+  "scripts": "./scripts",
+  "defaultScript": "sample1.js:aaa",
+  "suppressContentLength": true,
+  "defaultHeaders": [
+    {
+      "name": "x-def-header",
+      "value": "def-header-value-y"
+    }
+  ],
+  "suppressHeaders": [
+    "Date",
+    "Content-Length"
+  ],
+  "endpointsType": "file",
+  "endpointsPath": "./routes.json"
+}

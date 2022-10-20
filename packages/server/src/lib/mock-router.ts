@@ -5,42 +5,47 @@ import fs from "fs";
 import path from "path";
 import form from "express-form-data";
 import fastXMLparser from "fast-xml-parser";
-import cookieParser from 'cookie-parser';
+import cookieParser from "cookie-parser";
+import { Routes, Metadata, Endpoint } from "common";
 import {
-  Metadata,
   RequestSummary,
-  Endpoint,
-  Routes,
   RouterConfig,
   DEFAULT_ROUTES_FILE,
   ChangeDetector,
   XMLRequest,
-  Record,
+  EndpointsChangeDetector,
 } from "./types";
 import { controlRouter } from "./control-router";
-import OpenAPIRequestValidator, { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
-import { OpenAPIV3 } from 'openapi-types';
-import {v4} from 'uuid';
-import { evaluateConditions, loadMetadata, processMetadata } from "./utils";
+import OpenAPIRequestValidator, {
+  OpenAPIRequestValidatorArgs,
+} from "openapi-request-validator";
+import { OpenAPIV3 } from "openapi-types";
+import { v4 } from "uuid";
+import { evaluateConditions, findFiles, loadMetadata, processMetadata } from "./utils";
 import { loadScripts } from "./response-modifier";
 
-type Modifier = ((parameters: any) => void);
+type Modifier = (parameters: any) => void;
 interface ModifierList {
-  [key: string]: Modifier[]
-};
-
-const makeContentTypePattern = (contentType: string) => {
-  const pat = contentType.replace(/[*]/g, '[^/]+');
-  return new RegExp(pat);
+  [key: string]: Modifier[];
 }
 
+const makeContentTypePattern = (contentType: string) => {
+  const pat = contentType.replace(/[*]/g, "[^/]+");
+  return new RegExp(pat);
+};
+
 const xmlToJSON = (obj: any, schema: OpenAPIV3.SchemaObject): any => {
-  if (typeof obj === 'undefined') return undefined;
-  if (schema.type === 'array') {
+  if (typeof obj === "undefined") return undefined;
+  if (schema.type === "array") {
     const items = schema.items as OpenAPIV3.SchemaObject;
     if (schema.xml && schema.xml.wrapped) {
       const ret = [];
-      const name = (items.xml && items.xml.name) ? items.xml.name : schema.xml.name ? schema.xml.name : undefined;
+      const name =
+        items.xml && items.xml.name
+          ? items.xml.name
+          : schema.xml.name
+          ? schema.xml.name
+          : undefined;
       if (name) {
         const obj2 = obj[name];
         if (!Array.isArray(obj2)) {
@@ -70,16 +75,18 @@ const xmlToJSON = (obj: any, schema: OpenAPIV3.SchemaObject): any => {
   } else {
     return obj;
   }
-}
+};
 
-const createXMLToObjectModifier = (validatorArgs: OpenAPIRequestValidatorArgs | undefined) => {
+const createXMLToObjectModifier = (
+  validatorArgs: OpenAPIRequestValidatorArgs | undefined
+) => {
   if (!validatorArgs || !validatorArgs.requestBody) return undefined;
   const body = validatorArgs.requestBody;
   const contents = body.content;
   let target = undefined;
   for (const content in contents) {
     const pat = makeContentTypePattern(content);
-    if (pat.test('application/xml') || pat.test('text/xml')) {
+    if (pat.test("application/xml") || pat.test("text/xml")) {
       target = contents[content];
       break;
     }
@@ -87,7 +94,7 @@ const createXMLToObjectModifier = (validatorArgs: OpenAPIRequestValidatorArgs | 
   if (!target || !target.schema) return undefined;
   const schema = target.schema as OpenAPIV3.SchemaObject;
   // no name top level object is not allowed.
-  // named and wrapped property is not structure name. 
+  // named and wrapped property is not structure name.
   if (!schema.xml || !schema.xml.name) return undefined;
   const name = schema.xml.name;
   return (req: XMLRequest) => {
@@ -103,7 +110,9 @@ const createXMLToObjectModifier = (validatorArgs: OpenAPIRequestValidatorArgs | 
 // making a data modifier
 // if parameter needs array-type, convert a single parameter to an array.
 // if request body is xml, to JSON.
-const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | undefined) => {
+const createRequestModifier = (
+  validatorArgs: OpenAPIRequestValidatorArgs | undefined
+) => {
   const xmlModifier = createXMLToObjectModifier(validatorArgs);
   if (!validatorArgs || !validatorArgs.parameters) {
     if (xmlModifier) {
@@ -113,13 +122,18 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
     }
     return undefined;
   }
-  const modifierList: ModifierList = { header: [], path: [], query: [], cookie: [] };
+  const modifierList: ModifierList = {
+    header: [],
+    path: [],
+    query: [],
+    cookie: [],
+  };
   for (const param of validatorArgs.parameters) {
     const v3Param = param as OpenAPIV3.ParameterObject;
     if (v3Param && v3Param.schema && modifierList[v3Param.in]) {
       const place = modifierList[v3Param.in];
       const schema = v3Param.schema as OpenAPIV3.SchemaObject;
-      if (schema.type && schema.type === 'array') {
+      if (schema.type && schema.type === "array") {
         place.push((parameters: any) => {
           if (parameters && parameters[v3Param.name]) {
             const val = parameters[v3Param.name];
@@ -132,19 +146,25 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
           const items = schema.items as OpenAPIV3.SchemaObject;
           if (items.default) {
             place.push((parameters: any) => {
-              console.log(`${v3Param.name} : ${parameters[v3Param.name]}`)
+              console.log(`${v3Param.name} : ${parameters[v3Param.name]}`);
               if (parameters && !parameters[v3Param.name]) {
-                if (items.format === 'string') { }
-                parameters[v3Param.name] = items.format === 'string' ? ['' + items.default] : [items.default];
+                if (items.format === "string") {
+                }
+                parameters[v3Param.name] =
+                  items.format === "string"
+                    ? ["" + items.default]
+                    : [items.default];
               }
             });
           }
-          if (items.type === 'integer' || items.type === 'number') {
+          if (items.type === "integer" || items.type === "number") {
             place.push((parameters: any) => {
               if (parameters && parameters[v3Param.name]) {
-                parameters[v3Param.name] = parameters[v3Param.name].map((element: any) => {
-                  return Number(element);
-                });
+                parameters[v3Param.name] = parameters[v3Param.name].map(
+                  (element: any) => {
+                    return Number(element);
+                  }
+                );
               }
             });
           }
@@ -153,11 +173,14 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
         if (schema.default) {
           place.push((parameters: any) => {
             if (parameters && !parameters[v3Param.name]) {
-              parameters[v3Param.name] = schema.format === 'string' ? '' + schema.default : schema.default;
+              parameters[v3Param.name] =
+                schema.format === "string"
+                  ? "" + schema.default
+                  : schema.default;
             }
           });
         }
-        if (schema.type === 'integer' || schema.type === 'number') {
+        if (schema.type === "integer" || schema.type === "number") {
           place.push((parameters: any) => {
             if (parameters && parameters[v3Param.name]) {
               parameters[v3Param.name] = Number(parameters[v3Param.name]);
@@ -169,10 +192,22 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
   }
   return (req: XMLRequest) => {
     if (xmlModifier) xmlModifier(req);
-    if (modifierList.header) modifierList.header.forEach((modify) => { modify(req.headers) });
-    if (modifierList.path) modifierList.path.forEach((modify) => { modify(req.params) });
-    if (modifierList.query) modifierList.query.forEach((modify) => { modify(req.query) });
-    if (modifierList.cookie) modifierList.cookie.forEach((modify) => { modify(req.cookies) });
+    if (modifierList.header)
+      modifierList.header.forEach((modify) => {
+        modify(req.headers);
+      });
+    if (modifierList.path)
+      modifierList.path.forEach((modify) => {
+        modify(req.params);
+      });
+    if (modifierList.query)
+      modifierList.query.forEach((modify) => {
+        modify(req.query);
+      });
+    if (modifierList.cookie)
+      modifierList.cookie.forEach((modify) => {
+        modify(req.cookies);
+      });
   };
 };
 
@@ -180,11 +215,12 @@ const createRequestModifier = (validatorArgs: OpenAPIRequestValidatorArgs | unde
 const createHnadler = (
   baseDir: string,
   endpoint: Endpoint,
-  defaultScript?: string,
-  suppressContentLength?: boolean,
+  defaultScript?: string
 ) => {
   const modifier = createRequestModifier(endpoint.validatorArgs);
-  const validator = !endpoint.validatorArgs ? undefined : new OpenAPIRequestValidator(endpoint.validatorArgs);
+  const validator = !endpoint.validatorArgs
+    ? undefined
+    : new OpenAPIRequestValidator(endpoint.validatorArgs);
 
   function mockHandler(
     req: express.Request,
@@ -214,13 +250,9 @@ const createHnadler = (
       const validationResult = validator.validateRequest(req);
       if (validationResult) {
         const data = {
-          errors: validationResult
+          errors: validationResult,
         };
-        if(suppressContentLength){
-          res.status(422).write(JSON.stringify(data), ()=>res.send());
-        }else{
-          res.status(422).send(JSON.stringify(data));
-        }
+        res.status(422).write(JSON.stringify(data), () => res.send());
         return;
       }
     }
@@ -236,8 +268,7 @@ const createHnadler = (
             metadata.metadata,
             defaultScript,
             requestSummary,
-            res,
-            suppressContentLength,
+            res
           );
         } else if (pat.metadataType === "immediate") {
           processMetadata(
@@ -245,8 +276,7 @@ const createHnadler = (
             pat.metadata as Metadata,
             defaultScript,
             requestSummary,
-            res,
-            suppressContentLength,
+            res
           );
         }
         break;
@@ -270,36 +300,207 @@ const makePrefixPattern = (prefix: string | string[] | undefined): RegExp => {
     return new RegExp(`(${prefix})`);
   }
 };
+
 const makeResponseHeaderModifier = (routes: Routes | undefined) => {
-  if (!routes || (!routes.defaultHeaders && !routes.suppressHeaders)) return undefined;
+  if (!routes || (!routes.defaultHeaders && !routes.suppressHeaders))
+    return undefined;
   const modifiers: ((res: express.Response) => void)[] = [];
   if (routes.defaultHeaders) {
     const headers = routes.defaultHeaders;
-    modifiers.push(
-      (res: express.Response) => {
-        for (const header of headers) {
-          res.setHeader(header.name, header.value);
-        }
+    modifiers.push((res: express.Response) => {
+      for (const header of headers) {
+        res.setHeader(header.name, header.value);
       }
-    );
+    });
   }
   if (routes.suppressHeaders) {
     const headers = routes.suppressHeaders;
-    modifiers.push(
-      (res: express.Response) => {
-        for (const header of headers) {
-          res.removeHeader(header);
-        }
+    modifiers.push((res: express.Response) => {
+      for (const header of headers) {
+        res.removeHeader(header);
       }
-    );
+    });
   }
   if (modifiers.length == 0) return undefined;
-  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  return (
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) => {
     for (const modifier of modifiers) {
       modifier(res);
     }
     next();
   };
+};
+
+const makeEndpoints = (
+  endpoints: Endpoint[],
+  baseDir: string,
+  defaultScript?: string
+) => {
+  const mockRouter = express.Router();
+
+  for (const endpoint of endpoints) {
+    if(!endpoint.id){
+      endpoint.id = v4();
+    }
+    switch (endpoint.method) {
+      case "GET":
+        console.log(`GET    : ${endpoint.pattern}`);
+        mockRouter.get(
+          endpoint.pattern,
+          createHnadler(baseDir, endpoint, defaultScript)
+        );
+        break;
+      case "POST":
+        console.log(`POST   : ${endpoint.pattern}`);
+        mockRouter.post(
+          endpoint.pattern,
+          createHnadler(baseDir, endpoint, defaultScript)
+        );
+        break;
+      case "PUT":
+        console.log(`PUT    : ${endpoint.pattern}`);
+        mockRouter.put(
+          endpoint.pattern,
+          createHnadler(baseDir, endpoint, defaultScript)
+        );
+        break;
+      case "PATCH":
+        console.log(`PATCH  : ${endpoint.pattern}`);
+        mockRouter.patch(
+          endpoint.pattern,
+          createHnadler(baseDir, endpoint, defaultScript)
+        );
+        break;
+      case "DELETE":
+        console.log(`DELETE : ${endpoint.pattern}`);
+        mockRouter.delete(
+          endpoint.pattern,
+          createHnadler(baseDir, endpoint, defaultScript)
+        );
+        break;
+      default:
+        console.error(`error: method '${endpoint.method}' is not supported.`);
+        throw `'${endpoint.method}' is not supported.`;
+    }
+  }
+  return mockRouter;
+};
+
+const getDir = (filePath?: string) => {
+  if (filePath) {
+    if (fs.existsSync(filePath)) {
+      const stat = fs.statSync(filePath);
+      if (stat.isDirectory()) {
+        return filePath;
+      } else {
+        return path.dirname(filePath);
+      }
+    }
+  }
+  // default is current directory.
+  return ".";
+};
+
+// make change detector for endpoints.
+const makeEndpointsChangeDetector = (
+  targetRouter: express.Router,
+  fileName: string,
+  defaultScript?: string
+): EndpointsChangeDetector => {
+  const stat = fs.statSync(fileName);
+  const dir = getDir(fileName);
+  function changeDetector(
+    req: express.Request,
+    res: express.Response,
+    next: express.NextFunction
+  ) {
+    const stat = fs.statSync(changeDetector.endpointsFileName);
+    if (stat.mtime.getTime() !== changeDetector.endpointsTimestamp) {
+      // modified
+      console.log("*** ENDPOINTS FILE CHANGE DETECTED ***");
+      changeDetector.endpointsTimestamp = stat.mtime.getTime();
+      const rawEndpoints = fs.readFileSync(
+        changeDetector.endpointsFileName,
+        "utf-8"
+      );
+      const newEndpoints = JSON.parse(rawEndpoints);
+      if (newEndpoints.endpoints) {
+        const newEndpoitnsRouter = makeEndpoints(
+          newEndpoints.endpoints as Endpoint[],
+          changeDetector.endpointsDir,
+          changeDetector.defaultScript
+        );
+        changeDetector.targetRouter.stack.splice(0);
+        changeDetector.targetRouter.use(newEndpoitnsRouter);
+        console.log(`*** ENDPOINTS ${fileName} IS RECONSTRUCTED ***`);
+      }
+    }
+    next();
+  }
+  changeDetector.targetRouter = targetRouter;
+  changeDetector.endpointsFileName = fileName;
+  changeDetector.endpointsDir = dir;
+  changeDetector.endpointsTimestamp = stat.mtime.getTime();
+  changeDetector.defaultScript = defaultScript;
+  return changeDetector;
+};
+
+// make endpoints from a file.
+const makeEndpointsFromFile = (
+  endpointsFile: string,
+  routes: Routes | undefined
+) => {
+  const rawEndpoints = fs.readFileSync(endpointsFile, "utf-8");
+  const endpointsData = JSON.parse(rawEndpoints);
+  if (endpointsData.endpoints) {
+    const dir = getDir(endpointsFile);
+    const endpoints = makeEndpoints(
+      endpointsData.endpoints as Endpoint[],
+      dir,
+      routes ? routes.defaultScript : undefined
+    );
+
+    const thunkRouter = express.Router();
+    thunkRouter.use(endpoints);
+    const changeDetector = makeEndpointsChangeDetector(
+      thunkRouter,
+      endpointsFile
+    );
+
+    const root = express.Router();
+    root.use(changeDetector);
+    root.use(thunkRouter);
+    return root;
+  }
+  return undefined;
+};
+
+// make endpoints from files in directory
+const jsonPattern = /^.+\.json$/;
+const mekaEndpointsFromDir = (
+  endpointsDir: string,
+  routes: Routes | undefined
+) => {
+  const binder = express.Router();
+  const files = findFiles(endpointsDir, jsonPattern);
+  if(files){
+    for(const file of files){
+      try{
+        const resolvedPath = path.resolve(endpointsDir, file);
+        const router = makeEndpointsFromFile(resolvedPath, routes);
+        if (router) {
+          binder.use(router);
+        }
+      }catch(err){
+        console.error(`ERROR!!! endpoint file '${file}' is skipped.`);
+        console.error(err);
+      }
+    }
+  }
+  return binder;
 };
 
 const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
@@ -314,66 +515,32 @@ const makePrefixRouter = (baseDir: string, routes: Routes | undefined) => {
   prefixRouter.use(prefixPattern, mockRouter);
 
   // apply mock endpoint handlers.
-  if (routes && routes.endpoints) {
-    for (const endpoint of routes.endpoints) {
-      switch (endpoint.method) {
-        case "GET":
-          console.log(`GET    : ${endpoint.pattern}`);
-          mockRouter.get(
-            endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength),
-          );
-          break;
-        case "POST":
-          console.log(`POST   : ${endpoint.pattern}`);
-          mockRouter.post(
-            endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength)
-          );
-          break;
-        case "PUT":
-          console.log(`PUT    : ${endpoint.pattern}`);
-          mockRouter.put(
-            endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength)
-          );
-          break;
-        case "PATCH":
-          console.log(`PATCH  : ${endpoint.pattern}`);
-          mockRouter.patch(
-            endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength)
-          );
-          break;
-        case "DELETE":
-          console.log(`DELETE : ${endpoint.pattern}`);
-          mockRouter.delete(
-            endpoint.pattern,
-            createHnadler(baseDir, endpoint, routes.defaultScript, routes.suppressContentLength)
-          );
-          break;
-        default:
-          console.error(`error: method '${endpoint.method}' is not supported.`);
-          throw `'${endpoint.method}' is not supported.`;
+  if (routes) {
+    if (routes.endpointsType === "file") {
+      if (routes.endpointsPath) {
+        const resolvedPath = path.resolve(baseDir, routes.endpointsPath);
+        const router = makeEndpointsFromFile(resolvedPath, routes);
+        if (router) {
+          mockRouter.use(router);
+        }
+      }
+    } else if (routes.endpointsType === "dir") {
+      if (routes.endpointsPath) {
+        const router = mekaEndpointsFromDir(routes.endpointsPath, routes);
+        mockRouter.use(router);
+      }
+    } else {
+      if(routes.endpoints){
+        const router = makeEndpoints(
+          routes.endpoints,
+          baseDir,
+          routes.defaultScript
+        );
+        mockRouter.use(router);
       }
     }
   }
   return prefixRouter;
-};
-
-const makeRoutesDir = (config: RouterConfig | undefined) => {
-  if (config && config.routesPath) {
-    if (fs.existsSync(config.routesPath)) {
-      const stat = fs.statSync(config.routesPath);
-      if (stat.isDirectory()) {
-        return config.routesPath;
-      } else {
-        return path.dirname(config.routesPath);
-      }
-    }
-  }
-  // default is current directory.
-  return ".";
 };
 
 const makeRoutesPath = (config: RouterConfig | undefined) => {
@@ -394,11 +561,6 @@ const loadRoutes = (config: RouterConfig | undefined): Routes => {
     if (routesFileName) {
       const rawRoutes = fs.readFileSync(routesFileName);
       const routes = JSON.parse(rawRoutes.toString()) as Routes;
-      for(const endpoint of routes.endpoints){
-        if(!endpoint.id){
-          endpoint.id = v4();
-        }
-      }
       return routes;
     }
   }
@@ -409,23 +571,30 @@ const loadRoutes = (config: RouterConfig | undefined): Routes => {
 
 // xml body parser middleware by fast-xml-parser
 const CONTENT_TYPE_XML = /.*\/xml/;
-const CHARSET_PATTERN = /charset=([^ ;]+)/
-const xmlBodyParser = (req: XMLRequest, res: express.Response, next: express.NextFunction) => {
-  const contentType = req.headers['content-type'];
+const CHARSET_PATTERN = /charset=([^ ;]+)/;
+const xmlBodyParser = (
+  req: XMLRequest,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  const contentType = req.headers["content-type"];
   if (contentType && CONTENT_TYPE_XML.test(contentType)) {
     const mat = contentType.match(CHARSET_PATTERN);
-    const encoding = mat ? mat[1] : 'utf8';
+    const encoding = mat ? mat[1] : "utf8";
     // object for closure.
     const dataObj = {
-      data: ''
-    }
+      data: "",
+    };
     req.setEncoding(encoding as BufferEncoding);
-    req.on('data', (chunk) => {
+    req.on("data", (chunk) => {
       dataObj.data = dataObj.data + chunk;
     });
-    req.on('end', () => {
+    req.on("end", () => {
       // parse data
-      const parser = new fastXMLparser.XMLParser({ ignoreAttributes: false, attributeNamePrefix: '' });
+      const parser = new fastXMLparser.XMLParser({
+        ignoreAttributes: false,
+        attributeNamePrefix: "",
+      });
       const data = dataObj.data;
       const result = parser.parse(data);
       req.xml = result;
@@ -449,7 +618,7 @@ const makeChangeDetector = (
     res: express.Response,
     next: express.NextFunction
   ) {
-    if (changeDetector.needsUpdateFile && changeDetector.routesFileName) {
+    if (changeDetector.routesFileName) {
       const stat = fs.statSync(changeDetector.routesFileName);
       if (changeDetector.routesTimestamp != stat.mtime.getTime()) {
         console.log("*** ROUTES FILE CHANGE DETECTED ***");
@@ -485,25 +654,28 @@ const makeChangeDetector = (
     const stat = fs.statSync(routesFileName);
     changeDetector.routesFileName = routesFileName;
     changeDetector.routesTimestamp = stat.mtime.getTime();
-    changeDetector.routesDir = makeRoutesDir(config);
+    changeDetector.routesDir = getDir(config ? config.routesPath : undefined);
   }
   changeDetector.targetRouter = targetRouter;
   changeDetector.routes = routes;
   changeDetector.isChanged = false;
-  changeDetector.needsUpdateFile = config && config.needRoutesUpdate;
   return changeDetector;
 };
 
-const corsMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,PATCH');
+const corsMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,PATCH");
   res.header(
-    'Access-Control-Allow-Headers',
-    'Content-Type, Authorization, access_token'
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization, access_token"
   );
 
   // intercept OPTIONS method
-  if ('OPTIONS' === req.method) {
+  if ("OPTIONS" === req.method) {
     res.sendStatus(200);
   } else {
     next();
@@ -513,17 +685,17 @@ const corsMiddleware = (req: express.Request, res: express.Response, next: expre
 /// making a router from difinition file.
 export const mockRouter = (config?: RouterConfig): express.Router => {
   const routes = loadRoutes(config);
-  const routesDir = makeRoutesDir(config);
+  const routesDir = getDir(config ? config.routesPath : undefined);
 
   // load scripts
-  if(routes.scripts){
+  if (routes.scripts) {
     const scriptPath = path.resolve(routesDir, routes.scripts);
     loadScripts(scriptPath);
   }
 
   // root router is the entry point.
   const rootRouter = express.Router();
-  if(config && config.enableCors){
+  if (config && config.enableCors) {
     rootRouter.use(corsMiddleware);
   }
   rootRouter.use(express.urlencoded({ extended: true }));
