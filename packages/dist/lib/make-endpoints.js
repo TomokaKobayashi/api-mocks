@@ -30,6 +30,32 @@ const resolveRef = (apiYaml, ref) => {
     const [car, ...cdr] = refs;
     return resolve(apiYaml, cdr);
 };
+// rough copy method...
+const easyCopy = (obj) => {
+    if (!obj)
+        return undefined;
+    return JSON.parse(JSON.stringify(obj));
+};
+const replaceRef = (apiYaml, node) => {
+    if (!node)
+        return;
+    if (Array.isArray(node)) {
+        for (const child of node) {
+            replaceRef(apiYaml, child);
+        }
+    }
+    else if (typeof node === 'object') {
+        for (const key in node) {
+            let child = node[key];
+            if (child && child.$ref) {
+                child = easyCopy(resolveRef(apiYaml, child.$ref));
+                child.$ref = undefined;
+                node[key] = child;
+            }
+            replaceRef(apiYaml, child);
+        }
+    }
+};
 // build response from example fields.
 const buildResponse = (apiYaml, current) => {
     if (current.example) {
@@ -82,16 +108,87 @@ const buildResponse = (apiYaml, current) => {
     }
     return undefined;
 };
+// suppress optional data by 'requiredOnly' parameter.
+// 0: not suppress
+// 1: basic required data and required member in array
+// 2: basic required data and empty array
+// 3: basic required data only
+const suppressData = (schema, resp, requiredOnly) => {
+    if (schema.type === 'object') {
+        const props = schema.properties;
+        const required = schema.required;
+        const requiredSet = new Set();
+        if (required)
+            required.forEach(elm => requiredSet.add(elm));
+        for (const key in resp) {
+            const subSchema = props[key];
+            if (requiredSet.has(key)) {
+                // required
+                if (subSchema.type === 'array') {
+                    if (requiredOnly >= 2) {
+                        resp[key] = [];
+                    }
+                    else {
+                        const arData = resp[key];
+                        for (const data of arData) {
+                            suppressData(subSchema.items, data, requiredOnly);
+                        }
+                    }
+                }
+                else {
+                    suppressData(subSchema, resp[key], requiredOnly);
+                }
+            }
+            else {
+                // optional
+                if (subSchema.type === 'array') {
+                    switch (requiredOnly) {
+                        case 1:
+                            const arData = resp[key];
+                            for (const data of arData) {
+                                suppressData(subSchema.items, data, requiredOnly);
+                            }
+                            break;
+                        case 2:
+                            resp[key] = [];
+                            break;
+                        case 3:
+                            resp[key] = undefined;
+                            break;
+                    }
+                }
+                else {
+                    resp[key] = undefined;
+                }
+            }
+        }
+    }
+    else if (schema.type === 'array') {
+        for (const data of resp) {
+            suppressData(schema.items, data, requiredOnly);
+        }
+    }
+};
+const suppressOptionals = (apiYaml, body, response, requiredOnly) => {
+    if (!requiredOnly)
+        return response;
+    // prepare to suppress
+    const respData = easyCopy(response);
+    const copiedBody = easyCopy(body);
+    replaceRef(apiYaml, copiedBody);
+    suppressData(copiedBody.schema, respData, requiredOnly);
+    return respData;
+};
 // make response object from content object.
-const makeResponseObject = (apiYaml, contentBody) => {
+const makeResponseObject = (apiYaml, contentBody, requiredOnly) => {
     if (contentBody.example) {
         // if contentBody has example, it returns contents of example.
-        return contentBody.example;
+        return suppressOptionals(apiYaml, contentBody, contentBody.example, requiredOnly);
     }
     else {
         const result = buildResponse(apiYaml, contentBody.schema);
         if (result) {
-            return result;
+            return suppressOptionals(apiYaml, contentBody, result, requiredOnly);
         }
     }
     return undefined;
@@ -227,32 +324,6 @@ const makeHeaders = (headers) => {
     }
     return ret;
 };
-// rough copy method...
-const easyCopy = (obj) => {
-    if (!obj)
-        return undefined;
-    return JSON.parse(JSON.stringify(obj));
-};
-const replaceRef = (apiYaml, node) => {
-    if (!node)
-        return;
-    if (Array.isArray(node)) {
-        for (const child of node) {
-            replaceRef(apiYaml, child);
-        }
-    }
-    else if (typeof node === 'object') {
-        for (const key in node) {
-            let child = node[key];
-            if (child && child.$ref) {
-                child = easyCopy(resolveRef(apiYaml, child.$ref));
-                child.$ref = undefined;
-                node[key] = child;
-            }
-            replaceRef(apiYaml, child);
-        }
-    }
-};
 const makeValidatorParams = (apiYaml, methodInfo) => {
     // rough copy
     const params = easyCopy(methodInfo.parameters);
@@ -265,7 +336,7 @@ const makeValidatorParams = (apiYaml, methodInfo) => {
     };
     return ret;
 };
-const makeEndpointsFromYaml = (apiYaml, sourceName) => {
+const makeEndpointsFromYaml = (apiYaml, sourceName, requiredOnly = 0) => {
     const ret = [];
     const api = js_yaml_1.default.load(apiYaml);
     if (api.openapi && api.openapi.startsWith("3.")) {
@@ -295,7 +366,7 @@ const makeEndpointsFromYaml = (apiYaml, sourceName) => {
                     if (contentLen > 0) {
                         for (const content in respStatusInfo.content) {
                             const contentBody = respStatusInfo.content[content];
-                            const respObject = makeResponseObject(api, contentBody);
+                            const respObject = makeResponseObject(api, contentBody, requiredOnly);
                             if (respObject) {
                                 const respData = content === "application/json"
                                     ? JSON.stringify(respObject)

@@ -15,6 +15,7 @@ commander_1.default
     .option("-i --input <fileName | dirName>", "input file or directory name(required)")
     .option("-o --output <fileName>", "output file name for routes.json(default: 'routes.json'")
     .option("-p --prefix <prefix>", "response data file prefix")
+    .option("-r --required-only <level>", "output only 'required' data", parseInt)
     .option("-s --stereo-type <fileName", "prototype of output routes.jsib")
     .option("-w --with-validation", "enable to output validation parameters")
     .option("-c --suppress-content-length", "set suppressContentLength flag(omitted)")
@@ -25,6 +26,7 @@ const prefix = options.prefix;
 const output = options.output || 'routes.json';
 const withValidation = options.withValidation;
 const stereoTypeFile = options.stereoType;
+const requiredOnly = options.requiredOnly;
 if (!input) {
     console.error('ERROR: input is required.');
     process.exit(1);
@@ -88,7 +90,7 @@ try {
     for (const target of targets) {
         try {
             const content = fs_1.default.readFileSync(target, 'utf-8');
-            const endpoint = (0, make_endpoints_1.makeEndpointsFromYaml)(content, target);
+            const endpoint = (0, make_endpoints_1.makeEndpointsFromYaml)(content, target, requiredOnly);
             endpoints.push(...endpoint);
         }
         catch (err) {
