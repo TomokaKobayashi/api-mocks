@@ -123,3 +123,14 @@ export declare type Routes = {
   // file version
   version?: string;
 };
+
+export declare type SuppressDecider = (key: string) => boolean;
+export declare type SuppressPattern = RegExp | SuppressDecider;
+export declare type SuppressPatternArray = SuppressPattern[];
+export declare type Yaml2RoutesExtraConfig = {
+  requiredStting: {
+    level: number
+    pattern: SuppressPattern | SuppressPatternArray
+  }[]
+};
+

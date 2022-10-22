@@ -2,10 +2,34 @@ import fs from 'fs';
 import path from 'path';
 import { makeEndpointsFromYaml } from './make-endpoints';
 import commander from "commander";
-import { Endpoint, Metadata } from 'common';
+import { Endpoint, Metadata, Yaml2RoutesExtraConfig } from 'common';
 import { findFiles } from './utils';
 
 const yamlPat = /^.+\.ya?ml$/;
+
+const defaultConfigFile = 'yaml2routes.config.js';
+const defaultConfig: Yaml2RoutesExtraConfig = {
+  requiredStting: []
+};
+const tryReadConfig = (fileName: string = defaultConfigFile) => {
+  try{
+    if(fs.existsSync(fileName)){
+      const stat = fs.statSync(fileName);
+      if(stat.isFile()){
+        const fullPath = path.resolve(fileName);
+        const config = require(fullPath);
+        return config.default;
+      }
+    }
+  }catch(error){
+    console.log(`ERROR: an error occurred in reading '${fileName}'`);
+    console.log(error);
+    console.log('continue...');
+  }
+
+  return defaultConfig;
+};
+
 
 commander
   .version("0.0.1", "-v --version")
@@ -14,9 +38,10 @@ commander
   .option("-o --output <fileName>", "output file name for routes.json(default: 'routes.json'")
   .option("-p --prefix <prefix>", "response data file prefix")
   .option("-r --required-only <level>", "output only 'required' data", parseInt)
-  .option("-s --stereo-type <fileName", "prototype of output routes.jsib")
+  .option("-s --stereo-type <fileName>", "prototype of output routes.json")
   .option("-w --with-validation", "enable to output validation parameters")
   .option("-c --suppress-content-length", "set suppressContentLength flag(omitted)")
+  .option("-x --extra-config <fileName>", "read extra configuration file")
   .parse(process.argv);
 
 const options = commander.opts();
@@ -26,6 +51,7 @@ const output = options.output as string || 'routes.json';
 const withValidation = options.withValidation as boolean;
 const stereoTypeFile = options.stereoType;
 const requiredOnly = options.requiredOnly as number;
+const extraConfig = options.extraConfig as string;
 
 if(!input){
   console.error('ERROR: input is required.');
@@ -84,16 +110,19 @@ if(stereoTypeFile){
 // make outputPath
 const dirName = path.dirname(output);
 
+// read extra configuration file
+const config = tryReadConfig(extraConfig);
+
 try{
   // read and process yaml(s)
   const endpoints: Endpoint[] = [];
   for(const target of targets){
     try{
       const content = fs.readFileSync(target, 'utf-8');
-      const endpoint = makeEndpointsFromYaml(content, target, requiredOnly);
+      const endpoint = makeEndpointsFromYaml(content, target, requiredOnly, config);
       endpoints.push(...endpoint);
     }catch(err){
-      console.error(`ERROR: file:'${target} can not be processed.`);
+      console.error(`ERROR: file:'${target}' can not be processed.`);
       console.error(err);
     }
   }

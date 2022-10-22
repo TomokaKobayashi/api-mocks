@@ -27,7 +27,7 @@
       ],
       "cwd": "${workspaceFolder}/test",
       "program": "${workspaceFolder}/packages/dist/lib/yaml2routes.js",
-      "args": ["-i", "samplev3.yaml", "-o", "testout1.json", "-r", "1"],
+      "args": ["-i", "samplev3.yaml", "-o", "testout4.json", "-r", "3"],
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ]
