@@ -691,6 +691,13 @@ components:
       - name
       - photoUrls
       type: object
+      example:
+        id: 1234
+        name: xxxxx
+        photoUrls:
+        - photo
+        - url
+        notExitst: true
       properties:
         id:
           type: integer

@@ -128,7 +128,7 @@ export declare type SuppressDecider = (key: string) => boolean;
 export declare type SuppressPattern = RegExp | SuppressDecider;
 export declare type SuppressPatternArray = SuppressPattern[];
 export declare type Yaml2RoutesExtraConfig = {
-  requiredStting: {
+  requiredSetting: {
     level: number
     pattern: SuppressPattern | SuppressPatternArray
   }[]

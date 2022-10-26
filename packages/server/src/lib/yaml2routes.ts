@@ -9,7 +9,7 @@ const yamlPat = /^.+\.ya?ml$/;
 
 const defaultConfigFile = 'yaml2routes.config.js';
 const defaultConfig: Yaml2RoutesExtraConfig = {
-  requiredStting: []
+  requiredSetting: []
 };
 const tryReadConfig = (fileName: string = defaultConfigFile) => {
   try{
@@ -62,7 +62,7 @@ if(!fs.existsSync(input)){
   process.exit(1);
 }
 // input is file or dir?
-const yamlPat2 = /^.+\/all.\ya?ml$/;
+const yamlPat2 = /^.+\/all\.ya?ml$/;
 const stat = fs.statSync(input);
 const dirFlag = stat.isDirectory();
 const targets: string[] = [];

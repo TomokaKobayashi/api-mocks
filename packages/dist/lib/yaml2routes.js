@@ -11,7 +11,7 @@ const utils_1 = require("./utils");
 const yamlPat = /^.+\.ya?ml$/;
 const defaultConfigFile = 'yaml2routes.config.js';
 const defaultConfig = {
-    requiredStting: []
+    requiredSetting: []
 };
 const tryReadConfig = (fileName = defaultConfigFile) => {
     try {
@@ -60,7 +60,7 @@ if (!fs_1.default.existsSync(input)) {
     process.exit(1);
 }
 // input is file or dir?
-const yamlPat2 = /^.+\/all.\ya?ml$/;
+const yamlPat2 = /^.+\/all\.ya?ml$/;
 const stat = fs_1.default.statSync(input);
 const dirFlag = stat.isDirectory();
 const targets = [];

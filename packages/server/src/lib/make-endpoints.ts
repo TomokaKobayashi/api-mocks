@@ -151,6 +151,8 @@ const suppressData = (
       const setting = getSuppressSetting(settings, currentKey);
       const requiredTemp = setting ? setting.level : requiredOnly;
       const subSchema = props[key];
+      // if field schema does not exist, omit
+      if(!subSchema) continue;
       if (requiredSet.has(key)) {
         // required
         if (subSchema.type === "array") {
@@ -233,8 +235,8 @@ const suppressData = (
 
 const makeSuppressSetting = (config?: Yaml2RoutesExtraConfig) => {
   const ret: SuppressSetting[] = [];
-  if (config) {
-    for (const suppress of config.requiredStting) {
+  if (config && config.requiredSetting && Array.isArray(config.requiredSetting)) {
+    for (const suppress of config.requiredSetting) {
       ret.push({
         level: suppress.level,
         patterns: Array.isArray(suppress.pattern)

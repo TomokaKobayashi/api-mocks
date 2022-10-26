@@ -1,6 +1,6 @@
 module.exports = {
   default: {
-    requiredStting: [
+    requiredSetting: [
       {
         level: 1,
         pattern: [
