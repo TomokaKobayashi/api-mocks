@@ -60,7 +60,7 @@ if (!fs_1.default.existsSync(input)) {
     process.exit(1);
 }
 // input is file or dir?
-const yamlPat2 = /^.+\/all\.ya?ml$/;
+const yamlPat2 = /^.+[\/\\]all\.ya?ml$/;
 const stat = fs_1.default.statSync(input);
 const dirFlag = stat.isDirectory();
 const targets = [];
