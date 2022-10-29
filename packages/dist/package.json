@@ -1,6 +1,6 @@
 {
   "name": "@chandla/api-mock-server",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "main": "./lib/mock-server.js",
   "repository": "https://github.com/TomokaKobayashi/api-mocks.git",
   "author": "TomokaKobayashi <chandla@bc.mbn.or.jp>",
