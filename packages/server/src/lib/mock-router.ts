@@ -23,6 +23,7 @@ import { OpenAPIV3 } from "openapi-types";
 import { v4 } from "uuid";
 import { evaluateConditions, findFiles, loadMetadata, processMetadata } from "./utils";
 import { loadScripts } from "./response-modifier";
+import { parse } from "jsonc-parser";
 
 type Modifier = (parameters: any) => void;
 interface ModifierList {
@@ -426,7 +427,7 @@ const makeEndpointsChangeDetector = (
         changeDetector.endpointsFileName,
         "utf-8"
       );
-      const newEndpoints = JSON.parse(rawEndpoints);
+      const newEndpoints = parse(rawEndpoints);
       if (newEndpoints.endpoints) {
         const newEndpoitnsRouter = makeEndpoints(
           newEndpoints.endpoints as Endpoint[],
@@ -454,7 +455,7 @@ const makeEndpointsFromFile = (
   routes: Routes | undefined
 ) => {
   const rawEndpoints = fs.readFileSync(endpointsFile, "utf-8");
-  const endpointsData = JSON.parse(rawEndpoints);
+  const endpointsData = parse(rawEndpoints);
   if (endpointsData.endpoints) {
     const dir = getDir(endpointsFile);
     const endpoints = makeEndpoints(
@@ -479,7 +480,7 @@ const makeEndpointsFromFile = (
 };
 
 // make endpoints from files in directory
-const jsonPattern = /^.+\.json$/;
+const jsonPattern = /^.+\.jsonc?$/;
 const mekaEndpointsFromDir = (
   endpointsDir: string,
   routes: Routes | undefined
@@ -560,7 +561,7 @@ const loadRoutes = (config: RouterConfig | undefined): Routes => {
     const routesFileName = makeRoutesPath(config);
     if (routesFileName) {
       const rawRoutes = fs.readFileSync(routesFileName);
-      const routes = JSON.parse(rawRoutes.toString()) as Routes;
+      const routes = parse(rawRoutes.toString()) as Routes;
       return routes;
     }
   }
@@ -624,7 +625,7 @@ const makeChangeDetector = (
         console.log("*** ROUTES FILE CHANGE DETECTED ***");
         changeDetector.routesTimestamp = stat.mtime.getTime();
         const rawRoutes = fs.readFileSync(changeDetector.routesFileName);
-        const newRoutes = JSON.parse(rawRoutes.toString()) as Routes;
+        const newRoutes = parse(rawRoutes.toString()) as Routes;
         const prefixRouter = makePrefixRouter(
           changeDetector.routesDir,
           newRoutes

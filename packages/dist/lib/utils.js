@@ -8,6 +8,7 @@ exports.findFiles = exports.loadMetadata = exports.processMetadata = exports.eva
 const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const response_modifier_1 = require("./response-modifier");
+const jsonc_parser_1 = require("jsonc-parser");
 // state Object
 let state = {};
 const getState = () => state;
@@ -77,7 +78,7 @@ const processMetadata = (basePath, metadata, defaultScript, req, res) => {
                 const data = fs_1.default.readFileSync(dataPath);
                 if (headers["content-type"] &&
                     headers["content-type"].indexOf("application/json") >= 0) {
-                    respSummary.data = JSON.parse(data.toString());
+                    respSummary.data = (0, jsonc_parser_1.parse)(data.toString());
                 }
                 else {
                     respSummary.rawData = data;
@@ -137,7 +138,7 @@ const loadMetadata = (baseDir, filePath) => {
         : baseDir + "/" + filePath;
     console.log("definitionPath=" + metadataPath);
     const rawDef = fs_1.default.readFileSync(metadataPath);
-    const metadata = JSON.parse(rawDef.toString());
+    const metadata = (0, jsonc_parser_1.parse)(rawDef.toString());
     return { metadata, baseDir: path_1.default.dirname(metadataPath) };
 };
 exports.loadMetadata = loadMetadata;

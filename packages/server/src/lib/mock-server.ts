@@ -6,6 +6,7 @@ import { mockRouter } from "./mock-router";
 import fs from "fs";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import ProxyAgent from "proxy-agent";
+import { parse } from "jsonc-parser";
 
 export type AppConfig = {
   port: number;
@@ -38,7 +39,7 @@ const loadConfig = (path?: string): AppConfig => {
   if (!path) return defConfig;
   try {
     const rawFile = fs.readFileSync(path);
-    const config = JSON.parse(rawFile.toString()) as AppConfig;
+    const config = parse(rawFile.toString()) as AppConfig;
     return config;
   } catch (error) {
     console.log("warning: can not read config file : " + path);
@@ -103,11 +104,11 @@ const sampleMiddleware = (
         if (Array.isArray(val)) {
           const repVal = [];
           for (const v of val) {
-            repVal.push(JSON.parse(v));
+            repVal.push(parse(v));
           }
           req.headers[key] = repVal;
         } else {
-          const json = JSON.parse(val);
+          const json = parse(val);
           req.headers[key] = json;
         }
       } catch (err) {

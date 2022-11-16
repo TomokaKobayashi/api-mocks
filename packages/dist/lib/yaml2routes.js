@@ -8,6 +8,7 @@ const path_1 = __importDefault(require("path"));
 const make_endpoints_1 = require("./make-endpoints");
 const commander_1 = __importDefault(require("commander"));
 const utils_1 = require("./utils");
+const jsonc_parser_1 = require("jsonc-parser");
 const yamlPat = /^.+\.ya?ml$/;
 const defaultConfigFile = "yaml2routes.config.js";
 const defaultConfig = {
@@ -102,7 +103,7 @@ if (stereoTypeFile) {
         process.exit(1);
     }
     try {
-        stereoType = JSON.parse(fs_1.default.readFileSync(stereoTypeFile, "utf-8"));
+        stereoType = (0, jsonc_parser_1.parse)(fs_1.default.readFileSync(stereoTypeFile, "utf-8"));
     }
     catch (err) {
         console.error("ERROR: can't read stereoType.");
@@ -153,7 +154,7 @@ try {
                         else if (metaData.datatype == "value") {
                             const value = data;
                             try {
-                                const jsonData = JSON.parse(value);
+                                const jsonData = (0, jsonc_parser_1.parse)(value);
                                 fs_1.default.writeFileSync(fullPath, JSON.stringify(jsonData, null, "  "));
                             }
                             catch (err) {
@@ -177,7 +178,7 @@ try {
                     if (metaData.datatype == "value") {
                         const value = data;
                         try {
-                            const jsonData = JSON.parse(value);
+                            const jsonData = (0, jsonc_parser_1.parse)(value);
                             metaData.datatype = "object";
                             metaData.data = jsonData;
                         }

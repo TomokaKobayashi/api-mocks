@@ -5,6 +5,7 @@ import fs from "fs";
 import { DataType, Endpoint, Metadata, Pattern, Routes, Record, INNER_ENDPOINTS } from "common";
 import { v4 } from "uuid";
 import { findFiles } from "./utils";
+import { parse } from "jsonc-parser";
 
 // model of data
 type DataModel = {
@@ -57,7 +58,7 @@ const expandData = (
     };
   }else if(dataType==='value'){
     try{
-      const parsed = JSON.parse(data as string);
+      const parsed = parse(data as string);
       return {
         dataType,
         objectData: parsed,
@@ -73,7 +74,7 @@ const expandData = (
     const resolved = path.resolve(basePath, data as string);
     try{
       const rawData = fs.readFileSync(resolved, "utf-8");
-      const parsed = JSON.parse(rawData);
+      const parsed = parse(rawData);
       return {
         dataType,
         objectData: parsed,
@@ -113,7 +114,7 @@ const loadMetadata = (
   const metadataResolved = path.resolve(basePath, metadataPath);
   const metadataDir = path.dirname(metadataResolved);
   const rawMetadata = fs.readFileSync(metadataResolved, "utf-8");
-  const metadata = JSON.parse(rawMetadata) as Metadata;
+  const metadata = parse(rawMetadata) as Metadata;
   return expandMetadata(metadataDir, metadata);
 };
 
@@ -174,7 +175,7 @@ const loadEndpoints = (basePath: string, endpointPath: string): EndpointsModel =
   }
   const endpointsDir = path.dirname(resolved);
   const rawEndpoints = fs.readFileSync(resolved, "utf-8");
-  const parent = JSON.parse(rawEndpoints);
+  const parent = parse(rawEndpoints);
   if(!parent.endpoints){
     return {
       path: resolved,
@@ -210,7 +211,7 @@ const readRoutes = (fileName: string): RoutesModel => {
   // read and parse
   const rawData = fs.readFileSync(routesFile, "utf-8");
   // parse
-  const rawRoutes = JSON.parse(rawData) as Routes;
+  const rawRoutes = parse(rawData) as Routes;
   // construct routes
   const routes: RoutesModel = {
     basePath: routesDir,
@@ -235,7 +236,7 @@ const readRoutes = (fileName: string): RoutesModel => {
   } else if (rawRoutes.endpointsType === "dir" && rawRoutes.endpointsPath) {
     const stat = fs.statSync(rawRoutes.endpointsPath);
     if(stat.isDirectory()){
-      const files = findFiles(rawRoutes.endpointsPath, /^.+\.json$/);
+      const files = findFiles(rawRoutes.endpointsPath, /^.+\.jsonc?$/);
       if(files){
         for(const file of files){
           const dirName = path.dirname(file);

@@ -10,6 +10,7 @@ const fs_1 = __importDefault(require("fs"));
 const common_1 = require("common");
 const uuid_1 = require("uuid");
 const utils_1 = require("./utils");
+const jsonc_parser_1 = require("jsonc-parser");
 // data to manipulate
 let target;
 // expand data
@@ -22,7 +23,7 @@ const expandData = (basePath, dataType, data) => {
     }
     else if (dataType === 'value') {
         try {
-            const parsed = JSON.parse(data);
+            const parsed = (0, jsonc_parser_1.parse)(data);
             return {
                 dataType,
                 objectData: parsed,
@@ -40,7 +41,7 @@ const expandData = (basePath, dataType, data) => {
         const resolved = path_1.default.resolve(basePath, data);
         try {
             const rawData = fs_1.default.readFileSync(resolved, "utf-8");
-            const parsed = JSON.parse(rawData);
+            const parsed = (0, jsonc_parser_1.parse)(rawData);
             return {
                 dataType,
                 objectData: parsed,
@@ -73,7 +74,7 @@ const loadMetadata = (basePath, metadataPath) => {
     const metadataResolved = path_1.default.resolve(basePath, metadataPath);
     const metadataDir = path_1.default.dirname(metadataResolved);
     const rawMetadata = fs_1.default.readFileSync(metadataResolved, "utf-8");
-    const metadata = JSON.parse(rawMetadata);
+    const metadata = (0, jsonc_parser_1.parse)(rawMetadata);
     return expandMetadata(metadataDir, metadata);
 };
 // expand match
@@ -126,7 +127,7 @@ const loadEndpoints = (basePath, endpointPath) => {
     }
     const endpointsDir = path_1.default.dirname(resolved);
     const rawEndpoints = fs_1.default.readFileSync(resolved, "utf-8");
-    const parent = JSON.parse(rawEndpoints);
+    const parent = (0, jsonc_parser_1.parse)(rawEndpoints);
     if (!parent.endpoints) {
         return {
             path: resolved,
@@ -159,7 +160,7 @@ const readRoutes = (fileName) => {
     // read and parse
     const rawData = fs_1.default.readFileSync(routesFile, "utf-8");
     // parse
-    const rawRoutes = JSON.parse(rawData);
+    const rawRoutes = (0, jsonc_parser_1.parse)(rawData);
     // construct routes
     const routes = {
         basePath: routesDir,
@@ -188,7 +189,7 @@ const readRoutes = (fileName) => {
     else if (rawRoutes.endpointsType === "dir" && rawRoutes.endpointsPath) {
         const stat = fs_1.default.statSync(rawRoutes.endpointsPath);
         if (stat.isDirectory()) {
-            const files = (0, utils_1.findFiles)(rawRoutes.endpointsPath, /^.+\.json$/);
+            const files = (0, utils_1.findFiles)(rawRoutes.endpointsPath, /^.+\.jsonc?$/);
             if (files) {
                 for (const file of files) {
                     const dirName = path_1.default.dirname(file);

@@ -5,6 +5,7 @@ import express from "express";
 import { Metadata, Record } from "common";
 import { RequestSummary, ResponseSummary } from "./types";
 import { getFunction } from "./response-modifier";
+import { parse } from "jsonc-parser";
 
 // state Object
 let state: Record<any> = {};
@@ -92,7 +93,7 @@ export const processMetadata = (
           headers["content-type"] &&
           headers["content-type"].indexOf("application/json") >= 0
         ) {
-          respSummary.data = JSON.parse(data.toString());
+          respSummary.data = parse(data.toString());
         } else {
           respSummary.rawData = data;
         }
@@ -151,7 +152,7 @@ export const loadMetadata = (
     : baseDir + "/" + filePath;
   console.log("definitionPath=" + metadataPath);
   const rawDef = fs.readFileSync(metadataPath);
-  const metadata = JSON.parse(rawDef.toString()) as Metadata;
+  const metadata = parse(rawDef.toString()) as Metadata;
   return { metadata, baseDir: path.dirname(metadataPath) };
 };
 

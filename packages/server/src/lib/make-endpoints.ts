@@ -12,6 +12,7 @@ import {
 } from "common";
 import { OpenAPIRequestValidatorArgs } from "openapi-request-validator";
 import { v4 } from "uuid";
+import { parse } from "jsonc-parser";
 
 // resolve ref to obujet
 const resolve = (obj: any, refs: string[]): any => {
@@ -39,7 +40,7 @@ const resolveRef = (apiYaml: any, ref: string): any => {
 // rough copy method...
 const easyCopy = (obj: any) => {
   if (!obj) return undefined;
-  return JSON.parse(JSON.stringify(obj));
+  return parse(JSON.stringify(obj));
 };
 
 const replaceRef = (apiYaml: any, node: any) => {

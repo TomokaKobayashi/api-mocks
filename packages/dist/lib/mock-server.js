@@ -10,6 +10,7 @@ const mock_router_1 = require("./mock-router");
 const fs_1 = __importDefault(require("fs"));
 const http_proxy_middleware_1 = require("http-proxy-middleware");
 const proxy_agent_1 = __importDefault(require("proxy-agent"));
+const jsonc_parser_1 = require("jsonc-parser");
 const defConfig = {
     port: 4010,
     disabledSettings: ["x-powered-by", "etag"],
@@ -30,7 +31,7 @@ const loadConfig = (path) => {
         return defConfig;
     try {
         const rawFile = fs_1.default.readFileSync(path);
-        const config = JSON.parse(rawFile.toString());
+        const config = (0, jsonc_parser_1.parse)(rawFile.toString());
         return config;
     }
     catch (error) {
@@ -78,12 +79,12 @@ const sampleMiddleware = (req, res, next) => {
                 if (Array.isArray(val)) {
                     const repVal = [];
                     for (const v of val) {
-                        repVal.push(JSON.parse(v));
+                        repVal.push((0, jsonc_parser_1.parse)(v));
                     }
                     req.headers[key] = repVal;
                 }
                 else {
-                    const json = JSON.parse(val);
+                    const json = (0, jsonc_parser_1.parse)(val);
                     req.headers[key] = json;
                 }
             }

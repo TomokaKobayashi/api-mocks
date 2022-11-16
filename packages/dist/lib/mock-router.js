@@ -17,6 +17,7 @@ const openapi_request_validator_1 = __importDefault(require("openapi-request-val
 const uuid_1 = require("uuid");
 const utils_1 = require("./utils");
 const response_modifier_1 = require("./response-modifier");
+const jsonc_parser_1 = require("jsonc-parser");
 const makeContentTypePattern = (contentType) => {
     const pat = contentType.replace(/[*]/g, "[^/]+");
     return new RegExp(pat);
@@ -354,7 +355,7 @@ const makeEndpointsChangeDetector = (targetRouter, fileName, defaultScript) => {
             console.log("*** ENDPOINTS FILE CHANGE DETECTED ***");
             changeDetector.endpointsTimestamp = stat.mtime.getTime();
             const rawEndpoints = fs_1.default.readFileSync(changeDetector.endpointsFileName, "utf-8");
-            const newEndpoints = JSON.parse(rawEndpoints);
+            const newEndpoints = (0, jsonc_parser_1.parse)(rawEndpoints);
             if (newEndpoints.endpoints) {
                 const newEndpoitnsRouter = makeEndpoints(newEndpoints.endpoints, changeDetector.endpointsDir, changeDetector.defaultScript);
                 changeDetector.targetRouter.stack.splice(0);
@@ -374,7 +375,7 @@ const makeEndpointsChangeDetector = (targetRouter, fileName, defaultScript) => {
 // make endpoints from a file.
 const makeEndpointsFromFile = (endpointsFile, routes) => {
     const rawEndpoints = fs_1.default.readFileSync(endpointsFile, "utf-8");
-    const endpointsData = JSON.parse(rawEndpoints);
+    const endpointsData = (0, jsonc_parser_1.parse)(rawEndpoints);
     if (endpointsData.endpoints) {
         const dir = getDir(endpointsFile);
         const endpoints = makeEndpoints(endpointsData.endpoints, dir, routes ? routes.defaultScript : undefined);
@@ -389,7 +390,7 @@ const makeEndpointsFromFile = (endpointsFile, routes) => {
     return undefined;
 };
 // make endpoints from files in directory
-const jsonPattern = /^.+\.json$/;
+const jsonPattern = /^.+\.jsonc?$/;
 const mekaEndpointsFromDir = (endpointsDir, routes) => {
     const binder = express_1.default.Router();
     const files = (0, utils_1.findFiles)(endpointsDir, jsonPattern);
@@ -462,7 +463,7 @@ const loadRoutes = (config) => {
         const routesFileName = makeRoutesPath(config);
         if (routesFileName) {
             const rawRoutes = fs_1.default.readFileSync(routesFileName);
-            const routes = JSON.parse(rawRoutes.toString());
+            const routes = (0, jsonc_parser_1.parse)(rawRoutes.toString());
             return routes;
         }
     }
@@ -513,7 +514,7 @@ const makeChangeDetector = (config, routes, targetRouter) => {
                 console.log("*** ROUTES FILE CHANGE DETECTED ***");
                 changeDetector.routesTimestamp = stat.mtime.getTime();
                 const rawRoutes = fs_1.default.readFileSync(changeDetector.routesFileName);
-                const newRoutes = JSON.parse(rawRoutes.toString());
+                const newRoutes = (0, jsonc_parser_1.parse)(rawRoutes.toString());
                 const prefixRouter = makePrefixRouter(changeDetector.routesDir, newRoutes);
                 changeDetector.targetRouter.stack.splice(0);
                 changeDetector.targetRouter.use(prefixRouter);

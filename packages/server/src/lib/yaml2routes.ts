@@ -4,6 +4,7 @@ import { makeEndpointsFromYaml } from "./make-endpoints";
 import commander from "commander";
 import { Endpoint, Metadata, Yaml2RoutesExtraConfig } from "common";
 import { findFiles } from "./utils";
+import { parse } from "jsonc-parser";
 
 const yamlPat = /^.+\.ya?ml$/;
 
@@ -120,7 +121,7 @@ if (stereoTypeFile) {
     process.exit(1);
   }
   try {
-    stereoType = JSON.parse(fs.readFileSync(stereoTypeFile, "utf-8"));
+    stereoType = parse(fs.readFileSync(stereoTypeFile, "utf-8"));
   } catch (err) {
     console.error("ERROR: can't read stereoType.");
     console.error(err);
@@ -176,7 +177,7 @@ try {
             } else if (metaData.datatype == "value") {
               const value = data as string;
               try {
-                const jsonData = JSON.parse(value);
+                const jsonData = parse(value);
                 fs.writeFileSync(
                   fullPath,
                   JSON.stringify(jsonData, null, "  ")
@@ -201,7 +202,7 @@ try {
           if (metaData.datatype == "value") {
             const value = data as string;
             try {
-              const jsonData = JSON.parse(value);
+              const jsonData = parse(value);
               metaData.datatype = "object";
               metaData.data = jsonData;
             } catch (err) {
