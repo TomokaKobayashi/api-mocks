@@ -8,7 +8,6 @@ exports.makeEndpointsFromYaml = void 0;
 // this functions make route info from yaml.
 const js_yaml_1 = __importDefault(require("js-yaml"));
 const uuid_1 = require("uuid");
-const jsonc_parser_1 = require("jsonc-parser");
 // resolve ref to obujet
 const resolve = (obj, refs) => {
     const [car, ...cdr] = refs;
@@ -35,7 +34,7 @@ const resolveRef = (apiYaml, ref) => {
 const easyCopy = (obj) => {
     if (!obj)
         return undefined;
-    return (0, jsonc_parser_1.parse)(JSON.stringify(obj));
+    return JSON.parse(JSON.stringify(obj));
 };
 const replaceRef = (apiYaml, node) => {
     if (!node)

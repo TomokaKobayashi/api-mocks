@@ -79,12 +79,12 @@ const sampleMiddleware = (req, res, next) => {
                 if (Array.isArray(val)) {
                     const repVal = [];
                     for (const v of val) {
-                        repVal.push((0, jsonc_parser_1.parse)(v));
+                        repVal.push(JSON.parse(v));
                     }
                     req.headers[key] = repVal;
                 }
                 else {
-                    const json = (0, jsonc_parser_1.parse)(val);
+                    const json = JSON.parse(val);
                     req.headers[key] = json;
                 }
             }

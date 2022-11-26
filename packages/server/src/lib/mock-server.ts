@@ -104,11 +104,11 @@ const sampleMiddleware = (
         if (Array.isArray(val)) {
           const repVal = [];
           for (const v of val) {
-            repVal.push(parse(v));
+            repVal.push(JSON.parse(v));
           }
           req.headers[key] = repVal;
         } else {
-          const json = parse(val);
+          const json = JSON.parse(val);
           req.headers[key] = json;
         }
       } catch (err) {

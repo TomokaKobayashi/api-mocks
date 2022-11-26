@@ -13,7 +13,7 @@
       ],
       "cwd": "${workspaceFolder}/test",
       "program": "${workspaceFolder}/packages/dist/lib/mock-server.js",
-      "args": ["-r", "./routes/only.json"],
+      "args": ["-r", "./routes/only.json", "-s", "https://google.com"],
       "outFiles": [
         "${workspaceFolder}/**/*.js"
       ]
