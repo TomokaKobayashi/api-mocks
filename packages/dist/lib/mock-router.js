@@ -391,14 +391,14 @@ const makeEndpointsFromFile = (endpointsFile, routes) => {
 };
 // make endpoints from files in directory
 const jsonPattern = /^.+\.jsonc?$/;
-const mekaEndpointsFromDir = (endpointsDir, routes) => {
+const mekaEndpointsFromDir = (basePath, endpointsDir, routes) => {
     const binder = express_1.default.Router();
-    const files = (0, utils_1.findFiles)(endpointsDir, jsonPattern);
+    const resolvedBase = path_1.default.resolve(basePath, endpointsDir);
+    const files = (0, utils_1.findFiles)(resolvedBase, jsonPattern);
     if (files) {
         for (const file of files) {
             try {
-                const resolvedPath = path_1.default.resolve(endpointsDir, file);
-                const router = makeEndpointsFromFile(resolvedPath, routes);
+                const router = makeEndpointsFromFile(file, routes);
                 if (router) {
                     binder.use(router);
                 }
@@ -434,7 +434,7 @@ const makePrefixRouter = (baseDir, routes) => {
         }
         else if (routes.endpointsType === "dir") {
             if (routes.endpointsPath) {
-                const router = mekaEndpointsFromDir(routes.endpointsPath, routes);
+                const router = mekaEndpointsFromDir(baseDir, routes.endpointsPath, routes);
                 mockRouter.use(router);
             }
         }

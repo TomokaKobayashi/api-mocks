@@ -1,0 +1,20 @@
+{
+    "prefix": [
+      "/prefix00",
+      "/prefix01",
+      "/prefix02"
+    ],
+    "suppressContentLength": true,
+    "defaultHeaders": [
+      {
+        "name": "x-def-header",
+        "value": "def-header-value-y"
+      }
+    ],
+    "suppressHeaders": [
+      "Date",
+      "Content-Length"
+    ],
+    "endpointsType": "dir",
+    "endpointsPath": "./endpoints"
+}

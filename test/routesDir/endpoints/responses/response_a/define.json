@@ -1,0 +1,27 @@
+// comment
+{
+  "headers":[
+    {
+      "name": "Content-Type",
+      "value": "application/json"
+    },
+    {
+      "name": "Access-Control-Expose-Headers",
+      "value": "X-Test-Header"
+    },
+    {
+      "name": "X-Test-Header",
+      "value": "test-header-value"
+    },
+    {
+      "name": "X-Not-Exposed-Header",
+      "value": "be not exposed"
+    }
+  ],
+  "cookies":[{
+    "name": "sample-cookie",
+    "value": "cookie-value"
+  }],
+  "status": 200,
+  "data": "response_a.json"
+}

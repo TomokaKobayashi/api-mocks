@@ -1,0 +1,18 @@
+{
+  "endpoints": [
+    {
+      "pattern": "/aaa/bbb",
+      "method": "GET",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json",
+          "conditions": "data.AAA===\"BBB\""
+        },
+        {
+          "metadata": "responses/response_b/define.json",
+          "conditions": "data.CCC[0]===\"DDD\""
+        }
+      ]
+    }
+  ]
+}

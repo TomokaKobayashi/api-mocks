@@ -1,0 +1,24 @@
+{
+  "endpoints": [
+    {
+      "pattern": "/ccc/ddd",
+      "method": "GET",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json"
+        }
+      ]
+    },
+    {
+      "pattern": "/ddd/eee",
+      "method": "POST",
+      "matches": [
+        {
+          "metadata": "responses/response_a/define.json"
+        }
+      ]
+    }
+  ]
+}
+  
+
