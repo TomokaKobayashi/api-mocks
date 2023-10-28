@@ -1,5 +1,5 @@
 import { Options } from "http-proxy-middleware";
-export declare type AppConfig = {
+export type AppConfig = {
     port: number;
     routesPath?: string;
     disabledSettings?: string[];

@@ -5,7 +5,7 @@ import commander from "commander";
 import { mockRouter } from "./mock-router";
 import fs from "fs";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
-import ProxyAgent from "proxy-agent";
+import { ProxyAgent}  from "proxy-agent";
 import { parse } from "jsonc-parser";
 
 export type AppConfig = {

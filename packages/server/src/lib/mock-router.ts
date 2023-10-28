@@ -233,6 +233,27 @@ const createHnadler = (
       modifier(req);
     }
 
+    // parse JSON in multipart request
+    if(endpoint.bodyJson){
+      if(req.body[endpoint.bodyJson]){
+        const unparsed = req.body[endpoint.bodyJson];
+        try{
+          const parsed = JSON.parse(unparsed);
+          if(endpoint.bodyJsonUnion){
+            req.body = {
+              ...req.body,
+              ...parsed,
+            };
+            req.body[endpoint.bodyJson] = undefined;
+          }else{
+            req.body[endpoint.bodyJson] = parsed;  
+          }
+        }catch(e){
+          // no action
+        }
+      }
+    }
+
     const requestSummary: RequestSummary = {
       data: {
         ...req.query,
@@ -688,6 +709,11 @@ const corsMiddleware = (
 export const mockRouter = (config?: RouterConfig): express.Router => {
   const routes = loadRoutes(config);
   const routesDir = getDir(config ? config.routesPath : undefined);
+
+  // add default endopints
+  if(!routes.endpoints){
+    routes.endpoints = [];
+  }
 
   // load scripts
   if (routes.scripts) {

@@ -44,6 +44,8 @@
     {
       "pattern": "/ddd/eee",
       "method": "POST",
+      "bodyJson": "json",
+      "bodyJsonUnion": false,
       "matches": [
         {
           "metadata": "responses/response_a/define.json"

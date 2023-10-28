@@ -216,6 +216,25 @@ const createHnadler = (baseDir, endpoint, defaultScript) => {
         if (modifier) {
             modifier(req);
         }
+        // parse JSON in multipart request
+        if (endpoint.bodyJson) {
+            if (req.body[endpoint.bodyJson]) {
+                const unparsed = req.body[endpoint.bodyJson];
+                try {
+                    const parsed = JSON.parse(unparsed);
+                    if (endpoint.bodyJsonUnion) {
+                        req.body = Object.assign(Object.assign({}, req.body), parsed);
+                        req.body[endpoint.bodyJson] = undefined;
+                    }
+                    else {
+                        req.body[endpoint.bodyJson] = parsed;
+                    }
+                }
+                catch (e) {
+                    // no action
+                }
+            }
+        }
         const requestSummary = {
             data: Object.assign(Object.assign(Object.assign({}, req.query), req.params), req.body),
             headers: req.headers,
@@ -561,6 +580,10 @@ const corsMiddleware = (req, res, next) => {
 const mockRouter = (config) => {
     const routes = loadRoutes(config);
     const routesDir = getDir(config ? config.routesPath : undefined);
+    // add default endopints
+    if (!routes.endpoints) {
+        routes.endpoints = [];
+    }
     // load scripts
     if (routes.scripts) {
         const scriptPath = path_1.default.resolve(routesDir, routes.scripts);

@@ -1,6 +1,6 @@
 {
   "name": "@chandla/api-mock-server",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "main": "./lib/mock-server.js",
   "repository": "https://github.com/TomokaKobayashi/api-mocks.git",
   "author": "TomokaKobayashi <chandla@bc.mbn.or.jp>",
@@ -25,7 +25,7 @@
     "js-yaml": "^4.1.0",
     "jsonc-parser": "^3.2.0",
     "openapi-request-validator": "^10.0.0",
-    "proxy-agent": "^5.0.0",
+    "proxy-agent": "^6.3.0",
     "uuid": "^8.3.2"
   },
   "scripts": {

@@ -42,6 +42,7 @@ mock-server [options]
 | -r | ファイルパス | 本ソフトウェアの入力ファイル（routesファイルという）のパスを指定します。 | ./routes/routes.json |
 | -s | ファイルパスまたはURL | 静的コンテンツ配信対象ディレクトリまたは、静的コンテンツを配信するサーバのURLを指定します。 | ./public |
 | -x | なし | CORSヘッダを有効化します。プリフライトリクエストなどにも対応します。 | 
+| -u | ディレクトリパス | multipartによるファイルアップロードの際のファイル一時格納ディレクトリを指定します。 | ./upload | 
 
 ## 基本的な機能
 ### 1.最も基本的な使い方
@@ -541,6 +542,15 @@ module.exports = {
 ```endpoint```の```validatorArgs```に設定を行うことでバリデーションが有効となります。  
 ```OpenAPIRequestValidatorArgs```の詳細は[こちら](https://www.npmjs.com/package/openapi-request-validator)を参照。
 
+### 8.マルチパートリクエスト
+本ソフトウェアはリクエスト形式としてJSONを使用しますが、ファイルアップロードなどによるマルチパートデータを扱うことができます。  
+```-u```オプションで指定した一時格納ディレクトリが有効な場合に機能します。ファイルデータは一時格納ディレクトリに格納されます。  
+マルチパートに格納されたデータは```req.data```に統合されます。  
+この時のキー名はマルチパートの```name```属性で指定されたものになります。  
+また、```endpoints```で```bodyJson```を指定した場合、該当する項目をJSON文字列として解釈することを試みます。  
+```bodyJsonUnion```に```true```を指定すると解釈したJSONを```req.data```に統合し、指定したキーを削除します。  
+```false```の場合、該当キーのデータをJSON解釈結果で置換します。  
+
 # routesファイルのリファレンス
 ## routesファイル(Routes型)
 
@@ -575,6 +585,8 @@ interface {[key: string]: T}
 | method | "GET" \| "POST" \| "PUT" \| "DELETE" \| "PATCH" | 〇 | HTTPメソッド名を記述します。 |
 | matches | Pattern[] | 〇 | 応答パターンの配列を指定します。 |
 | customProps | Record\<any\> | - | 任意の情報を記述できるmapです。ツール用の情報を記述することを想定しています。 |
+| bodyJson | string | - | 指定したキー名のreq.dataに含まれる項目をJSONとして再解釈し、解釈に成功した場合項目の内容を解釈結果に置換します。 |
+| bodyJsonUnion | boolean | - | bodyJsonとともに使用します。解釈結果をreq.dataに統合し、元のキーを削除します。 |
 
 ## Pattern型
 | キー名 | 型 | 必須 | 説明 |

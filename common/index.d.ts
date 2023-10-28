@@ -79,6 +79,10 @@ export declare type Endpoint = {
   count?: number;
   // disabled this endpoint
   disabled?: boolean;
+  // name for body JSON in multipart request
+  bodyJson?: string;
+  // unite bodyJson key into req.data
+  bodyJsonUnion?: boolean;
 };
 
 // types of endpoints. default is 'immediate'.

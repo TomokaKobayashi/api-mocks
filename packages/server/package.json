@@ -22,8 +22,5 @@
   },
   "scripts": {
     "build": "tsc"
-  },
-  "dependencies": {
-    "proxy-agent": "^5.0.0"
   }
 }
