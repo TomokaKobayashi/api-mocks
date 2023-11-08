@@ -6,7 +6,7 @@ import path from "path";
 import form from "express-form-data";
 import fastXMLparser from "fast-xml-parser";
 import cookieParser from "cookie-parser";
-import { Routes, Metadata, Endpoint } from "common";
+import { Routes, Metadata, Endpoint, Header } from "common";
 import {
   RequestSummary,
   RouterConfig,
@@ -685,7 +685,7 @@ const makeChangeDetector = (
   return changeDetector;
 };
 
-const corsMiddleware = (
+const corsMiddleware = (allowHeaders?: string) => (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
@@ -694,7 +694,7 @@ const corsMiddleware = (
   res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,PATCH");
   res.header(
     "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, access_token"
+    "Content-Type, Authorization, access_token" + (allowHeaders ? `, ${allowHeaders}` : '')
   );
 
   // intercept OPTIONS method
@@ -724,7 +724,8 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
   // root router is the entry point.
   const rootRouter = express.Router();
   if (config && config.enableCors) {
-    rootRouter.use(corsMiddleware);
+    console.log(`allowHeaders=${config.allowHeaders}`);
+    rootRouter.use(corsMiddleware(config.allowHeaders));
   }
   rootRouter.use(express.urlencoded({ extended: true }));
   rootRouter.use(express.json());

@@ -17,6 +17,8 @@ export type RouterConfig = {
   preprocessMiddle?: express.Handler[] | express.Handler;
   // enable CORS headers and preflight request(OPTION).
   enableCors?: boolean;
+  // Access-Control-Allow-Headers in CORS
+  allowHeaders?: string;
 };
 
 // request data is use to evaluate condiitons of matching.

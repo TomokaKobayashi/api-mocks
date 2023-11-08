@@ -564,10 +564,10 @@ const makeChangeDetector = (config, routes, targetRouter) => {
     changeDetector.isChanged = false;
     return changeDetector;
 };
-const corsMiddleware = (req, res, next) => {
+const corsMiddleware = (allowHeaders) => (req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
     res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,PATCH");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, access_token");
+    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, access_token" + (allowHeaders ? `, ${allowHeaders}` : ''));
     // intercept OPTIONS method
     if ("OPTIONS" === req.method) {
         res.sendStatus(200);
@@ -592,7 +592,8 @@ const mockRouter = (config) => {
     // root router is the entry point.
     const rootRouter = express_1.default.Router();
     if (config && config.enableCors) {
-        rootRouter.use(corsMiddleware);
+        console.log(`allowHeaders=${config.allowHeaders}`);
+        rootRouter.use(corsMiddleware(config.allowHeaders));
     }
     rootRouter.use(express_1.default.urlencoded({ extended: true }));
     rootRouter.use(express_1.default.json());

@@ -52,6 +52,7 @@ commander_1.default
     .option("-a --apiBaseUri <uri>", "control api base uri")
     .option("-u --upload <directory>", "directory for upload")
     .option("-x --enable-cors", "enable CORS headers and preflight request")
+    .option("-y --allow-headers <headers>", "Access-Control-Allow-Headers")
     .option("-f --fileUpdate <true|false>", "routes update by control apis", (val) => {
     return val === "true";
 })
@@ -67,6 +68,7 @@ const finalConfig = {
     disabledSettings: commander_1.default.getOptionValue("disabledSettings") || config.disabledSettings,
     staticProxy: config.staticProxy,
     enableCors: commander_1.default.getOptionValue("enableCors") || config.enableCors,
+    allowHeaders: commander_1.default.getOptionValue("allowHeaders") || config.allowHeaders,
 };
 // a sample middleware to parse JSON in request headers
 const sampleMiddleware = (req, res, next) => {
@@ -110,6 +112,7 @@ const router = (0, mock_router_1.mockRouter)({
     apiRoot: finalConfig.apiRoot,
     uploadPath: finalConfig.uploadPath,
     enableCors: finalConfig.enableCors,
+    allowHeaders: finalConfig.allowHeaders,
     preprocessMiddle: sampleMiddleware,
 });
 // apply mock-router

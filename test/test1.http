@@ -268,3 +268,6 @@ GET /
 
 ###
 GET http://localhost:4010/pet/findByTags
+
+###
+OPTIONS http://localhost:4010/pet/findByTags

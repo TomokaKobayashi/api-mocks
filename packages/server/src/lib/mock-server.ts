@@ -7,6 +7,7 @@ import fs from "fs";
 import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import { ProxyAgent}  from "proxy-agent";
 import { parse } from "jsonc-parser";
+import { Header } from "common";
 
 export type AppConfig = {
   port: number;
@@ -17,6 +18,7 @@ export type AppConfig = {
   uploadPath?: string;
   staticProxy?: Options;
   enableCors?: boolean;
+  allowHeaders?: string;
 };
 
 const defConfig: AppConfig = {
@@ -61,6 +63,7 @@ commander
   .option("-a --apiBaseUri <uri>", "control api base uri")
   .option("-u --upload <directory>", "directory for upload")
   .option("-x --enable-cors", "enable CORS headers and preflight request")
+  .option("-y --allow-headers <headers>", "Access-Control-Allow-Headers")
   .option(
     "-f --fileUpdate <true|false>",
     "routes update by control apis",
@@ -86,6 +89,7 @@ const finalConfig: AppConfig = {
     commander.getOptionValue("disabledSettings") || config.disabledSettings,
   staticProxy: config.staticProxy,
   enableCors: commander.getOptionValue("enableCors") || config.enableCors,
+  allowHeaders: commander.getOptionValue("allowHeaders") || config.allowHeaders,
 };
 
 // a sample middleware to parse JSON in request headers
@@ -137,6 +141,7 @@ const router = mockRouter({
   apiRoot: finalConfig.apiRoot,
   uploadPath: finalConfig.uploadPath,
   enableCors: finalConfig.enableCors,
+  allowHeaders: finalConfig.allowHeaders,
   preprocessMiddle: sampleMiddleware,
 });
 

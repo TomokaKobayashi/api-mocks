@@ -9,6 +9,7 @@ export type RouterConfig = {
     uploadPath?: string;
     preprocessMiddle?: express.Handler[] | express.Handler;
     enableCors?: boolean;
+    allowHeaders?: string;
 };
 export type RequestSummary = {
     data: Record<any>;

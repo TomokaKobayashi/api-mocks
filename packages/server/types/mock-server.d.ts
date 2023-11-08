@@ -8,4 +8,5 @@ export type AppConfig = {
     uploadPath?: string;
     staticProxy?: Options;
     enableCors?: boolean;
+    allowHeaders?: string;
 };
