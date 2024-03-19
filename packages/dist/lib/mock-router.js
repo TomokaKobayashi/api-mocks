@@ -595,8 +595,9 @@ const mockRouter = (config) => {
         console.log(`allowHeaders=${config.allowHeaders}`);
         rootRouter.use(corsMiddleware(config.allowHeaders));
     }
-    rootRouter.use(express_1.default.urlencoded({ extended: true }));
-    rootRouter.use(express_1.default.json());
+    console.log(`maxReceiveSize=${config === null || config === void 0 ? void 0 : config.maxReceiveSize}`);
+    rootRouter.use(express_1.default.urlencoded({ extended: true, limit: config === null || config === void 0 ? void 0 : config.maxReceiveSize }));
+    rootRouter.use(express_1.default.json({ limit: config === null || config === void 0 ? void 0 : config.maxReceiveSize }));
     rootRouter.use((0, cookie_parser_1.default)());
     // express-form-data needs temporary directory to upload.
     if (config && config.uploadPath) {

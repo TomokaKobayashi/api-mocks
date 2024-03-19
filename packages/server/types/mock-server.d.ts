@@ -9,4 +9,5 @@ export type AppConfig = {
     staticProxy?: Options;
     enableCors?: boolean;
     allowHeaders?: string;
+    maxReceiveSize?: string;
 };

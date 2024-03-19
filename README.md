@@ -42,8 +42,9 @@ mock-server [options]
 | -r | ファイルパス | 本ソフトウェアの入力ファイル（routesファイルという）のパスを指定します。 | ./routes/routes.json |
 | -s | ファイルパスまたはURL | 静的コンテンツ配信対象ディレクトリまたは、静的コンテンツを配信するサーバのURLを指定します。 | ./public |
 | -x | なし | CORSヘッダを有効化します。プリフライトリクエストなどにも対応します。 | 
-| -y | ヘッダ名リスト | CORSヘッダを有効化した際、Access-Control-Allow-Headersに追加するヘッダ名をカンマ区切りで指定します。 | 
+| -y | ヘッダ名リスト | CORSヘッダを有効化した際、Access-Control-Allow-Headersに追加するヘッダ名をカンマ区切りで指定します。 |  |
 | -u | ディレクトリパス | multipartによるファイルアップロードの際のファイル一時格納ディレクトリを指定します。 | ./upload | 
+| -m | 最大受信サイズ | リクエストを受信する最大サイズを指定します。"100kb"や"10mb"のように指定します。 | 10mb |
 
 ## 基本的な機能
 ### 1.最も基本的な使い方
@@ -619,6 +620,7 @@ interface {[key: string]: T}
 | staticContents | string | - | ```-s```オプションを使用しない場合に静的コンテンツ配信の対象とするディレクトリです。<br/>省略時は```"./public"```です。 |
 | enableCors | boolean | - | ```-x```オプションがない場合のCORS対応の有無を指定します。<br/>省略時は```false```(なし)です。 |
 | allowHeaders | string | - | CORS対応ありの場合にAccess-Control-Allow-Headersに追加するヘッダ名のリストを指定します。<br/>ヘッダ名をカンマスペース区切りで列挙します。<br/>例："x-data-XXX, x-data-YYY" |
+| maxReceiveSize | string | - | リクエストを受信する最大サイズを指定します。"100kb"や"10mb"のように指定します。<br/>省略時は10mbです。 |
 
 
 # 付属ツール

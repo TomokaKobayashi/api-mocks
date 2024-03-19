@@ -727,8 +727,9 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
     console.log(`allowHeaders=${config.allowHeaders}`);
     rootRouter.use(corsMiddleware(config.allowHeaders));
   }
-  rootRouter.use(express.urlencoded({ extended: true }));
-  rootRouter.use(express.json());
+  console.log(`maxReceiveSize=${config?.maxReceiveSize}`);
+  rootRouter.use(express.urlencoded({ extended: true, limit: config?.maxReceiveSize }));
+  rootRouter.use(express.json({limit: config?.maxReceiveSize}));
   rootRouter.use(cookieParser());
 
   // express-form-data needs temporary directory to upload.

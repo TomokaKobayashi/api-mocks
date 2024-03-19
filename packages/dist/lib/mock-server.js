@@ -25,6 +25,7 @@ const defConfig = {
         changeOrigin: true,
     },
     enableCors: false,
+    maxReceiveSize: "10mb"
 };
 const loadConfig = (path) => {
     if (!path)
@@ -53,6 +54,7 @@ commander_1.default
     .option("-u --upload <directory>", "directory for upload")
     .option("-x --enable-cors", "enable CORS headers and preflight request")
     .option("-y --allow-headers <headers>", "Access-Control-Allow-Headers")
+    .option("-m --max-receive-size <size>", "maximum receive body size")
     .option("-f --fileUpdate <true|false>", "routes update by control apis", (val) => {
     return val === "true";
 })
@@ -69,6 +71,7 @@ const finalConfig = {
     staticProxy: config.staticProxy,
     enableCors: commander_1.default.getOptionValue("enableCors") || config.enableCors,
     allowHeaders: commander_1.default.getOptionValue("allowHeaders") || config.allowHeaders,
+    maxReceiveSize: commander_1.default.getOptionValue("maxReceiveSize") || config.maxReceiveSize,
 };
 // a sample middleware to parse JSON in request headers
 const sampleMiddleware = (req, res, next) => {
@@ -113,6 +116,7 @@ const router = (0, mock_router_1.mockRouter)({
     uploadPath: finalConfig.uploadPath,
     enableCors: finalConfig.enableCors,
     allowHeaders: finalConfig.allowHeaders,
+    maxReceiveSize: finalConfig.maxReceiveSize,
     preprocessMiddle: sampleMiddleware,
 });
 // apply mock-router

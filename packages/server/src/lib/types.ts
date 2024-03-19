@@ -19,6 +19,8 @@ export type RouterConfig = {
   enableCors?: boolean;
   // Access-Control-Allow-Headers in CORS
   allowHeaders?: string;
+  // Max receive size
+  maxReceiveSize?: string;
 };
 
 // request data is use to evaluate condiitons of matching.

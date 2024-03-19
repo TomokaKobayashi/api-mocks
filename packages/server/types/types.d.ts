@@ -10,6 +10,7 @@ export type RouterConfig = {
     preprocessMiddle?: express.Handler[] | express.Handler;
     enableCors?: boolean;
     allowHeaders?: string;
+    maxReceiveSize?: string;
 };
 export type RequestSummary = {
     data: Record<any>;
