@@ -21,6 +21,8 @@ export type RouterConfig = {
   allowHeaders?: string;
   // Max receive size
   maxReceiveSize?: string;
+  // Keep Upload Files
+  keepUploadFile?: boolean;
 };
 
 // request data is use to evaluate condiitons of matching.

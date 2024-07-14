@@ -601,7 +601,7 @@ const mockRouter = (config) => {
     rootRouter.use((0, cookie_parser_1.default)());
     // express-form-data needs temporary directory to upload.
     if (config && config.uploadPath) {
-        rootRouter.use(express_form_data_1.default.parse({ uploadDir: config.uploadPath, autoClean: true }));
+        rootRouter.use(express_form_data_1.default.parse({ uploadDir: config.uploadPath, autoClean: !config.keepUploadFile }));
         rootRouter.use(express_form_data_1.default.union());
     }
     // XMLparser bodyParser

@@ -26,7 +26,7 @@ Content-Type: application/json
 }
 
 ###
-POST http://localhost:4010/prefix00/ddd/eee
+POST https://localhost:4010/prefix00/ddd/eee
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
@@ -53,6 +53,11 @@ Content-Type: application/json
 
 ------WebKitFormBoundary7MA4YWxkTrZu0gW
 Content-Disposition: form-data; name="image"; filename="sample1.png"
+Content-Type: image/png
+
+< ./test/sample1.png
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="sample2.png"
 Content-Type: image/png
 
 < ./test/sample1.png
@@ -271,3 +276,43 @@ GET http://localhost:4010/pet/findByTags
 
 ###
 OPTIONS http://localhost:4010/pet/findByTags
+
+
+###
+POST http://localhost:4010/prefix00/ddd/eee
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="text"
+
+title
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="params"
+Content-Type: application/x-www-form-urlencoded
+
+AAA=BBB&CCC=DDD&CCC=EEE
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="json"
+Content-Type: application/json
+
+{
+    "aaaa": "bbbb",
+    "cccc":[
+        "dddd",
+        "eeee"
+    ]
+}
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="schedule.svg"
+Content-Type: image/svg
+
+< ./test/schedule.svg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
+GET http://localhost:4010/prefix00/ccc/ddd
+Content-Type: application/json
+
+< ./test/schedule.svg

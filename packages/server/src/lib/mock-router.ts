@@ -735,7 +735,7 @@ export const mockRouter = (config?: RouterConfig): express.Router => {
   // express-form-data needs temporary directory to upload.
   if (config && config.uploadPath) {
     rootRouter.use(
-      form.parse({ uploadDir: config.uploadPath, autoClean: true })
+      form.parse({ uploadDir: config.uploadPath, autoClean: !config.keepUploadFile })
     );
     rootRouter.use(form.union());
   }

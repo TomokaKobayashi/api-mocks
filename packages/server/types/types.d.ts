@@ -11,6 +11,7 @@ export type RouterConfig = {
     enableCors?: boolean;
     allowHeaders?: string;
     maxReceiveSize?: string;
+    keepUploadFile?: boolean;
 };
 export type RequestSummary = {
     data: Record<any>;

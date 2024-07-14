@@ -8,6 +8,8 @@ import { createProxyMiddleware, Options } from "http-proxy-middleware";
 import { ProxyAgent}  from "proxy-agent";
 import { parse } from "jsonc-parser";
 import { Header } from "common";
+import { certificateFor } from "@expo/devcert";
+import https from "https";
 
 export type AppConfig = {
   port: number;
@@ -20,6 +22,9 @@ export type AppConfig = {
   enableCors?: boolean;
   allowHeaders?: string;
   maxReceiveSize?: string;
+  enableHttps?: boolean;
+  domainName?: string;
+  keepUploadFile?: boolean;
 };
 
 const defConfig: AppConfig = {
@@ -36,7 +41,8 @@ const defConfig: AppConfig = {
     changeOrigin: true,
   },
   enableCors: false,
-  maxReceiveSize: "10mb"
+  maxReceiveSize: "10mb",
+  keepUploadFile: false,
 };
 
 const loadConfig = (path?: string): AppConfig => {
@@ -55,6 +61,15 @@ const parseDisabledSettings = (headers: string) => {
   return headers.split(",");
 };
 
+const createHttps = async (config: AppConfig, app: express.Express) => {
+  const domainName = config.domainName || "localhost";
+  const ssl = await certificateFor(domainName, {skipCertutilInstall: true, skipHostsFile: true});
+  const httpsServer = https.createServer(ssl, app);
+  httpsServer.listen(finalConfig.port, () => {
+    console.log(`started https on port ${finalConfig.port} at domain '${domainName}'`);
+  });
+}
+
 commander
   .version("0.0.1", "-v --version")
   .usage("[options]")
@@ -67,6 +82,9 @@ commander
   .option("-x --enable-cors", "enable CORS headers and preflight request")
   .option("-y --allow-headers <headers>", "Access-Control-Allow-Headers")
   .option("-m --max-receive-size <size>", "maximum receive body size")
+  .option("-t --enable-https", "enable https")
+  .option("-w --domain-name", "domain names for https")
+  .option("-k --keep-upload-file", "enable https")
   .option(
     "-f --fileUpdate <true|false>",
     "routes update by control apis",
@@ -94,6 +112,9 @@ const finalConfig: AppConfig = {
   enableCors: commander.getOptionValue("enableCors") || config.enableCors,
   allowHeaders: commander.getOptionValue("allowHeaders") || config.allowHeaders,
   maxReceiveSize: commander.getOptionValue("maxReceiveSize") || config.maxReceiveSize,
+  enableHttps: commander.getOptionValue("enableHttps") || config.enableHttps,
+  domainName: commander.getOptionValue("domainName") || config.domainName,
+  keepUploadFile: commander.getOptionValue("keepUploadFile") || config.keepUploadFile,
 };
 
 // a sample middleware to parse JSON in request headers
@@ -147,6 +168,7 @@ const router = mockRouter({
   enableCors: finalConfig.enableCors,
   allowHeaders: finalConfig.allowHeaders,
   maxReceiveSize: finalConfig.maxReceiveSize,
+  keepUploadFile: finalConfig.keepUploadFile,
   preprocessMiddle: sampleMiddleware,
 });
 
@@ -169,7 +191,12 @@ if (finalConfig.staticContents) {
   }
 }
 
-// starting to serve
-app.listen(finalConfig.port, () => {
-  console.log(`started on port ${finalConfig.port}`);
-});
+// https key and certification
+if(finalConfig.enableHttps){
+  createHttps(finalConfig, app);
+}else{
+  // starting to serve
+  app.listen(finalConfig.port, () => {
+    console.log(`started http on port ${finalConfig.port}`);
+  });
+}

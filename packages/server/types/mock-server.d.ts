@@ -10,4 +10,7 @@ export type AppConfig = {
     enableCors?: boolean;
     allowHeaders?: string;
     maxReceiveSize?: string;
+    enableHttps?: boolean;
+    domainName?: string;
+    keepUploadFile?: boolean;
 };

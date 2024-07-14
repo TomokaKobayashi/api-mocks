@@ -6,6 +6,9 @@
 
   "scripts": {
     "build": "echo No Action in test",
-    "start": "mock-server"
+    "start": "mock-server",
+    "start2": "mock-server -m 10kb",
+    "start3": "mock-server -m 300kb",
+    "start:https": "mock-server -t -k"
   }
 }
